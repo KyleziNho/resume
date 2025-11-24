@@ -104,14 +104,14 @@ export default function MessagesApp() {
       ></div>
 
       {/* 2. HEADER (Skeuomorphic Bar) */}
-      <div className="relative z-10 flex items-center justify-between px-4 h-11 bg-gradient-to-b from-[#f9f9f9] to-[#e0e0e0] border-b border-[#b0b0b0] shadow-sm select-none">
-        <div className="flex items-center gap-1 text-gray-500 text-sm font-medium drop-shadow-[0_1px_0_rgba(255,255,255,1)]">
+      <div className="relative z-10 flex items-center justify-between px-3 md:px-4 h-11 md:h-11 bg-gradient-to-b from-[#f9f9f9] to-[#e0e0e0] border-b border-[#b0b0b0] shadow-sm select-none">
+        <div className="flex items-center gap-1 text-gray-500 text-xs md:text-sm font-medium drop-shadow-[0_1px_0_rgba(255,255,255,1)]">
           <span>To:</span>
           <span className="text-black font-bold">Kyle</span>
         </div>
         <button
           onClick={handleClear}
-          className="text-xs text-[#666] hover:text-black font-medium active:scale-95 transition-transform"
+          className="text-[10px] md:text-xs text-[#666] hover:text-black font-medium active:scale-95 transition-transform"
         >
           Clear
         </button>
@@ -120,7 +120,7 @@ export default function MessagesApp() {
       {/* 3. CHAT AREA */}
       <div
         ref={scrollRef}
-        className="flex-1 relative z-10 overflow-y-auto p-4 space-y-4 custom-scrollbar"
+        className="flex-1 relative z-10 overflow-y-auto p-2 md:p-4 space-y-2 md:space-y-3 custom-scrollbar"
       >
         {messages.map((msg) => {
           const isMe = msg.sender === 'user';
@@ -130,7 +130,7 @@ export default function MessagesApp() {
               className={`flex flex-col ${isMe ? 'items-end' : 'items-start'} mb-2`}
             >
               {/* Header (Name + Time) */}
-              <div className={`flex gap-2 text-[10px] text-[#888] mb-0.5 px-1 font-medium drop-shadow-[0_1px_0_rgba(255,255,255,1)]`}>
+              <div className={`flex gap-1 md:gap-2 text-[9px] md:text-[10px] text-[#888] mb-0.5 px-1 font-medium drop-shadow-[0_1px_0_rgba(255,255,255,1)]`}>
                 <span className="font-bold text-[#666]">{isMe ? 'You' : 'Kyle'}</span>
                 <span>{msg.timestamp}</span>
               </div>
@@ -138,7 +138,7 @@ export default function MessagesApp() {
               {/* BUBBLE (The Glossy Look) */}
               <div
                 className={`
-                  relative max-w-[80%] px-4 py-2 rounded-2xl shadow-md border
+                  relative max-w-[85%] md:max-w-[75%] px-3 md:px-4 py-1.5 md:py-2 rounded-2xl shadow-md border
                   ${isMe
                     ? 'bg-gradient-to-b from-[#fffcdb] to-[#fcf39a] border-[#e8d98b] text-[#5c4b08]' // Yellow/Gold Gloss
                     : 'bg-gradient-to-b from-[#e3f2fd] to-[#bfdff5] border-[#9bc4e0] text-[#1a3b5c]' // Blue/Aqua Gloss
@@ -148,7 +148,7 @@ export default function MessagesApp() {
                   boxShadow: '0 1px 2px rgba(0,0,0,0.1), inset 0 1px 0 rgba(255,255,255,0.7)'
                 }}
               >
-                <p className="text-sm leading-snug drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
+                <p className="text-xs md:text-sm leading-snug drop-shadow-[0_1px_0_rgba(255,255,255,0.4)]">
                   {msg.text}
                 </p>
               </div>
@@ -159,34 +159,34 @@ export default function MessagesApp() {
         {/* Typing Indicator */}
         {isTyping && (
            <div className="flex flex-col items-start">
-             <div className="text-[10px] text-[#888] mb-0.5 px-1 font-medium ml-1">Kyle is typing...</div>
-             <div className="bg-gradient-to-b from-[#e3f2fd] to-[#bfdff5] border border-[#9bc4e0] px-4 py-2 rounded-2xl shadow-md w-16 flex items-center justify-center gap-1">
-               <div className="w-1.5 h-1.5 bg-[#1a3b5c]/40 rounded-full animate-bounce"></div>
-               <div className="w-1.5 h-1.5 bg-[#1a3b5c]/40 rounded-full animate-bounce delay-75"></div>
-               <div className="w-1.5 h-1.5 bg-[#1a3b5c]/40 rounded-full animate-bounce delay-150"></div>
+             <div className="text-[9px] md:text-[10px] text-[#888] mb-0.5 px-1 font-medium ml-1">Kyle is typing...</div>
+             <div className="bg-gradient-to-b from-[#e3f2fd] to-[#bfdff5] border border-[#9bc4e0] px-3 md:px-4 py-1.5 md:py-2 rounded-2xl shadow-md w-14 md:w-16 flex items-center justify-center gap-1">
+               <div className="w-1 h-1 md:w-1.5 md:h-1.5 bg-[#1a3b5c]/40 rounded-full animate-bounce"></div>
+               <div className="w-1 h-1 md:w-1.5 md:h-1.5 bg-[#1a3b5c]/40 rounded-full animate-bounce delay-75"></div>
+               <div className="w-1 h-1 md:w-1.5 md:h-1.5 bg-[#1a3b5c]/40 rounded-full animate-bounce delay-150"></div>
              </div>
            </div>
         )}
       </div>
 
       {/* 4. INPUT AREA (Pill Shape) */}
-      <div className="relative z-20 p-3 bg-gradient-to-t from-[#dcdcdc] to-[#eeeeee] border-t border-[#aaa]">
+      <div className="relative z-20 p-2 md:p-3 bg-gradient-to-t from-[#dcdcdc] to-[#eeeeee] border-t border-[#aaa] safe-area-bottom">
         <form
           onSubmit={handleSend}
-          className="bg-white rounded-full border border-[#999] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] flex items-center px-2 py-1 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all"
+          className="bg-white rounded-full border border-[#999] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] flex items-center px-2 md:px-2 py-0.5 md:py-1 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all"
         >
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Type or push 'enter' to talk..."
-            className="flex-1 bg-transparent border-none outline-none text-sm px-2 text-gray-700 placeholder:text-gray-400 h-8"
+            placeholder="iMessage"
+            className="flex-1 bg-transparent border-none outline-none text-xs md:text-sm px-2 text-gray-700 placeholder:text-gray-400 h-7 md:h-8"
           />
           <button
             type="button"
-            className="p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+            className="p-1 md:p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
           >
-            <Smile size={18} />
+            <Smile size={16} className="md:w-[18px] md:h-[18px]" />
           </button>
         </form>
       </div>

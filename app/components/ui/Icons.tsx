@@ -170,3 +170,37 @@ export const MacPreviewIcon = () => (
     </div>
   </div>
 );
+
+export const MacMessagesIcon = () => (
+  <div className="w-full h-full relative group-hover:scale-105 transition-transform drop-shadow-lg">
+    {/* Speech bubble - classic green Messages icon from OS X */}
+    <div className="w-full h-full rounded-full relative overflow-hidden shadow-[0_4px_12px_rgba(0,0,0,0.35)]">
+      {/* Main green gradient background */}
+      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#6CE86C] via-[#4CD964] to-[#2FB344]"></div>
+
+      {/* Glossy highlight effect */}
+      <div className="absolute inset-0 bg-gradient-to-b from-white/40 via-white/5 to-transparent opacity-90 rounded-full"></div>
+
+      {/* Speech bubble shape */}
+      <div className="absolute inset-[20%] flex items-center justify-center">
+        {/* Main bubble body */}
+        <div className="relative w-full h-[70%]">
+          <div className="absolute inset-0 bg-white rounded-[20%] shadow-[0_2px_4px_rgba(0,0,0,0.15)]"></div>
+
+          {/* Speech bubble tail */}
+          <div className="absolute -bottom-[20%] left-[15%] w-0 h-0"
+               style={{
+                 borderLeft: '8px solid transparent',
+                 borderRight: '4px solid transparent',
+                 borderTop: '10px solid white',
+                 filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.1))'
+               }}>
+          </div>
+        </div>
+      </div>
+
+      {/* Outer rim shine */}
+      <div className="absolute inset-0 rounded-full shadow-[inset_0_1px_2px_rgba(255,255,255,0.5)]"></div>
+    </div>
+  </div>
+);

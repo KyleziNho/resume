@@ -123,7 +123,7 @@ export default function MacOsPortfolio() {
     messages: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Messages',
-      iconType: 'folder' as const,
+      iconType: 'messages' as const,
       pos: { x: 150, y: 80 }, size: { width: 850, height: 600 }
     }
   });

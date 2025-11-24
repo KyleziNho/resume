@@ -1,7 +1,7 @@
 import React from 'react';
 import { Github, Linkedin } from 'lucide-react';
 import { FloatingDock } from './floating-dock';
-import { MacFolderIcon, MacDocIcon, MacTerminalIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon } from './Icons';
+import { MacFolderIcon, MacDocIcon, MacTerminalIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon, MacMessagesIcon } from './Icons';
 
 type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint' | 'messages';
 
@@ -11,7 +11,7 @@ interface WindowState {
   isMaximized: boolean;
   zIndex: number;
   title: string;
-  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari';
+  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages';
   pos: { x: number; y: number };
   size: { width: number; height: number };
 }
@@ -24,7 +24,7 @@ interface DockProps {
 }
 
 const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onFocusWindow }) => {
-  const renderIcon = (iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari') => {
+  const renderIcon = (iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages') => {
     switch (iconType) {
       case 'drive': return <MacDriveIcon />;
       case 'folder': return <MacFolderIcon />;
@@ -32,6 +32,7 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
       case 'doc': return <MacDocIcon />;
       case 'preview': return <MacPreviewIcon />;
       case 'safari': return <MacSafariIcon />;
+      case 'messages': return <MacMessagesIcon />;
       default: return <MacFolderIcon />;
     }
   };
