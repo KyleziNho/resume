@@ -3,7 +3,7 @@ import { Github, Linkedin } from 'lucide-react';
 import { FloatingDock } from './floating-dock';
 import { MacFolderIcon, MacDocIcon, MacTerminalIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon } from './Icons';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint';
 
 interface WindowState {
   isOpen: boolean;
@@ -41,6 +41,7 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
     { id: 'finder', title: windows.finder.title, icon: renderIcon(windows.finder.iconType), isOpen: windows.finder.isOpen },
     { id: 'safari', title: windows.safari.title, icon: renderIcon(windows.safari.iconType), isOpen: windows.safari.isOpen },
     { id: 'preview', title: windows.preview.title, icon: renderIcon(windows.preview.iconType), isOpen: windows.preview.isOpen },
+    { id: 'paint', title: windows.paint.title, icon: renderIcon(windows.paint.iconType), isOpen: windows.paint.isOpen },
     { id: 'resume', title: windows.resume.title, icon: renderIcon(windows.resume.iconType), isOpen: windows.resume.isOpen },
     { id: 'terminal', title: windows.terminal.title, icon: renderIcon(windows.terminal.iconType), isOpen: windows.terminal.isOpen },
     { id: 'contact', title: windows.contact.title, icon: renderIcon(windows.contact.iconType), isOpen: windows.contact.isOpen },
