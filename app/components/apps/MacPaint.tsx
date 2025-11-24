@@ -296,8 +296,8 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     if (tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.lineWidth = brushSize * 4; // Eraser is bigger
-    } else if (tool === 'select' || tool === 'lasso') {
-      // Selection tools don't draw yet
+    } else if (tool === 'select') {
+      // Selection tool doesn't draw yet
       return;
     } else {
       ctx.globalCompositeOperation = 'source-over';
