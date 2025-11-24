@@ -11,7 +11,7 @@ import PreviewWindow from './components/apps/PreviewWindow';
 import Finder from './components/apps/Finder';
 import Safari from './components/apps/Safari';
 import MacPaint from './components/apps/MacPaint';
-import Messages from './components/apps/Messages';
+import MessagesApp from './components/apps/MessagesApp';
 import LetterGlitch from './components/ui/LetterGlitch';
 import { projects } from './data/projects';
 
@@ -825,7 +825,7 @@ export default function MacOsPortfolio() {
         onMaximize={maximizeWindow}
         onFocus={focusWindow}
       >
-         <Messages />
+         <MessagesApp />
       </MacWindow>
 
       {/* Global Styles */}
