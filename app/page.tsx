@@ -47,6 +47,17 @@ TerminalBackground.displayName = 'TerminalBackground';
 
 type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint';
 
+interface WindowState {
+  isOpen: boolean;
+  isMinimized: boolean;
+  isMaximized: boolean;
+  zIndex: number;
+  title: string;
+  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari';
+  pos: { x: number; y: number };
+  size: { width: number; height: number };
+}
+
 export default function MacOsPortfolio() {
   const [booted, setBooted] = useState(false);
   const [time, setTime] = useState('');
@@ -59,53 +70,53 @@ export default function MacOsPortfolio() {
   const [projectNames, setProjectNames] = useState<Record<string, string>>({});
   const [paintImage, setPaintImage] = useState('/me.png');
 
-  const [windows, setWindows] = useState({
+  const [windows, setWindows] = useState<Record<WindowId, WindowState>>({
     welcome: {
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 10,
       title: 'About Kyle',
-      iconType: 'drive',
+      iconType: 'drive' as const,
       pos: { x: 300, y: 100 }, size: { width: 380, height: 400 }
     },
     finder: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Finder',
-      iconType: 'folder',
+      iconType: 'folder' as const,
       pos: { x: 100, y: 100 }, size: { width: 700, height: 500 }
     },
     preview: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Preview',
-      iconType: 'preview',
+      iconType: 'preview' as const,
       pos: { x: 200, y: 100 }, size: { width: 850, height: 550 }
     },
     resume: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Bio.pdf',
-      iconType: 'doc',
+      iconType: 'doc' as const,
       pos: { x: 400, y: 100 }, size: { width: 600, height: 600 }
     },
     terminal: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Terminal',
-      iconType: 'terminal',
+      iconType: 'terminal' as const,
       pos: { x: 100, y: 400 }, size: { width: 500, height: 350 }
     },
     contact: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Contact',
-      iconType: 'folder',
+      iconType: 'folder' as const,
       pos: { x: 200, y: 300 }, size: { width: 400, height: 450 }
     },
     safari: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Safari',
-      iconType: 'safari',
+      iconType: 'safari' as const,
       pos: { x: 150, y: 120 }, size: { width: 900, height: 600 }
     },
     paint: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'MacPaint',
-      iconType: 'doc',
+      iconType: 'doc' as const,
       pos: { x: 180, y: 90 }, size: { width: 900, height: 650 }
     }
   });
@@ -210,31 +221,37 @@ export default function MacOsPortfolio() {
     return () => window.removeEventListener('resize', calculateIconLayout);
   }, []);
 
-  const focusWindow = (id: WindowId) => {
+  const focusWindow = (id: string) => {
+    const windowId = id as WindowId;
     setZIndex(z => z + 1);
-    setWindows(prev => ({ ...prev, [id]: { ...prev[id], zIndex: zIndex + 1 } }));
+    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], zIndex: zIndex + 1 } }));
   };
 
-  const openWindow = (id: WindowId) => {
+  const openWindow = (id: string) => {
+    const windowId = id as WindowId;
     focusWindow(id);
-    setWindows(prev => ({ ...prev, [id]: { ...prev[id], isOpen: true, isMinimized: false } }));
+    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isOpen: true, isMinimized: false } }));
   };
 
-  const closeWindow = (id: WindowId) => {
-    setWindows(prev => ({ ...prev, [id]: { ...prev[id], isOpen: false } }));
+  const closeWindow = (id: string) => {
+    const windowId = id as WindowId;
+    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isOpen: false } }));
   };
 
-  const minimizeWindow = (id: WindowId) => {
-    setWindows(prev => ({ ...prev, [id]: { ...prev[id], isMinimized: true } }));
+  const minimizeWindow = (id: string) => {
+    const windowId = id as WindowId;
+    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isMinimized: true } }));
   };
 
-  const restoreWindow = (id: WindowId) => {
+  const restoreWindow = (id: string) => {
+    const windowId = id as WindowId;
     focusWindow(id);
-    setWindows(prev => ({ ...prev, [id]: { ...prev[id], isMinimized: false } }));
+    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isMinimized: false } }));
   };
 
-  const maximizeWindow = (id: WindowId) => {
-    setWindows(prev => ({ ...prev, [id]: { ...prev[id], isMaximized: !prev[id].isMaximized } }));
+  const maximizeWindow = (id: string) => {
+    const windowId = id as WindowId;
+    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isMaximized: !prev[windowId].isMaximized } }));
   };
 
   const openProjectPreview = (project: any) => {
