@@ -11,26 +11,30 @@ type Message = {
   timestamp: string;
 };
 
-// --- Bot Logic: Simple Keyword Matching ---
-const getBotResponse = (input: string): string => {
-  const lower = input.toLowerCase();
+// --- AI Bot Logic ---
+const getBotResponse = async (input: string, history: Message[]): Promise<string> => {
+  try {
+    const response = await fetch('/api/chat', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        message: input,
+        history: history.slice(1), // Exclude initial greeting
+      }),
+    });
 
-  if (lower.includes('hello') || lower.includes('hi') || lower.includes('hey'))
-    return "hey! thanks for stopping by. feel free to ask about my projects, skills, or experience.";
+    if (!response.ok) {
+      throw new Error('API request failed');
+    }
 
-  if (lower.includes('project') || lower.includes('work') || lower.includes('app'))
-    return "i've built some cool stuff. check out the 'My Work' folder on the desktop! 'Frift' and 'Arcadeus' are my favorites.";
-
-  if (lower.includes('skill') || lower.includes('stack') || lower.includes('tech'))
-    return "i'm fluent in the modern stack: React, Next.js, TypeScript, and Python. I also love Flutter for mobile.";
-
-  if (lower.includes('hire') || lower.includes('job') || lower.includes('contact'))
-    return "i'm always open to interesting opportunities! shoot me an email at kyle@bath.ac.uk or check the Contact folder.";
-
-  if (lower.includes('who are you') || lower.includes('about'))
-    return "i'm kyle, a cs master's student at bath. i build things that live on the internet.";
-
-  return "hmm, i'm just a simulation so i might have missed that. try asking about my 'projects' or 'skills'!";
+    const data = await response.json();
+    return data.response;
+  } catch (error) {
+    console.error('Chat error:', error);
+    return "hmm, i'm having trouble thinking right now. maybe try again?";
+  }
 };
 
 export default function MessagesApp() {
@@ -54,7 +58,7 @@ export default function MessagesApp() {
     }
   }, [messages, isTyping]);
 
-  const handleSend = (e?: React.FormEvent) => {
+  const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim()) return;
 
@@ -65,22 +69,23 @@ export default function MessagesApp() {
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
 
-    setMessages(prev => [...prev, userMsg]);
+    const currentMessages = [...messages, userMsg];
+    setMessages(currentMessages);
     setInput('');
     setIsTyping(true);
 
-    // Simulate network delay and typing
-    setTimeout(() => {
-      const responseText = getBotResponse(userMsg.text);
-      const botMsg: Message = {
-        id: (Date.now() + 1).toString(),
-        sender: 'kyle',
-        text: responseText,
-        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-      };
-      setMessages(prev => [...prev, botMsg]);
-      setIsTyping(false);
-    }, 1500 + Math.random() * 1000);
+    // Get AI response
+    const responseText = await getBotResponse(userMsg.text, currentMessages);
+
+    const botMsg: Message = {
+      id: (Date.now() + 1).toString(),
+      sender: 'kyle',
+      text: responseText,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+    };
+
+    setMessages(prev => [...prev, botMsg]);
+    setIsTyping(false);
   };
 
   const handleClear = () => {
