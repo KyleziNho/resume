@@ -3,7 +3,7 @@ import { Github, Linkedin } from 'lucide-react';
 import { FloatingDock } from './floating-dock';
 import { MacFolderIcon, MacDocIcon, MacTerminalIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon } from './Icons';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint' | 'messages';
 
 interface WindowState {
   isOpen: boolean;
@@ -40,6 +40,7 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
   const windowItems: Array<{ id: WindowId; title: string; icon: React.ReactNode; isOpen: boolean }> = [
     { id: 'finder', title: windows.finder.title, icon: renderIcon(windows.finder.iconType), isOpen: windows.finder.isOpen },
     { id: 'safari', title: windows.safari.title, icon: renderIcon(windows.safari.iconType), isOpen: windows.safari.isOpen },
+    { id: 'messages', title: windows.messages.title, icon: renderIcon(windows.messages.iconType), isOpen: windows.messages.isOpen },
     { id: 'preview', title: windows.preview.title, icon: renderIcon(windows.preview.iconType), isOpen: windows.preview.isOpen },
     { id: 'paint', title: windows.paint.title, icon: renderIcon(windows.paint.iconType), isOpen: windows.paint.isOpen },
     { id: 'resume', title: windows.resume.title, icon: renderIcon(windows.resume.iconType), isOpen: windows.resume.isOpen },

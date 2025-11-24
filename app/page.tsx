@@ -11,6 +11,7 @@ import PreviewWindow from './components/apps/PreviewWindow';
 import Finder from './components/apps/Finder';
 import Safari from './components/apps/Safari';
 import MacPaint from './components/apps/MacPaint';
+import Messages from './components/apps/Messages';
 import LetterGlitch from './components/ui/LetterGlitch';
 import { projects } from './data/projects';
 
@@ -45,7 +46,7 @@ const TerminalBackground = React.memo(() => {
 
 TerminalBackground.displayName = 'TerminalBackground';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint' | 'messages';
 
 interface WindowState {
   isOpen: boolean;
@@ -118,6 +119,12 @@ export default function MacOsPortfolio() {
       title: 'MacPaint',
       iconType: 'doc' as const,
       pos: { x: 180, y: 90 }, size: { width: 900, height: 650 }
+    },
+    messages: {
+      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
+      title: 'Messages',
+      iconType: 'folder' as const,
+      pos: { x: 150, y: 80 }, size: { width: 850, height: 600 }
     }
   });
 
@@ -128,7 +135,8 @@ export default function MacOsPortfolio() {
     terminal: { x: 20, y: 370 },
     contact: { x: 20, y: 480 },
     safari: { x: 20, y: 590 },
-    paint: { x: 20, y: 700 }
+    paint: { x: 20, y: 700 },
+    messages: { x: 20, y: 810 }
   });
 
   const [iconScale, setIconScale] = useState(1);
@@ -140,7 +148,8 @@ export default function MacOsPortfolio() {
     terminal: 'Terminal',
     contact: 'Contact',
     safari: 'Safari',
-    paint: 'MacPaint'
+    paint: 'MacPaint',
+    messages: 'Messages'
   });
 
   const [contextMenu, setContextMenu] = useState<{
@@ -183,7 +192,7 @@ export default function MacOsPortfolio() {
       const dockHeight = 80; // Bottom dock area
       const availableHeight = viewportHeight - menuBarHeight - dockHeight;
 
-      const iconCount = 7; // Number of desktop icons
+      const iconCount = 8; // Number of desktop icons
       const baseIconHeight = 110; // Base height per icon (icon + label + gap)
       const minIconHeight = 70; // Minimum height per icon
       const topPadding = 40;
@@ -209,7 +218,8 @@ export default function MacOsPortfolio() {
         terminal: { x: 20, y: topPadding + iconSpacing * 3 },
         contact: { x: 20, y: topPadding + iconSpacing * 4 },
         safari: { x: 20, y: topPadding + iconSpacing * 5 },
-        paint: { x: 20, y: topPadding + iconSpacing * 6 }
+        paint: { x: 20, y: topPadding + iconSpacing * 6 },
+        messages: { x: 20, y: topPadding + iconSpacing * 7 }
       });
 
       setIconScale(scale);
@@ -466,6 +476,16 @@ export default function MacOsPortfolio() {
            initialPos={iconPos.paint}
            scale={iconScale}
            onDoubleClick={() => openWindow('paint')}
+           onRename={handleIconRename}
+           onContextMenu={handleIconContextMenu}
+         />
+         <DesktopIcon
+           id="messages"
+           label={iconLabels.messages}
+           type="folder"
+           initialPos={iconPos.messages}
+           scale={iconScale}
+           onDoubleClick={() => openWindow('messages')}
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
@@ -788,6 +808,24 @@ export default function MacOsPortfolio() {
         onFocus={focusWindow}
       >
          <MacPaint imageSrc={paintImage} fileName="me.paint" />
+      </MacWindow>
+
+      {/* MESSAGES WINDOW */}
+      <MacWindow
+        id="messages"
+        title={windows.messages.title}
+        isOpen={windows.messages.isOpen}
+        isMinimized={windows.messages.isMinimized}
+        isMaximized={windows.messages.isMaximized}
+        zIndex={windows.messages.zIndex}
+        pos={windows.messages.pos}
+        size={windows.messages.size}
+        onClose={closeWindow}
+        onMinimize={minimizeWindow}
+        onMaximize={maximizeWindow}
+        onFocus={focusWindow}
+      >
+         <Messages />
       </MacWindow>
 
       {/* Global Styles */}
