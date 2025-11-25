@@ -917,6 +917,7 @@ export default function MacOsPortfolio() {
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
+{/* Temporarily removed - my apps folder (keep for future folder implementation)
          <DesktopIcon
            id="finder"
            label={iconLabels.finder}
@@ -927,6 +928,7 @@ export default function MacOsPortfolio() {
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
+*/}
          <DesktopIcon
            id="resume"
            label={iconLabels.resume}
