@@ -132,6 +132,8 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
             width={512}
             height={512}
             className="w-full h-full object-contain"
+            priority
+            quality={85}
           />
         </div>
       ),
@@ -148,6 +150,8 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
             width={512}
             height={512}
             className="w-full h-full object-contain"
+            priority
+            quality={85}
           />
         </div>
       ),

@@ -72,6 +72,26 @@ const FloatingDockMobile = ({
     setIsTouching(true);
     const touch = e.touches[0];
     mouseX.set(touch.pageX);
+
+    // Find initial icon and trigger haptic
+    const touchX = touch.clientX;
+    let startIndex = -1;
+    itemRefs.current.forEach((ref, index) => {
+      if (!ref) return;
+      const bounds = ref.getBoundingClientRect();
+      // Expand hit area by 10px on each side for better detection
+      if (
+        touchX >= bounds.left - 10 &&
+        touchX <= bounds.right + 10
+      ) {
+        startIndex = index;
+      }
+    });
+
+    if (startIndex !== -1) {
+      haptic();
+      setLastHoveredIndex(startIndex);
+    }
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -85,13 +105,17 @@ const FloatingDockMobile = ({
 
     // Find which icon is being touched for haptic feedback
     let currentIndex = -1;
+    let closestDistance = Infinity;
+
     itemRefs.current.forEach((ref, index) => {
       if (!ref) return;
       const bounds = ref.getBoundingClientRect();
-      if (
-        touchX >= bounds.left &&
-        touchX <= bounds.right
-      ) {
+      const centerX = bounds.left + bounds.width / 2;
+      const distance = Math.abs(touchX - centerX);
+
+      // Find the closest icon to the touch point
+      if (distance < closestDistance && distance < bounds.width) {
+        closestDistance = distance;
         currentIndex = index;
       }
     });

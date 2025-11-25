@@ -210,10 +210,10 @@ export default function NotesApp() {
           Hey! I'm Kyle, a CS master's student at the University of Bath finishing in September 2026.
         </p>
         <p className="mb-4">
-          I love building things—especially apps with clean UI/UX. I'm obsessed with iOS design and spend way too much time on Twitter looking at interface patterns.
+          I love building things, especially apps with clean UI/UX. I'm obsessed with iOS design and spend way too much time on Twitter looking at interface patterns.
         </p>
         <p className="mb-4">
-          Right now I'm working on Frift (a student marketplace app on the App Store), and I've built other projects like Arcadeus (real estate AI) and Receiptly (receipt splitting app).
+          Right now I'm working on Frift (a student marketplace app on the App Store), and I've built other projects like Arcadeus (real estate AI) and Kyro (online card game).
         </p>
         <p>
           I'm actively looking for internships and grad roles in software development. Feel free to message me on KyleBOT or connect on LinkedIn!
