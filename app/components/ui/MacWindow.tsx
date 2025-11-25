@@ -77,8 +77,8 @@ const MacWindow: React.FC<MacWindowProps> = ({
     // Initial flash after 3.5 seconds
     const initialTimer = setTimeout(doFlash, 3500);
 
-    // Then repeat every 5 seconds (after the initial 3.5s + 2s flash = 5.5s, so next at ~8.5s, etc)
-    const intervalTimer = setInterval(doFlash, 5000);
+    // Then repeat every 1.5 seconds
+    const intervalTimer = setInterval(doFlash, 1500);
 
     return () => {
       clearTimeout(initialTimer);
