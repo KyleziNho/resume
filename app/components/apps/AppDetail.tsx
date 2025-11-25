@@ -110,23 +110,28 @@ export default function AppDetail({ app }: AppDetailProps) {
 
         {/* Screenshots Carousel - horizontal scroll */}
         {app.images.length > 0 && (
-          <div className="-mx-4">
-            <div className="flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scrollbar-hide">
+          <div className="-mx-4 md:mx-0">
+            <div
+              className="flex gap-3 md:gap-4 overflow-x-auto pl-4 md:pl-0 pr-4 pb-4 snap-x snap-mandatory"
+              style={{
+                scrollbarWidth: 'thin',
+                scrollbarColor: '#888 #e0e0e0',
+              }}
+            >
               {app.images.map((image, index) => (
                 <div
                   key={index}
                   className="shrink-0 snap-start rounded-xl overflow-hidden"
                   style={{
-                    height: '220px',
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                   }}
                 >
                   <Image
                     src={`${image}?v=2`}
                     alt={`${app.name} screenshot ${index + 1}`}
-                    width={110}
-                    height={220}
-                    className="h-full w-auto object-contain"
+                    width={200}
+                    height={400}
+                    className="h-[220px] md:h-[380px] w-auto object-contain"
                     unoptimized
                   />
                 </div>

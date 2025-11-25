@@ -139,4 +139,20 @@
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
   }
+
+  /* Native scrollbar styling for screenshot carousels */
+  .overflow-x-auto::-webkit-scrollbar {
+    height: 8px;
+  }
+  .overflow-x-auto::-webkit-scrollbar-track {
+    background: #e0e0e0;
+    border-radius: 4px;
+  }
+  .overflow-x-auto::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+  }
+  .overflow-x-auto::-webkit-scrollbar-thumb:hover {
+    background: #666;
+  }
 }
