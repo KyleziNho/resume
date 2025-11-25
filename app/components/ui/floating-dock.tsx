@@ -320,7 +320,17 @@ function IconContainerMobile({
   }
 
   if (onClick) {
-    return <button onClick={handleClick}>{content}</button>;
+    return (
+      <button
+        onClick={handleClick}
+        style={{
+          WebkitTapHighlightColor: 'transparent',
+          pointerEvents: isTouching ? 'none' : 'auto'
+        }}
+      >
+        {content}
+      </button>
+    );
   }
 
   return content;
