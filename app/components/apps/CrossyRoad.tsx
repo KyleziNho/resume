@@ -384,12 +384,26 @@ export default function KernelCrossing() {
 
   // --- GAME LOOP ---
   useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    // Set canvas size based on container
+    const updateCanvasSize = () => {
+      const container = canvas.parentElement;
+      if (container) {
+        canvas.width = container.clientWidth || 800;
+        canvas.height = container.clientHeight || 600;
+      }
+    };
+    updateCanvasSize();
+
     const tick = () => {
       update();
       draw();
       requestRef.current = requestAnimationFrame(tick);
     };
     requestRef.current = requestAnimationFrame(tick);
+
     return () => {
       if (requestRef.current) {
         cancelAnimationFrame(requestRef.current);
@@ -408,11 +422,12 @@ export default function KernelCrossing() {
         ref={canvasRef}
         width={800}
         height={600}
-        className="w-full h-full object-cover"
+        className="absolute inset-0 w-full h-full"
+        style={{ imageRendering: 'crisp-edges' }}
       />
 
       {/* UI OVERLAY: HUD */}
-      <div className="absolute top-4 left-4 flex gap-4">
+      <div className="absolute top-4 left-4 flex gap-4 z-20">
         <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50">
            <span className="text-xs text-blue-500 font-bold uppercase block">Current Score</span>
            <span className="text-2xl font-black text-gray-800">{score}</span>
@@ -425,7 +440,7 @@ export default function KernelCrossing() {
 
       {/* UI OVERLAY: MENU */}
       {gameState === 'menu' && (
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-10">
+        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-30">
           <div className="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm border border-white/20">
             <div className="w-16 h-16 bg-blue-500 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg transform -rotate-6">
                 <span className="text-3xl">📂</span>
@@ -444,7 +459,7 @@ export default function KernelCrossing() {
 
       {/* UI OVERLAY: GAME OVER */}
       {gameState === 'gameover' && (
-        <div className="absolute inset-0 bg-red-500/20 backdrop-blur-sm flex items-center justify-center z-10 animate-fade-in">
+        <div className="absolute inset-0 bg-red-500/20 backdrop-blur-sm flex items-center justify-center z-30 animate-fade-in">
           <div className="bg-white p-8 rounded-2xl shadow-2xl text-center border-4 border-red-100">
             <div className="text-6xl mb-2">💥</div>
             <h2 className="text-2xl font-black text-gray-800 mb-1">Process Terminated</h2>
