@@ -332,15 +332,35 @@ export default function MacOsPortfolio() {
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      // On mobile, center window and size it much smaller for mobile screens
+      // On mobile, center window and size it appropriately for mobile screens
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const menuBarHeight = 24;
       const dockHeight = 80;
 
-      // Use smaller default mobile sizes instead of desktop sizes
-      const mobileWindowWidth = Math.min(350, viewportWidth - 40);
-      const mobileWindowHeight = Math.min(500, viewportHeight - menuBarHeight - dockHeight - 60);
+      // App-specific sizing for better mobile experience
+      let mobileWindowWidth: number;
+      let mobileWindowHeight: number;
+
+      switch (windowId) {
+        case 'paint':
+        case 'safari':
+        case 'messages':
+          // Larger content apps - use more screen space but still contained
+          mobileWindowWidth = Math.min(viewportWidth - 30, 380);
+          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 50, 550);
+          break;
+        case 'finder':
+        case 'preview':
+          // Medium-sized apps
+          mobileWindowWidth = Math.min(viewportWidth - 40, 350);
+          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 60, 500);
+          break;
+        default:
+          // Smaller apps (terminal, resume, welcome)
+          mobileWindowWidth = Math.min(viewportWidth - 50, 320);
+          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 70, 480);
+      }
 
       // Center the window
       const centerX = (viewportWidth - mobileWindowWidth) / 2;
@@ -394,15 +414,35 @@ export default function MacOsPortfolio() {
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      // On mobile, re-center window when restoring with smaller sizes
+      // On mobile, re-center window when restoring with appropriate sizes
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const menuBarHeight = 24;
       const dockHeight = 80;
 
-      // Use smaller default mobile sizes
-      const mobileWindowWidth = Math.min(350, viewportWidth - 40);
-      const mobileWindowHeight = Math.min(500, viewportHeight - menuBarHeight - dockHeight - 60);
+      // App-specific sizing for better mobile experience
+      let mobileWindowWidth: number;
+      let mobileWindowHeight: number;
+
+      switch (windowId) {
+        case 'paint':
+        case 'safari':
+        case 'messages':
+          // Larger content apps - use more screen space but still contained
+          mobileWindowWidth = Math.min(viewportWidth - 30, 380);
+          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 50, 550);
+          break;
+        case 'finder':
+        case 'preview':
+          // Medium-sized apps
+          mobileWindowWidth = Math.min(viewportWidth - 40, 350);
+          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 60, 500);
+          break;
+        default:
+          // Smaller apps (terminal, resume, welcome)
+          mobileWindowWidth = Math.min(viewportWidth - 50, 320);
+          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 70, 480);
+      }
 
       // Center the window
       const centerX = (viewportWidth - mobileWindowWidth) / 2;
