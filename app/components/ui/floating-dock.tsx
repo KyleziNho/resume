@@ -47,6 +47,7 @@ const FloatingDockMobile = ({
   const [lastHoveredIndex, setLastHoveredIndex] = useState<number | null>(null);
   const [isTouching, setIsTouching] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const lastHapticTime = useRef<number>(0);
 
   // Calculate dynamic sizing based on number of items
   const itemCount = items.length;
@@ -95,6 +96,9 @@ const FloatingDockMobile = ({
   const handleTouchMove = (e: React.TouchEvent) => {
     if (!isTouching) return;
 
+    // Prevent scrolling while dragging across dock
+    e.preventDefault();
+
     const touch = e.touches[0];
 
     // Update mouseX for magnification effect
@@ -113,9 +117,22 @@ const FloatingDockMobile = ({
     });
 
     // Trigger haptic if moved to a different icon
+    // Throttle haptics to max one every 80ms to prevent iOS from ignoring rapid calls
     if (currentIndex !== -1 && currentIndex !== lastHoveredIndex) {
       setIsDragging(true);
-      haptic();
+      const now = Date.now();
+      if (now - lastHapticTime.current >= 80) {
+        try {
+          // Use setTimeout to defer haptic slightly, might help with Safari timing
+          requestAnimationFrame(() => {
+            haptic();
+          });
+          lastHapticTime.current = now;
+        } catch (error) {
+          // Silently fail if haptic not available
+          console.log('Haptic feedback not available');
+        }
+      }
       setLastHoveredIndex(currentIndex);
     }
   };
@@ -145,8 +162,7 @@ const FloatingDockMobile = ({
       )}
       style={{
         height: `${height * 4}px`,
-        gap: `${gap * 4}px`,
-        touchAction: 'none'
+        gap: `${gap * 4}px`
       }}
     >
       {items.map((item, index) => (
