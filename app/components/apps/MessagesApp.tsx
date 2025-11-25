@@ -2,6 +2,7 @@
 
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Eraser, Smile } from 'lucide-react';
+import { haptic } from 'ios-haptics';
 
 // --- Types ---
 type Message = {
@@ -119,6 +120,9 @@ export default function MessagesApp() {
     e?.preventDefault();
     if (!input.trim()) return;
 
+    // Haptic feedback when sending message
+    haptic();
+
     const userMsg: Message = {
       id: Date.now().toString(),
       sender: 'user',
@@ -147,6 +151,9 @@ export default function MessagesApp() {
       text: responseText,
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     };
+
+    // Haptic feedback when receiving response
+    haptic();
 
     setMessages(prev => [...prev, botMsg]);
     setIsTyping(false);

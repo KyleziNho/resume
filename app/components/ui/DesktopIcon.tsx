@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MacDriveIcon, MacFolderIcon, MacTerminalIcon, MacDocIcon, MacSafariIcon, MacPaintIcon, MacPreviewIcon, MacMessagesIcon, MacNotesIcon, MacAppStoreIcon, AppIcon } from './Icons';
+import { haptic } from 'ios-haptics';
 
 interface DesktopIconProps {
   id: string;
@@ -28,11 +29,20 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [isRenaming, setIsRenaming] = useState(false);
   const [editedLabel, setEditedLabel] = useState(label);
+  const [isMobile, setIsMobile] = useState(false);
   const iconRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const currentPosRef = useRef(initialPos);
   const dragStartPosRef = useRef({ x: 0, y: 0 });
   const dragStartMouseRef = useRef({ x: 0, y: 0 });
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     setEditedLabel(label);
@@ -119,6 +129,14 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
     onContextMenu(e, id, label, () => setIsRenaming(true));
   };
 
+  // Handle single tap on mobile
+  const handleTap = () => {
+    if (isMobile) {
+      haptic();
+      onDoubleClick();
+    }
+  };
+
   const renderIcon = () => {
     switch (type) {
       case 'drive': return <MacDriveIcon />;
@@ -146,6 +164,7 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
       className={`absolute w-20 flex flex-col items-center gap-1 cursor-default select-none z-10 ${isDragging ? 'opacity-80 cursor-grabbing' : ''}`}
       onMouseDown={handleMouseDown}
       onDoubleClick={onDoubleClick}
+      onClick={handleTap}
       onContextMenu={handleContextMenuClick}
     >
       <div className="w-16 h-16 group active:brightness-75">
