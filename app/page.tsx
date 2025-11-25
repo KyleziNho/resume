@@ -223,25 +223,52 @@ export default function MacOsPortfolio() {
     };
   }, []);
 
-  // Prevent pull-to-refresh on mobile
+  // Prevent pull-to-refresh on mobile (but allow scrolling inside app windows)
   useEffect(() => {
     let startY = 0;
+    let startElement: Element | null = null;
 
     const handleTouchStart = (e: TouchEvent) => {
       startY = e.touches[0].pageY;
+      startElement = e.target as Element;
     };
 
     const handleTouchMove = (e: TouchEvent) => {
       const currentY = e.touches[0].pageY;
+      const isPullingDown = currentY > startY;
 
-      // Prevent pull-to-refresh when at top and pulling down
-      if (window.scrollY <= 0 && currentY > startY) {
+      // Check if we're inside a scrollable container
+      let element = startElement;
+      while (element && element !== document.body) {
+        const style = window.getComputedStyle(element);
+        const overflowY = style.overflowY;
+        const isScrollable = overflowY === 'auto' || overflowY === 'scroll';
+
+        if (isScrollable && element.scrollHeight > element.clientHeight) {
+          // This is a scrollable element
+          const scrollTop = element.scrollTop;
+
+          // Allow scrolling up inside the element if not at top
+          if (isPullingDown && scrollTop > 0) {
+            return; // Don't prevent - let the element scroll
+          }
+
+          // Allow scrolling down inside the element if not at bottom
+          if (!isPullingDown && scrollTop < element.scrollHeight - element.clientHeight) {
+            return; // Don't prevent - let the element scroll
+          }
+        }
+        element = element.parentElement;
+      }
+
+      // Prevent pull-to-refresh only when at top of page and pulling down
+      if (window.scrollY <= 0 && isPullingDown) {
         e.preventDefault();
       }
     };
 
     // Must use passive: false to allow preventDefault on iOS
-    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchstart', handleTouchStart, { passive: true });
     document.addEventListener('touchmove', handleTouchMove, { passive: false });
 
     return () => {
