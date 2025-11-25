@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MacDriveIcon, MacFolderIcon, MacTerminalIcon, MacDocIcon, MacSafariIcon, MacPaintIcon, MacPreviewIcon, MacMessagesIcon, MacNotesIcon } from './Icons';
+import { MacDriveIcon, MacFolderIcon, MacTerminalIcon, MacDocIcon, MacSafariIcon, MacPaintIcon, MacPreviewIcon, MacMessagesIcon, MacNotesIcon, MacAppStoreIcon, AppIcon } from './Icons';
 
 interface DesktopIconProps {
   id: string;
   label: string;
-  type: 'drive' | 'folder' | 'terminal' | 'doc' | 'safari' | 'paint' | 'preview' | 'messages' | 'notes';
+  type: 'drive' | 'folder' | 'terminal' | 'doc' | 'safari' | 'paint' | 'preview' | 'messages' | 'notes' | 'appstore' | 'app';
   initialPos: { x: number; y: number };
   scale?: number;
+  iconSrc?: string; // For app type icons
   onDoubleClick: () => void;
   onRename: (id: string, newLabel: string) => void;
   onContextMenu: (e: React.MouseEvent, id: string, label: string, startRename: () => void) => void;
@@ -18,6 +19,7 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
   type,
   initialPos,
   scale = 1,
+  iconSrc,
   onDoubleClick,
   onRename,
   onContextMenu
@@ -128,6 +130,8 @@ const DesktopIcon: React.FC<DesktopIconProps> = ({
       case 'preview': return <MacPreviewIcon />;
       case 'messages': return <MacMessagesIcon />;
       case 'notes': return <MacNotesIcon />;
+      case 'appstore': return <MacAppStoreIcon />;
+      case 'app': return iconSrc ? <AppIcon iconSrc={iconSrc} /> : <MacFolderIcon />;
       default: return <MacFolderIcon />;
     }
   };

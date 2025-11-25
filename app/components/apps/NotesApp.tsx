@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useRef, useState } from 'react';
-import { Mic, ChevronDown, Undo, Redo } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { ChevronDown, Undo, Redo } from 'lucide-react';
 
 export default function NotesApp() {
   const editorRef = useRef<HTMLDivElement>(null);
@@ -10,6 +10,14 @@ export default function NotesApp() {
   const [showFontMenu, setShowFontMenu] = useState(false);
   const [showSizeMenu, setShowSizeMenu] = useState(false);
   const [alignMode, setAlignMode] = useState<'left' | 'center' | 'right'>('left');
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   const fonts = [
     'San Francisco',
@@ -92,7 +100,7 @@ export default function NotesApp() {
   return (
     <div className="flex flex-col h-full bg-white font-sans">
       {/* Notes Toolbar */}
-      <div className="flex items-center gap-1 px-4 py-2 border-b border-gray-200 bg-white">
+      <div className={`flex items-center gap-1 ${isMobile ? 'px-2 py-1.5' : 'px-4 py-2'} border-b border-gray-200 bg-white`}>
         {/* Format buttons */}
         <button
           onClick={() => execCommand('bold')}
@@ -116,14 +124,14 @@ export default function NotesApp() {
           <span className="underline text-gray-700 text-sm">U</span>
         </button>
 
-        {/* Font dropdown */}
-        <div className="relative ml-2 flex-shrink-0">
+        {/* Font dropdown - shorter on mobile */}
+        <div className="relative ml-1 flex-shrink-0">
           <button
             onClick={() => setShowFontMenu(!showFontMenu)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 whitespace-nowrap"
+            className={`${isMobile ? 'px-1.5 py-1' : 'px-3 py-1'} border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors flex items-center gap-1 whitespace-nowrap`}
           >
-            <span className="truncate max-w-[120px]">{selectedFont}</span>
-            <ChevronDown size={14} className="flex-shrink-0" />
+            <span className={`truncate ${isMobile ? 'max-w-[50px] text-xs' : 'max-w-[120px]'}`}>{isMobile ? 'Aa' : selectedFont}</span>
+            <ChevronDown size={12} className="flex-shrink-0" />
           </button>
           {showFontMenu && (
             <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 min-w-[150px]">
@@ -142,16 +150,16 @@ export default function NotesApp() {
         </div>
 
         {/* Size dropdown */}
-        <div className="relative ml-1 flex-shrink-0">
+        <div className="relative flex-shrink-0">
           <button
             onClick={() => setShowSizeMenu(!showSizeMenu)}
-            className="px-3 py-1 border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors flex items-center gap-2 whitespace-nowrap"
+            className={`${isMobile ? 'px-1.5 py-1 text-xs' : 'px-3 py-1'} border border-gray-300 rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50 transition-colors flex items-center gap-1 whitespace-nowrap`}
           >
-            {selectedSize}
-            <ChevronDown size={14} className="flex-shrink-0" />
+            {isMobile ? selectedSize.replace('px', '') : selectedSize}
+            <ChevronDown size={12} className="flex-shrink-0" />
           </button>
           {showSizeMenu && (
-            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 min-w-[100px]">
+            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-300 rounded-md shadow-lg z-50 min-w-[80px]">
               {sizes.map((size) => (
                 <button
                   key={size}
@@ -168,34 +176,29 @@ export default function NotesApp() {
         {/* Alignment toggle button */}
         <button
           onClick={toggleAlign}
-          className="p-1.5 hover:bg-gray-100 rounded transition-colors ml-2 flex-shrink-0"
+          className="p-1.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
           title={`Align ${alignMode === 'left' ? 'Center' : alignMode === 'center' ? 'Right' : 'Left'}`}
         >
           {renderAlignIcon()}
         </button>
 
         {/* Undo/Redo buttons */}
-        <div className="flex items-center gap-1 ml-auto">
+        <div className="flex items-center gap-0.5 ml-auto">
           <button
             onClick={() => execCommand('undo')}
             className="p-1.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
             title="Undo"
           >
-            <Undo size={16} className="text-gray-700" />
+            <Undo size={isMobile ? 14 : 16} className="text-gray-700" />
           </button>
           <button
             onClick={() => execCommand('redo')}
             className="p-1.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0"
             title="Redo"
           >
-            <Redo size={16} className="text-gray-700" />
+            <Redo size={isMobile ? 14 : 16} className="text-gray-700" />
           </button>
         </div>
-
-        {/* Microphone button */}
-        <button className="ml-2 p-1.5 hover:bg-gray-100 rounded transition-colors flex-shrink-0" title="Dictation">
-          <Mic size={16} className="text-gray-700" />
-        </button>
       </div>
 
       {/* Notes Content - Editable */}
@@ -203,20 +206,17 @@ export default function NotesApp() {
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        className="flex-1 overflow-y-auto px-12 py-6 bg-white outline-none"
-        style={{ fontSize: '16px', fontFamily: 'San Francisco, -apple-system, BlinkMacSystemFont, sans-serif' }}
+        className={`flex-1 overflow-y-auto ${isMobile ? 'px-4 py-4' : 'px-12 py-6'} bg-white outline-none`}
+        style={{ fontSize: isMobile ? '14px' : '16px', fontFamily: 'San Francisco, -apple-system, BlinkMacSystemFont, sans-serif' }}
       >
-        <p className="mb-4">
-          Hey! I'm Kyle, a CS master's student at the University of Bath finishing in September 2026.
-        </p>
-        <p className="mb-4">
-          I love building things, especially apps with clean UI/UX. I'm obsessed with iOS design and spend way too much time on Twitter looking at interface patterns.
-        </p>
-        <p className="mb-4">
-          Right now I'm working on Frift (a student marketplace app on the App Store), and I've built other projects like Arcadeus (real estate AI) and Kyro (online card game).
-        </p>
+        {/* Image */}
+        <img
+          src="/me.png"
+          alt="Kyle"
+          className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} rounded-lg object-cover mb-4 float-right ml-4`}
+        />
         <p>
-          I'm actively looking for internships and grad roles in software development. Feel free to message me on KyleBOT or connect on LinkedIn!
+          hey, i'm kyle. currently doing a CS masters at bath uni, looking for a grad role in 2026. i love building things - check out my apps in the finder or chat with me via kylebot!
         </p>
       </div>
     </div>

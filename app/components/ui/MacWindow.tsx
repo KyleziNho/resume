@@ -38,6 +38,15 @@ const MacWindow: React.FC<MacWindowProps> = ({
   const { size: currentSize, setSize, startResize, isResizing, resizeDir } = useResizable(size, currentPos, setPos);
   const [viewportHeight, setViewportHeight] = useState(0);
   const [viewportOffsetY, setViewportOffsetY] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Track visual viewport height changes (for mobile keyboard)
   useEffect(() => {
@@ -136,15 +145,24 @@ const MacWindow: React.FC<MacWindowProps> = ({
           boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6)'
         }}
       >
-        <div className="absolute left-2 flex gap-2 z-20" onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
-          <button onClick={() => onClose(id)} className="w-3 h-3 rounded-full bg-[#ff5f57] border border-[#b93a35] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group">
-             <X size={6} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
+        <div className={`absolute left-2 flex ${isMobile ? 'gap-3' : 'gap-2'} z-20`} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
+          <button
+            onClick={() => onClose(id)}
+            className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-[#ff5f57] border border-[#b93a35] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group ${isMobile ? 'active:scale-90' : ''}`}
+          >
+             <X size={isMobile ? 10 : 6} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
           </button>
-          <button onClick={() => onMinimize(id)} className="w-3 h-3 rounded-full bg-[#febc2e] border border-[#c99627] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group">
-             <Minus size={6} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
+          <button
+            onClick={() => onMinimize(id)}
+            className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-[#febc2e] border border-[#c99627] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group ${isMobile ? 'active:scale-90' : ''}`}
+          >
+             <Minus size={isMobile ? 10 : 6} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
           </button>
-          <button onClick={() => onMaximize(id)} className="w-3 h-3 rounded-full bg-[#28c840] border border-[#1c8a23] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group">
-             <Maximize2 size={5} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
+          <button
+            onClick={() => onMaximize(id)}
+            className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-[#28c840] border border-[#1c8a23] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group ${isMobile ? 'active:scale-90' : ''}`}
+          >
+             <Maximize2 size={isMobile ? 9 : 5} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
           </button>
         </div>
 
@@ -157,7 +175,13 @@ const MacWindow: React.FC<MacWindowProps> = ({
       <div className="flex-1 bg-[#ece9d8] rounded-b-md overflow-hidden flex flex-col relative border-l border-r border-b border-[#888]">
         <div className="absolute inset-0 pointer-events-none opacity-5" style={{backgroundImage: 'linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '3px 100%'}}></div>
 
-        <div className="relative z-10 flex-1 overflow-y-auto custom-scrollbar">
+        <div
+          className="relative z-10 flex-1 overflow-y-auto custom-scrollbar"
+          style={{
+            overscrollBehavior: 'contain',
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
           {children}
         </div>
       </div>

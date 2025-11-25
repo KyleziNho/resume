@@ -14,7 +14,8 @@ import MacPaint from './components/apps/MacPaint';
 import MessagesApp from './components/apps/MessagesApp';
 import NotesApp from './components/apps/NotesApp';
 import KernelCrossing from './components/apps/CrossyRoad';
-import AppStore from './components/apps/AppStore';
+import AppStore, { AppData } from './components/apps/AppStore';
+import AppDetail from './components/apps/AppDetail';
 import LetterGlitch from './components/ui/LetterGlitch';
 import { projects } from './data/projects';
 import { haptic } from 'ios-haptics';
@@ -167,6 +168,10 @@ export default function MacOsPortfolio() {
     appstore: 'App Store'
   });
 
+  const [installedApps, setInstalledApps] = useState<AppData[]>([]);
+  const [selectedApp, setSelectedApp] = useState<AppData | null>(null);
+  const [installedAppPositions, setInstalledAppPositions] = useState<Record<string, { x: number; y: number }>>({});
+
   const [contextMenu, setContextMenu] = useState<{
     x: number;
     y: number;
@@ -179,28 +184,41 @@ export default function MacOsPortfolio() {
         setTime(now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     }, 1000);
 
-    // Animate loading progress with haptic feedback
+    // Animate loading progress with pulsing haptic feedback
     let progress = 0;
+
+    // Pulsing haptic feedback during boot (like app installation)
+    haptic.error();
+    const pulseInterval = setInterval(() => {
+      haptic.error();
+    }, 300);
+
     const loadingInterval = setInterval(() => {
       progress += Math.random() * 15 + 5; // Random increment between 5-20
       if (progress >= 100) {
         progress = 100;
         setLoadingProgress(100);
         clearInterval(loadingInterval);
-        haptic(); // Final haptic when complete
+        clearInterval(pulseInterval);
+
+        // Final completion haptics
+        setTimeout(() => {
+          haptic();
+          setTimeout(() => {
+            haptic();
+          }, 100);
+        }, 250);
+
         setTimeout(() => setBooted(true), 300);
       } else {
         setLoadingProgress(progress);
-        // Haptic feedback at certain milestones
-        if (Math.floor(progress) % 25 === 0) {
-          haptic();
-        }
       }
     }, 150);
 
     return () => {
       clearInterval(timer);
       clearInterval(loadingInterval);
+      clearInterval(pulseInterval);
     };
   }, []);
 
@@ -230,6 +248,25 @@ export default function MacOsPortfolio() {
       document.removeEventListener('touchmove', handleTouchMove);
     };
   }, []);
+
+  // Load installed apps from localStorage on mount
+  useEffect(() => {
+    const stored = localStorage.getItem('installedApps');
+    if (stored) {
+      try {
+        setInstalledApps(JSON.parse(stored));
+      } catch (e) {
+        console.error('Failed to parse installed apps from localStorage', e);
+      }
+    }
+  }, []);
+
+  // Save installed apps to localStorage whenever they change
+  useEffect(() => {
+    if (installedApps.length > 0) {
+      localStorage.setItem('installedApps', JSON.stringify(installedApps));
+    }
+  }, [installedApps]);
 
   // Position initial welcome window on mobile
   useEffect(() => {
@@ -391,6 +428,103 @@ export default function MacOsPortfolio() {
     return () => window.removeEventListener('resize', calculateIconLayout);
   }, []);
 
+  // Calculate positions for installed apps to avoid overlap with existing icons
+  useEffect(() => {
+    if (installedApps.length === 0 || Object.keys(iconPos).length === 0) return;
+
+    const calculateInstalledAppPositions = () => {
+      const isMobile = window.innerWidth < 768;
+      const baseIconSize = 70;
+      const minSpacing = 25;
+
+      // Seeded random for consistent positions
+      const seededRandom = (seed: number) => {
+        const x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
+      };
+
+      const newPositions: Record<string, { x: number; y: number }> = {};
+
+      // Start with all existing desktop icon positions
+      const occupiedPositions = Object.values(iconPos).map(pos => ({ x: pos.x, y: pos.y }));
+
+      installedApps.forEach((app, index) => {
+        // Skip if we already have a position for this app
+        if (installedAppPositions[app.id]) {
+          occupiedPositions.push(installedAppPositions[app.id]);
+          return;
+        }
+
+        let finalPos: { x: number; y: number };
+
+        if (isMobile) {
+          // Mobile: Find a non-overlapping position using collision detection
+          const horizontalPadding = 15;
+          const topPadding = 40;
+          const bottomPadding = 100;
+          const usableWidth = window.innerWidth - (horizontalPadding * 2) - baseIconSize;
+          const usableHeight = window.innerHeight - topPadding - bottomPadding - baseIconSize;
+
+          let attempts = 0;
+          let x = 0, y = 0;
+          let validPosition = false;
+
+          // Try to find a non-overlapping position
+          while (!validPosition && attempts < 100) {
+            // Use app id hash for consistent but unique seeding
+            const appIdHash = app.id.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+            const seedX = (appIdHash + index + 1) * 1337 + attempts * 7;
+            const seedY = (appIdHash + index + 1) * 2749 + attempts * 13;
+
+            x = horizontalPadding + seededRandom(seedX) * usableWidth;
+            y = topPadding + seededRandom(seedY) * usableHeight;
+
+            // Check for collisions with all existing and previously placed icons
+            validPosition = true;
+            for (const pos of occupiedPositions) {
+              const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+              if (distance < baseIconSize + minSpacing) {
+                validPosition = false;
+                break;
+              }
+            }
+            attempts++;
+          }
+
+          // Fallback to grid position if can't find valid spot
+          if (!validPosition) {
+            const cols = 3;
+            const totalIcons = Object.keys(iconPos).length + index;
+            const col = totalIcons % cols;
+            const row = Math.floor(totalIcons / cols);
+            x = horizontalPadding + (col * (usableWidth / cols));
+            y = topPadding + (row * (baseIconSize + minSpacing));
+          }
+
+          finalPos = { x, y };
+        } else {
+          // Desktop: Continue the column after existing icons
+          const baseIconHeight = 110;
+          const topPadding = 40;
+          const existingIconCount = Object.keys(iconPos).length;
+          finalPos = {
+            x: 20,
+            y: topPadding + (existingIconCount + index) * baseIconHeight * iconScale
+          };
+        }
+
+        newPositions[app.id] = finalPos;
+        occupiedPositions.push(finalPos);
+      });
+
+      if (Object.keys(newPositions).length > 0) {
+        setInstalledAppPositions(prev => ({ ...prev, ...newPositions }));
+      }
+    };
+
+    calculateInstalledAppPositions();
+  }, [installedApps, iconPos, iconScale]);
+
   const focusWindow = (id: string) => {
     const windowId = id as WindowId;
     setZIndex(z => z + 1);
@@ -452,6 +586,40 @@ export default function MacOsPortfolio() {
     haptic();
 
     setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isOpen: false } }));
+  };
+
+  const handleAppInstalled = (app: AppData) => {
+    // Add app to installed apps if not already there
+    setInstalledApps(prev => {
+      if (prev.find(a => a.id === app.id)) {
+        // If already installed, open the app detail window
+        setSelectedApp(app);
+        openWindow(`app-${app.id}`);
+        return prev;
+      }
+      return [...prev, app];
+    });
+
+    // Open the app detail window
+    setSelectedApp(app);
+    openWindow(`app-${app.id}`);
+  };
+
+  const handleUninstallAll = () => {
+    // Close all installed app windows
+    installedApps.forEach(app => {
+      const windowId = `app-${app.id}` as WindowId;
+      setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isOpen: false } }));
+    });
+
+    // Clear installed apps from state
+    setInstalledApps([]);
+
+    // Clear from localStorage
+    localStorage.removeItem('installedApps');
+
+    // Clear selected app
+    setSelectedApp(null);
   };
 
   const minimizeWindow = (id: string) => {
@@ -721,7 +889,7 @@ export default function MacOsPortfolio() {
                       <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                       </svg>
-                      Connect on LinkedIn
+                      Kyle O'Sullivan
                     </a>
                   </div>
                 </div>
@@ -806,6 +974,7 @@ export default function MacOsPortfolio() {
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
+{/* Temporarily removed
          <DesktopIcon
            id="game"
            label={iconLabels.game}
@@ -816,6 +985,7 @@ export default function MacOsPortfolio() {
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
+*/}
          <DesktopIcon
            id="appstore"
            label={iconLabels.appstore}
@@ -826,6 +996,38 @@ export default function MacOsPortfolio() {
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
+
+{/* Temporarily removed - installed app icons
+         {installedApps.map((app) => {
+           // Use pre-calculated position that avoids overlap with existing icons
+           const position = installedAppPositions[app.id];
+           // Don't render until position is calculated
+           if (!position) return null;
+
+           return (
+             <DesktopIcon
+               key={app.id}
+               id={`app-${app.id}`}
+               label={app.name}
+               type="app"
+               iconSrc={app.icon}
+               initialPos={position}
+               scale={iconScale}
+               onDoubleClick={() => {
+                 setSelectedApp(app);
+                 openWindow(`app-${app.id}`);
+               }}
+               onRename={(id, newLabel) => {
+                 // Update app name in installed apps
+                 setInstalledApps(prev => prev.map(a =>
+                   a.id === app.id ? { ...a, name: newLabel } : a
+                 ));
+               }}
+               onContextMenu={handleIconContextMenu}
+             />
+           );
+         })}
+*/}
       </div>
 
       {/* Context Menu */}
@@ -845,6 +1047,30 @@ export default function MacOsPortfolio() {
         onRestoreWindow={restoreWindow}
         onFocusWindow={focusWindow}
         hasMessagesNotification={hasMessagesNotification}
+        installedApps={installedApps}
+        installedAppWindows={
+          installedApps.reduce((acc, app) => {
+            const windowId = `app-${app.id}` as WindowId;
+            acc[app.id] = {
+              isOpen: windows[windowId]?.isOpen ?? false,
+              isMinimized: windows[windowId]?.isMinimized ?? false,
+            };
+            return acc;
+          }, {} as Record<string, { isOpen: boolean; isMinimized: boolean }>)
+        }
+        onOpenApp={(appId) => {
+          const app = installedApps.find(a => a.id === appId);
+          if (app) {
+            setSelectedApp(app);
+            openWindow(`app-${appId}`);
+          }
+        }}
+        onRestoreApp={(appId) => {
+          restoreWindow(`app-${appId}`);
+        }}
+        onFocusApp={(appId) => {
+          focusWindow(`app-${appId}`);
+        }}
       />
 
       {/* --- WINDOWS --- */}
@@ -1045,8 +1271,43 @@ export default function MacOsPortfolio() {
         onMaximize={maximizeWindow}
         onFocus={focusWindow}
       >
-         <AppStore />
+         <AppStore
+           onAppInstalled={handleAppInstalled}
+           onUninstallAll={handleUninstallAll}
+           initialInstalledApps={installedApps}
+         />
       </MacWindow>
+
+      {/* DYNAMICALLY CREATED APP DETAIL WINDOWS */}
+      {installedApps.map((app) => {
+        const windowId = `app-${app.id}`;
+        const isOpen = windows[windowId as WindowId]?.isOpen ?? false;
+        const isMinimized = windows[windowId as WindowId]?.isMinimized ?? false;
+        const isMaximized = windows[windowId as WindowId]?.isMaximized ?? false;
+        const zIndex = windows[windowId as WindowId]?.zIndex ?? 10;
+        const pos = windows[windowId as WindowId]?.pos ?? { x: 220, y: 100 };
+        const size = windows[windowId as WindowId]?.size ?? { width: 500, height: 600 };
+
+        return (
+          <MacWindow
+            key={windowId}
+            id={windowId}
+            title={app.name}
+            isOpen={isOpen}
+            isMinimized={isMinimized}
+            isMaximized={isMaximized}
+            zIndex={zIndex}
+            pos={pos}
+            size={size}
+            onClose={closeWindow}
+            onMinimize={minimizeWindow}
+            onMaximize={maximizeWindow}
+            onFocus={focusWindow}
+          >
+            <AppDetail app={app} />
+          </MacWindow>
+        );
+      })}
 
       {/* Global Styles */}
       <style jsx global>{`

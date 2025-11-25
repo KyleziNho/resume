@@ -579,7 +579,7 @@ const fileSystem: Record<string, any> = {
     items: [
       { name: 'About Kyle', type: 'drive' },
       { name: 'My Work', type: 'folder' },
-      { name: 'Bio.pdf', type: 'file' },
+      { name: 'resume.pdf', type: 'file' },
       { name: 'Terminal', type: 'terminal' },
       { name: 'Contact', type: 'folder' }
     ]
@@ -839,7 +839,7 @@ export default function MacOsPortfolio() {
     },
     resume: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
-      title: 'Bio.pdf',
+      title: 'resume.pdf',
       iconType: 'doc',
       pos: { x: 400, y: 100 }, size: { width: 600, height: 600 }
     },
@@ -871,7 +871,7 @@ export default function MacOsPortfolio() {
   const [iconLabels, setIconLabels] = useState({
     hd: 'About Kyle',
     projects: 'My Work',
-    resume: 'Bio.pdf',
+    resume: 'resume.pdf',
     terminal: 'Terminal',
     contact: 'Contact'
   });
@@ -995,7 +995,7 @@ export default function MacOsPortfolio() {
     const itemToWindowMap: Record<string, WindowId> = {
       'About Kyle': 'welcome',
       'My Work': 'projects',
-      'Bio.pdf': 'resume',
+      'resume.pdf': 'resume',
       'Terminal': 'terminal',
       'Contact': 'contact'
     };

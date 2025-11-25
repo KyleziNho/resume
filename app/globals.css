@@ -123,4 +123,11 @@
     -webkit-overflow-scrolling: touch;
     touch-action: pan-x pan-y;
   }
+
+  /* Prevent pull-to-refresh on scrollable areas within app windows */
+  .overflow-y-auto,
+  .overflow-auto {
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
 }

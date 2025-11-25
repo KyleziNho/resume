@@ -89,6 +89,9 @@ export const useResizable = (
   const [resizeDir, setResizeDir] = useState('');
   const startState = useRef({ x: 0, y: 0, width: 0, height: 0, posX: 0, posY: 0 });
 
+  // Sync size when initialSize prop changes
+  useEffect(() => { setSize(initialSize); }, [initialSize.width, initialSize.height]);
+
   const startResize = (dir: string, clientX: number, clientY: number, currentPos: { x: number; y: number }) => {
     setIsResizing(true);
     setResizeDir(dir);
