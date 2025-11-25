@@ -57,7 +57,7 @@ export default function AppDetail({ app }: AppDetailProps) {
           {/* App Info */}
           <div className="flex-1">
             <h1
-              className="text-xl font-bold mb-1"
+              className="text-xl font-bold mb-0.5"
               style={{
                 color: '#333',
                 textShadow: '0 1px 0 rgba(255,255,255,0.7)',
@@ -67,19 +67,43 @@ export default function AppDetail({ app }: AppDetailProps) {
             </h1>
             <p className="text-sm text-gray-600 mb-2">{app.tagline}</p>
 
-            {/* Status Badge */}
-            <div
-              className="inline-block px-3 py-1 rounded-full text-xs font-semibold"
-              style={{
-                background: app.progress === 100
-                  ? 'linear-gradient(180deg, #7ed97e 0%, #5bc95b 50%, #3ab53a 100%)'
-                  : 'linear-gradient(180deg, #f5c26c 0%, #f5a83d 50%, #e89d1a 100%)',
-                color: 'white',
-                textShadow: '0 -1px 0 rgba(0,0,0,0.2)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 1px 2px rgba(0,0,0,0.2)',
-              }}
-            >
-              {app.stage}
+            {/* Action Buttons */}
+            <div className="flex flex-wrap gap-2">
+              {/* App Store / Project Button */}
+              <a
+                href={app.link}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => haptic()}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-white transition-all duration-150 active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(180deg, #6cb4f5 0%, #3d9df5 30%, #1a7de8 70%, #1565c0 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2)',
+                  textShadow: '0 -1px 0 rgba(0,0,0,0.2)',
+                }}
+              >
+                <ExternalLink size={12} />
+                <span>{app.stage === 'Live on App Store' ? 'App Store' : 'View'}</span>
+              </a>
+
+              {/* Website Button - only show if website exists */}
+              {app.website && (
+                <a
+                  href={app.website}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => haptic()}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold text-white transition-all duration-150 active:scale-[0.98]"
+                  style={{
+                    background: 'linear-gradient(180deg, #7ed97e 0%, #5bc95b 30%, #3ab53a 70%, #2a9d2a 100%)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2)',
+                    textShadow: '0 -1px 0 rgba(0,0,0,0.2)',
+                  }}
+                >
+                  <Globe size={12} />
+                  <span>Website</span>
+                </a>
+              )}
             </div>
           </div>
         </div>
@@ -122,7 +146,7 @@ export default function AppDetail({ app }: AppDetailProps) {
                 textShadow: '0 1px 0 rgba(255,255,255,0.7)',
               }}
             >
-              Development Progress
+              Progress
             </h2>
             <span className="text-xs font-semibold text-gray-600">
               {app.progress}%
@@ -131,7 +155,7 @@ export default function AppDetail({ app }: AppDetailProps) {
 
           {/* Aqua Progress Bar */}
           <div
-            className="h-4 rounded-full overflow-hidden relative"
+            className="h-4 rounded-full overflow-hidden relative mb-3"
             style={{
               background: 'linear-gradient(180deg, #1a1a1a 0%, #3d3d3d 20%, #2a2a2a 80%, #1a1a1a 100%)',
               boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.1), 0 1px 4px rgba(0,0,0,0.3)',
@@ -156,6 +180,13 @@ export default function AppDetail({ app }: AppDetailProps) {
               />
             </div>
           </div>
+
+          {/* Progress Notes */}
+          {app.progressNotes && (
+            <p className="text-xs text-gray-700 leading-relaxed">
+              {app.progressNotes}
+            </p>
+          )}
         </div>
 
         {/* Technologies Section */}
@@ -191,62 +222,6 @@ export default function AppDetail({ app }: AppDetailProps) {
                 {tech}
               </div>
             ))}
-          </div>
-        </div>
-
-        {/* Links Section */}
-        <div
-          className="p-3 rounded-lg border border-[#aaa]"
-          style={{
-            background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-          }}
-        >
-          <h2
-            className="text-sm font-bold mb-3"
-            style={{
-              color: '#333',
-              textShadow: '0 1px 0 rgba(255,255,255,0.7)',
-            }}
-          >
-            Links
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {/* App Store Button */}
-            <a
-              href={app.link}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => haptic()}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all duration-150 active:scale-[0.98]"
-              style={{
-                background: 'linear-gradient(180deg, #6cb4f5 0%, #3d9df5 30%, #1a7de8 70%, #1565c0 100%)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2)',
-                textShadow: '0 -1px 0 rgba(0,0,0,0.2)',
-              }}
-            >
-              <ExternalLink size={14} />
-              <span>{app.stage === 'Live on App Store' ? 'View on App Store' : 'View Project'}</span>
-            </a>
-
-            {/* Website Button - only show if website exists */}
-            {app.website && (
-              <a
-                href={app.website}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => haptic()}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all duration-150 active:scale-[0.98]"
-                style={{
-                  background: 'linear-gradient(180deg, #7ed97e 0%, #5bc95b 30%, #3ab53a 70%, #2a9d2a 100%)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2)',
-                  textShadow: '0 -1px 0 rgba(0,0,0,0.2)',
-                }}
-              >
-                <Globe size={14} />
-                <span>Visit Website</span>
-              </a>
-            )}
           </div>
         </div>
 

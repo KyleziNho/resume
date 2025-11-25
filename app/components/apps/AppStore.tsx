@@ -12,6 +12,7 @@ export interface AppData {
   link: string;
   website?: string; // Optional website URL
   description: string;
+  progressNotes?: string; // Optional detailed progress notes
   images: string[];
   progress: number; // 0-100
   stage: string;
@@ -38,7 +39,8 @@ export const apps: AppData[] = [
     icon: '/app-frift.png',
     link: 'https://apps.apple.com/gb/app/frift-student-marketplace/id6745021634',
     website: 'https://www.frift.uk',
-    description: 'Cross-platform marketplace app for university students to buy, sell and connect. Built with a unified Firebase backend featuring real-time data architecture, custom Cloud Functions for user verification, automated moderation, and multi-tag filtering. Optimised performance by bundling frequently-accessed static data into a single JSON asset, reducing 200+ Firebase queries to 1 local read. Features social-inspired feeds, responsive product grids, and optimised media handling. Winner of Dragons Den at Bath and Santander X. Now integrated into Bath University course modules.',
+    description: 'Started with friends at uni - nightlife tickets were sold across snapchat and whatsapp making them hard to find. Surveyed 100 people, discovered we should also list clothes. Flew to Chicago to learn Flutter from a friend, spent 3 months building it solo. Won Dragons Den at Bath and Santander X.',
+    progressNotes: 'App is fully built and live on the App Store. Won some competitions which was super validating. Now integrated into a Bath uni course module where students work on it as part of their degree (free labour lol). Next step is properly marketing it and getting users - that\'s the hard part. This was my first big software project so it\'s been a massive learning experience. Will keep iterating on it.',
     images: ['/app-frift.png'],
     progress: 100,
     stage: 'Live on App Store',
@@ -417,7 +419,7 @@ export default function AppStore({ onAppInstalled, onUninstallAll, initialInstal
         }}
       >
         <p className="text-[10px] text-gray-500" style={{ textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>
-          Founded & developed Kyle
+          Founded and developed by me
         </p>
       </div>
 
