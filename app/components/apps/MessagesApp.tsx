@@ -112,7 +112,7 @@ export default function MessagesApp() {
       ></div>
 
       {/* 2. HEADER (Skeuomorphic Bar) */}
-      <div className="relative z-10 flex items-center justify-between px-3 md:px-4 h-11 md:h-11 bg-gradient-to-b from-[#f9f9f9] to-[#e0e0e0] border-b border-[#b0b0b0] shadow-sm select-none shrink-0">
+      <div className="relative z-10 flex items-center justify-between px-3 md:px-4 h-10 md:h-11 bg-gradient-to-b from-[#f9f9f9] to-[#e0e0e0] border-b border-[#b0b0b0] shadow-sm select-none shrink-0">
         <div className="flex items-center gap-1 text-gray-500 text-xs md:text-sm font-medium drop-shadow-[0_1px_0_rgba(255,255,255,1)]">
           <span>To:</span>
           <span className="text-black font-bold">Kyle</span>
@@ -128,7 +128,7 @@ export default function MessagesApp() {
       {/* 3. CHAT AREA */}
       <div
         ref={scrollRef}
-        className="flex-1 relative z-10 overflow-y-auto p-2 md:p-4 space-y-2 md:space-y-3 custom-scrollbar"
+        className="flex-1 relative z-10 overflow-y-auto p-2 md:p-4 pb-1 md:pb-2 space-y-2 md:space-y-3 custom-scrollbar min-h-0"
       >
         {messages.map((msg) => {
           const isMe = msg.sender === 'user';
@@ -178,7 +178,7 @@ export default function MessagesApp() {
       </div>
 
       {/* 4. INPUT AREA (Pill Shape) */}
-      <div className="relative z-20 p-2 md:p-3 bg-gradient-to-t from-[#dcdcdc] to-[#eeeeee] border-t border-[#aaa] shrink-0">
+      <div className="relative z-20 p-1.5 md:p-3 bg-gradient-to-t from-[#dcdcdc] to-[#eeeeee] border-t border-[#aaa] shrink-0">
         <form
           onSubmit={handleSend}
           className="bg-white rounded-full border border-[#999] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] flex items-center px-2 md:px-2 py-0.5 md:py-1 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all"
