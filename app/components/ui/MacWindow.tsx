@@ -89,7 +89,7 @@ const MacWindow: React.FC<MacWindowProps> = ({
   const windowStyle = isMaximized ? {
     transform: 'translate3d(0px, 24px, 0)',
     width: '100vw',
-    height: viewportHeight > 0 ? `${viewportHeight}px` : 'calc(100dvh - 24px)',
+    height: viewportHeight > 0 ? `${viewportHeight - 24}px` : 'calc(100dvh - 24px)',
     maxHeight: 'calc(100vh - 24px)',
     position: 'fixed' as const,
     top: 0,
