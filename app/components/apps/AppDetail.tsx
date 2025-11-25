@@ -3,7 +3,8 @@
 import React from 'react';
 import Image from 'next/image';
 import { AppData } from './AppStore';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Globe } from 'lucide-react';
+import { haptic } from 'ios-haptics';
 
 interface AppDetailProps {
   app: AppData;
@@ -202,7 +203,7 @@ export default function AppDetail({ app }: AppDetailProps) {
           }}
         >
           <h2
-            className="text-sm font-bold mb-2"
+            className="text-sm font-bold mb-3"
             style={{
               color: '#333',
               textShadow: '0 1px 0 rgba(255,255,255,0.7)',
@@ -210,18 +211,43 @@ export default function AppDetail({ app }: AppDetailProps) {
           >
             Links
           </h2>
-          <a
-            href={app.link}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 text-xs font-medium transition-all duration-150 active:scale-[0.98]"
-            style={{
-              color: '#1a7de8',
-            }}
-          >
-            <ExternalLink size={14} />
-            <span>View on App Store / Website</span>
-          </a>
+          <div className="flex flex-wrap gap-2">
+            {/* App Store Button */}
+            <a
+              href={app.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={() => haptic()}
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all duration-150 active:scale-[0.98]"
+              style={{
+                background: 'linear-gradient(180deg, #6cb4f5 0%, #3d9df5 30%, #1a7de8 70%, #1565c0 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2)',
+                textShadow: '0 -1px 0 rgba(0,0,0,0.2)',
+              }}
+            >
+              <ExternalLink size={14} />
+              <span>{app.stage === 'Live on App Store' ? 'View on App Store' : 'View Project'}</span>
+            </a>
+
+            {/* Website Button - only show if website exists */}
+            {app.website && (
+              <a
+                href={app.website}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={() => haptic()}
+                className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold text-white transition-all duration-150 active:scale-[0.98]"
+                style={{
+                  background: 'linear-gradient(180deg, #7ed97e 0%, #5bc95b 30%, #3ab53a 70%, #2a9d2a 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), 0 2px 4px rgba(0,0,0,0.2)',
+                  textShadow: '0 -1px 0 rgba(0,0,0,0.2)',
+                }}
+              >
+                <Globe size={14} />
+                <span>Visit Website</span>
+              </a>
+            )}
+          </div>
         </div>
 
         {/* App Images */}

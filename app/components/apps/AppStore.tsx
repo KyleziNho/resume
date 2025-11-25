@@ -10,6 +10,7 @@ export interface AppData {
   tagline: string;
   icon: string;
   link: string;
+  website?: string; // Optional website URL
   description: string;
   images: string[];
   progress: number; // 0-100
@@ -36,11 +37,12 @@ export const apps: AppData[] = [
     tagline: 'Your campus marketplace',
     icon: '/app-frift.png',
     link: 'https://apps.apple.com/gb/app/frift-student-marketplace/id6745021634',
-    description: 'The app for university students to buy, sell and connect. Zero fees, safe on-campus meetups, and eco-friendly. Stay plugged into campus life.',
+    website: 'https://www.frift.uk',
+    description: 'Cross-platform marketplace app for university students to buy, sell and connect. Built with a unified Firebase backend featuring real-time data architecture, custom Cloud Functions for user verification, automated moderation, and multi-tag filtering. Optimised performance by bundling frequently-accessed static data into a single JSON asset, reducing 200+ Firebase queries to 1 local read. Features social-inspired feeds, responsive product grids, and optimised media handling. Winner of Dragons Den at Bath and Santander X. Now integrated into Bath University course modules.',
     images: ['/app-frift.png'],
     progress: 100,
     stage: 'Live on App Store',
-    technologies: ['Flutter', 'Firebase', 'OpenAI', 'Cloud Functions']
+    technologies: ['Flutter', 'Firebase', 'Firestore', 'Cloud Functions']
   },
   {
     id: 'arcadeus',
