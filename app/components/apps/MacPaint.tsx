@@ -270,6 +270,11 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
   // Drawing Handlers
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent default touch behavior to stop scrolling
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+
     if (!ctx || !canvasRef.current) return;
     const { x, y } = getMousePos(e);
 
@@ -334,6 +339,11 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
+    // Prevent default touch behavior
+    if ('touches' in e) {
+      e.preventDefault();
+    }
+
     if (!isDrawing || !ctx || !canvasRef.current) return;
     const { x, y } = getMousePos(e);
 
@@ -546,19 +556,51 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
               <ToolBtn id="circle" icon={Circle} compact />
             </div>
 
-            {/* Brush Size Slider */}
-            <div className="p-2 border-b-2 border-black bg-white">
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={brushSize}
-                onChange={(e) => setBrushSize(Number(e.target.value))}
-                className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer"
+            {/* Brush Size Slider - Apple Liquid Glass Style */}
+            <div className="p-3 border-b-2 border-black bg-gradient-to-b from-gray-100 to-gray-200">
+              <div className="text-[8px] font-bold text-center uppercase mb-2 text-gray-600">Size</div>
+              <div
+                className="relative h-7 rounded-full overflow-hidden"
                 style={{
-                  background: `linear-gradient(to right, #000 0%, #000 ${((brushSize - 1) / 19) * 100}%, #e5e5e5 ${((brushSize - 1) / 19) * 100}%, #e5e5e5 100%)`
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(240,240,245,0.8) 100%)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 2px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(0,0,0,0.15)',
+                  backdropFilter: 'blur(10px)',
                 }}
-              />
+              >
+                {/* Track fill */}
+                <div
+                  className="absolute top-1 bottom-1 left-1 rounded-full transition-all duration-100"
+                  style={{
+                    width: `calc(${((brushSize - 1) / 19) * 100}% - 4px)`,
+                    minWidth: '8px',
+                    background: 'linear-gradient(180deg, #4A9EFF 0%, #0066FF 50%, #0052CC 100%)',
+                    boxShadow: '0 1px 3px rgba(0,102,255,0.4), inset 0 1px 1px rgba(255,255,255,0.3)',
+                  }}
+                />
+                {/* Thumb */}
+                <div
+                  className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full transition-all duration-100"
+                  style={{
+                    left: `calc(${((brushSize - 1) / 19) * 100}% - 12px)`,
+                    minLeft: '2px',
+                    background: 'linear-gradient(180deg, #FFFFFF 0%, #F0F0F5 100%)',
+                    boxShadow: '0 2px 6px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,1)',
+                    border: '0.5px solid rgba(0,0,0,0.1)',
+                  }}
+                />
+                {/* Invisible range input */}
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={brushSize}
+                  onChange={(e) => setBrushSize(Number(e.target.value))}
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  style={{ touchAction: 'none' }}
+                />
+              </div>
+              <div className="text-[9px] text-center mt-1.5 font-mono text-gray-500">{brushSize}px</div>
             </div>
 
             {/* Undo Button */}
@@ -580,12 +622,13 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           {/* Main Canvas Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Canvas */}
-            <div className="flex-1 bg-white border-2 border-black overflow-auto">
+            <div className="flex-1 bg-white border-2 border-black overflow-hidden relative">
               <canvas
                 ref={canvasRef}
                 width={800}
                 height={600}
-                className="block bg-white cursor-crosshair w-full h-auto"
+                className="block bg-white cursor-crosshair w-full h-full"
+                style={{ touchAction: 'none' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
@@ -629,7 +672,15 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                 {PATTERNS.map((p) => (
                   <button
                     key={p.id}
-                    onClick={() => {
+                    type="button"
+                    onTouchEnd={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      haptic();
+                      setActivePattern(p);
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
                       haptic();
                       setActivePattern(p);
                     }}
@@ -668,21 +719,49 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                 <ToolBtn id="hireme" icon={HelpCircle} />
              </div>
 
-             {/* Brush Size Slider */}
-             <div className="border-2 border-black bg-white p-2 pointer-events-auto">
-                <div className="text-[9px] font-bold text-center uppercase leading-none mb-2">Size</div>
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={brushSize}
-                  onChange={(e) => setBrushSize(Number(e.target.value))}
-                  className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-black"
+             {/* Brush Size Slider - Apple Liquid Glass Style */}
+             <div className="border-2 border-black bg-gradient-to-b from-gray-100 to-gray-200 p-2 pointer-events-auto">
+                <div className="text-[9px] font-bold text-center uppercase leading-none mb-2 text-gray-600">Size</div>
+                <div
+                  className="relative h-5 rounded-full overflow-hidden"
                   style={{
-                    background: `linear-gradient(to right, #000 0%, #000 ${((brushSize - 1) / 19) * 100}%, #d1d5db ${((brushSize - 1) / 19) * 100}%, #d1d5db 100%)`
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(240,240,245,0.8) 100%)',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 2px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+                    border: '1px solid rgba(0,0,0,0.15)',
+                    backdropFilter: 'blur(10px)',
                   }}
-                />
-                <div className="text-[8px] text-center mt-1 font-mono">{brushSize}px</div>
+                >
+                  {/* Track fill */}
+                  <div
+                    className="absolute top-0.5 bottom-0.5 left-0.5 rounded-full transition-all duration-100"
+                    style={{
+                      width: `calc(${((brushSize - 1) / 19) * 100}% - 2px)`,
+                      minWidth: '6px',
+                      background: 'linear-gradient(180deg, #4A9EFF 0%, #0066FF 50%, #0052CC 100%)',
+                      boxShadow: '0 1px 3px rgba(0,102,255,0.4), inset 0 1px 1px rgba(255,255,255,0.3)',
+                    }}
+                  />
+                  {/* Thumb */}
+                  <div
+                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full transition-all duration-100"
+                    style={{
+                      left: `calc(${((brushSize - 1) / 19) * 100}% - 8px)`,
+                      background: 'linear-gradient(180deg, #FFFFFF 0%, #F0F0F5 100%)',
+                      boxShadow: '0 2px 6px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,1)',
+                      border: '0.5px solid rgba(0,0,0,0.1)',
+                    }}
+                  />
+                  {/* Invisible range input */}
+                  <input
+                    type="range"
+                    min="1"
+                    max="20"
+                    value={brushSize}
+                    onChange={(e) => setBrushSize(Number(e.target.value))}
+                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  />
+                </div>
+                <div className="text-[8px] text-center mt-1 font-mono text-gray-500">{brushSize}px</div>
              </div>
 
              {/* Current Pattern Preview */}
