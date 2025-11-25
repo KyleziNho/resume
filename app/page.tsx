@@ -141,6 +141,7 @@ export default function MacOsPortfolio() {
   });
 
   const [hasMessagesNotification, setHasMessagesNotification] = useState(false);
+  const [appStoreNotificationCount, setAppStoreNotificationCount] = useState(4);
 
   const [iconPos, setIconPos] = useState({
     hd: { x: 20, y: 40 },
@@ -579,6 +580,11 @@ export default function MacOsPortfolio() {
     // Clear messages notification when opened
     if (windowId === 'messages') {
       setHasMessagesNotification(false);
+    }
+
+    // Clear app store notification when opened
+    if (windowId === 'appstore') {
+      setAppStoreNotificationCount(0);
     }
   };
 
@@ -1052,6 +1058,7 @@ export default function MacOsPortfolio() {
         onRestoreWindow={restoreWindow}
         onFocusWindow={focusWindow}
         hasMessagesNotification={hasMessagesNotification}
+        appStoreNotificationCount={appStoreNotificationCount}
         installedApps={installedApps}
         installedAppWindows={
           installedApps.reduce((acc, app) => {

@@ -23,6 +23,7 @@ interface DockProps {
   onRestoreWindow: (id: WindowId) => void;
   onFocusWindow: (id: WindowId) => void;
   hasMessagesNotification?: boolean;
+  appStoreNotificationCount?: number;
   installedApps?: AppData[];
   installedAppWindows?: Record<string, { isOpen: boolean; isMinimized: boolean }>;
   onOpenApp?: (appId: string) => void;
@@ -30,7 +31,7 @@ interface DockProps {
   onFocusApp?: (appId: string) => void;
 }
 
-const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onFocusWindow, hasMessagesNotification = false, installedApps = [], installedAppWindows = {}, onOpenApp, onRestoreApp, onFocusApp }) => {
+const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onFocusWindow, hasMessagesNotification = false, appStoreNotificationCount = 0, installedApps = [], installedAppWindows = {}, onOpenApp, onRestoreApp, onFocusApp }) => {
   const [dockVisible, setDockVisible] = useState(true);
   const [isHoveringDock, setIsHoveringDock] = useState(false);
 
@@ -92,7 +93,7 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
   };
 
   // Permanent dock apps that always show
-  const permanentWindowIds: WindowId[] = ['safari', 'messages'];
+  const permanentWindowIds: WindowId[] = ['safari', 'messages', 'appstore'];
 
   // All window items
   const allWindowItems: Array<{ id: WindowId; title: string; icon: React.ReactNode; isOpen: boolean }> = [
@@ -120,6 +121,11 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
         {win.id === 'messages' && hasMessagesNotification && (
           <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-lg">
             1
+          </div>
+        )}
+        {win.id === 'appstore' && appStoreNotificationCount > 0 && (
+          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-lg">
+            {appStoreNotificationCount}
           </div>
         )}
       </div>
