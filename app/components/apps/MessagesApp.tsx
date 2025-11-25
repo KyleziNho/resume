@@ -26,14 +26,16 @@ const getBotResponse = async (input: string, history: Message[]): Promise<string
     });
 
     if (!response.ok) {
-      throw new Error('API request failed');
+      const errorData = await response.json();
+      console.error('API error response:', errorData);
+      throw new Error(`API request failed: ${JSON.stringify(errorData)}`);
     }
 
     const data = await response.json();
     return data.response;
   } catch (error) {
     console.error('Chat error:', error);
-    return "hmm, i'm having trouble thinking right now. maybe try again?";
+    return "hmm, i'm having trouble connecting right now. my circuits might be overloaded - try again?";
   }
 };
 
@@ -41,6 +43,7 @@ export default function MessagesApp() {
   const [input, setInput] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -51,10 +54,15 @@ export default function MessagesApp() {
     }
   ]);
 
-  // Auto-scroll to bottom
+  // Auto-scroll to bottom when messages change
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+      // Small delay to ensure layout has updated
+      setTimeout(() => {
+        if (scrollRef.current) {
+          scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+        }
+      }, 100);
     }
   }, [messages, isTyping]);
 
@@ -104,7 +112,7 @@ export default function MessagesApp() {
       ></div>
 
       {/* 2. HEADER (Skeuomorphic Bar) */}
-      <div className="relative z-10 flex items-center justify-between px-3 md:px-4 h-11 md:h-11 bg-gradient-to-b from-[#f9f9f9] to-[#e0e0e0] border-b border-[#b0b0b0] shadow-sm select-none">
+      <div className="relative z-10 flex items-center justify-between px-3 md:px-4 h-11 md:h-11 bg-gradient-to-b from-[#f9f9f9] to-[#e0e0e0] border-b border-[#b0b0b0] shadow-sm select-none shrink-0">
         <div className="flex items-center gap-1 text-gray-500 text-xs md:text-sm font-medium drop-shadow-[0_1px_0_rgba(255,255,255,1)]">
           <span>To:</span>
           <span className="text-black font-bold">Kyle</span>
@@ -170,23 +178,28 @@ export default function MessagesApp() {
       </div>
 
       {/* 4. INPUT AREA (Pill Shape) */}
-      <div className="relative z-20 p-2 md:p-3 bg-gradient-to-t from-[#dcdcdc] to-[#eeeeee] border-t border-[#aaa] safe-area-bottom">
+      <div className="relative z-20 p-2 md:p-3 bg-gradient-to-t from-[#dcdcdc] to-[#eeeeee] border-t border-[#aaa] shrink-0">
         <form
           onSubmit={handleSend}
           className="bg-white rounded-full border border-[#999] shadow-[inset_0_1px_2px_rgba(0,0,0,0.1)] flex items-center px-2 md:px-2 py-0.5 md:py-1 focus-within:ring-2 focus-within:ring-blue-400/50 transition-all"
         >
           <input
+            ref={inputRef}
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="iMessage"
-            className="flex-1 bg-transparent border-none outline-none text-xs md:text-sm px-2 text-gray-700 placeholder:text-gray-400 h-7 md:h-8"
+            className="flex-1 bg-transparent border-none outline-none text-base px-2 text-gray-700 placeholder:text-gray-400 h-8 md:h-8"
+            autoComplete="off"
+            autoCorrect="off"
+            autoCapitalize="off"
+            style={{ fontSize: '16px' }}
           />
           <button
-            type="button"
-            className="p-1 md:p-1.5 text-gray-400 hover:text-gray-600 transition-colors"
+            type="submit"
+            className="p-1 md:p-1.5 text-blue-500 hover:text-blue-600 transition-colors active:scale-95"
           >
-            <Smile size={16} className="md:w-[18px] md:h-[18px]" />
+            <Send size={16} className="md:w-[18px] md:h-[18px]" />
           </button>
         </form>
       </div>

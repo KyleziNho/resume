@@ -100,7 +100,7 @@ export default function Finder({ items, onNavigate, onRename }: FinderProps) {
 
         <div className="bg-white border border-gray-300 rounded px-2 py-0.5 flex items-center w-32 shadow-inner">
           <Search size={12} className="text-gray-400 mr-1" />
-          <input type="text" placeholder="Search" className="w-full text-xs bg-transparent outline-none placeholder:text-gray-400" />
+          <input type="text" placeholder="Search" className="w-full text-xs bg-transparent outline-none placeholder:text-gray-400" style={{ fontSize: '16px' }} />
         </div>
       </div>
 
@@ -173,6 +173,7 @@ export default function Finder({ items, onNavigate, onRename }: FinderProps) {
                             }
                           }}
                           className="text-xs text-center font-medium px-1.5 py-0.5 rounded outline-none w-full max-w-[100px] bg-white text-black border border-blue-500"
+                          style={{ fontSize: '16px' }}
                           onClick={(e) => e.stopPropagation()}
                           onMouseDown={(e) => e.stopPropagation()}
                         />
@@ -246,6 +247,7 @@ export default function Finder({ items, onNavigate, onRename }: FinderProps) {
                               }
                             }}
                             className="text-xs font-medium px-1 py-0.5 rounded outline-none bg-white text-black border border-blue-500 flex-1 min-w-[60px]"
+                            style={{ fontSize: '16px' }}
                             onClick={(e) => e.stopPropagation()}
                             onMouseDown={(e) => e.stopPropagation()}
                           />

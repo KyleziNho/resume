@@ -12,8 +12,10 @@ import Finder from './components/apps/Finder';
 import Safari from './components/apps/Safari';
 import MacPaint from './components/apps/MacPaint';
 import MessagesApp from './components/apps/MessagesApp';
+import NotesApp from './components/apps/NotesApp';
 import LetterGlitch from './components/ui/LetterGlitch';
 import { projects } from './data/projects';
+import { haptic } from 'ios-haptics';
 
 // Memoized background component to prevent restarts
 const TerminalBackground = React.memo(() => {
@@ -46,7 +48,7 @@ const TerminalBackground = React.memo(() => {
 
 TerminalBackground.displayName = 'TerminalBackground';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint' | 'messages';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages';
 
 interface WindowState {
   isOpen: boolean;
@@ -54,7 +56,7 @@ interface WindowState {
   isMaximized: boolean;
   zIndex: number;
   title: string;
-  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari';
+  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes';
   pos: { x: number; y: number };
   size: { width: number; height: number };
 }
@@ -75,8 +77,8 @@ export default function MacOsPortfolio() {
     welcome: {
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 10,
       title: 'About Kyle',
-      iconType: 'drive' as const,
-      pos: { x: 300, y: 100 }, size: { width: 380, height: 400 }
+      iconType: 'notes' as const,
+      pos: { x: 300, y: 100 }, size: { width: 600, height: 500 }
     },
     finder: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
@@ -102,12 +104,6 @@ export default function MacOsPortfolio() {
       iconType: 'terminal' as const,
       pos: { x: 100, y: 400 }, size: { width: 500, height: 350 }
     },
-    contact: {
-      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
-      title: 'Contact',
-      iconType: 'folder' as const,
-      pos: { x: 200, y: 300 }, size: { width: 400, height: 450 }
-    },
     safari: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Safari',
@@ -117,26 +113,27 @@ export default function MacOsPortfolio() {
     paint: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'MacPaint',
-      iconType: 'doc' as const,
+      iconType: 'paint' as const,
       pos: { x: 180, y: 90 }, size: { width: 900, height: 650 }
     },
     messages: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
-      title: 'Messages',
+      title: 'KyleBOT',
       iconType: 'messages' as const,
       pos: { x: 150, y: 80 }, size: { width: 850, height: 600 }
     }
   });
+
+  const [hasMessagesNotification, setHasMessagesNotification] = useState(true);
 
   const [iconPos, setIconPos] = useState({
     hd: { x: 20, y: 40 },
     finder: { x: 20, y: 150 },
     resume: { x: 20, y: 260 },
     terminal: { x: 20, y: 370 },
-    contact: { x: 20, y: 480 },
-    safari: { x: 20, y: 590 },
-    paint: { x: 20, y: 700 },
-    messages: { x: 20, y: 810 }
+    safari: { x: 20, y: 480 },
+    paint: { x: 20, y: 590 },
+    messages: { x: 20, y: 700 }
   });
 
   const [iconScale, setIconScale] = useState(1);
@@ -146,10 +143,9 @@ export default function MacOsPortfolio() {
     finder: 'My Work',
     resume: 'Bio.pdf',
     terminal: 'Terminal',
-    contact: 'Contact',
     safari: 'Safari',
     paint: 'MacPaint',
-    messages: 'Messages'
+    messages: 'KyleBOT'
   });
 
   const [contextMenu, setContextMenu] = useState<{
@@ -165,6 +161,64 @@ export default function MacOsPortfolio() {
     }, 1000);
     setTimeout(() => setBooted(true), 3000);
     return () => clearInterval(timer);
+  }, []);
+
+  // Prevent pull-to-refresh on mobile
+  useEffect(() => {
+    let startY = 0;
+
+    const handleTouchStart = (e: TouchEvent) => {
+      startY = e.touches[0].pageY;
+    };
+
+    const handleTouchMove = (e: TouchEvent) => {
+      const currentY = e.touches[0].pageY;
+
+      // Prevent pull-to-refresh when at top and pulling down
+      if (window.scrollY <= 0 && currentY > startY) {
+        e.preventDefault();
+      }
+    };
+
+    // Must use passive: false to allow preventDefault on iOS
+    document.addEventListener('touchstart', handleTouchStart, { passive: false });
+    document.addEventListener('touchmove', handleTouchMove, { passive: false });
+
+    return () => {
+      document.removeEventListener('touchstart', handleTouchStart);
+      document.removeEventListener('touchmove', handleTouchMove);
+    };
+  }, []);
+
+  // Position initial welcome window on mobile
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const menuBarHeight = 24;
+      const dockHeight = 80;
+
+      const availableWidth = viewportWidth - 40;
+      const availableHeight = viewportHeight - menuBarHeight - dockHeight - 40;
+
+      const welcomeWindow = windows.welcome;
+      const windowWidth = Math.min(welcomeWindow.size.width, availableWidth);
+      const windowHeight = Math.min(welcomeWindow.size.height, availableHeight);
+
+      const centerX = (viewportWidth - windowWidth) / 2;
+      const centerY = menuBarHeight + ((availableHeight - windowHeight) / 2);
+
+      setWindows(prev => ({
+        ...prev,
+        welcome: {
+          ...prev.welcome,
+          pos: { x: Math.max(0, centerX), y: Math.max(menuBarHeight, centerY) },
+          size: { width: windowWidth, height: windowHeight }
+        }
+      }));
+    }
   }, []);
 
   // Close Apple menu when clicking outside
@@ -184,45 +238,76 @@ export default function MacOsPortfolio() {
     };
   }, [showAppleMenu]);
 
-  // Responsive desktop icons - adjust positions and scale based on window height
+  // Responsive desktop icons - adjust positions and scale based on window size
   useEffect(() => {
     const calculateIconLayout = () => {
       const viewportHeight = window.innerHeight;
+      const viewportWidth = window.innerWidth;
       const menuBarHeight = 24; // Top menu bar
       const dockHeight = 80; // Bottom dock area
       const availableHeight = viewportHeight - menuBarHeight - dockHeight;
 
-      const iconCount = 8; // Number of desktop icons
-      const baseIconHeight = 110; // Base height per icon (icon + label + gap)
-      const minIconHeight = 70; // Minimum height per icon
-      const topPadding = 40;
+      const iconCount = 7; // Number of desktop icons
+      const isMobile = viewportWidth < 768;
 
-      // Calculate required height for all icons
-      const requiredHeight = (iconCount * baseIconHeight) + topPadding;
+      if (isMobile) {
+        // Mobile: Grid layout (2-3 columns)
+        const cols = viewportWidth < 400 ? 2 : 3;
+        const rows = Math.ceil(iconCount / cols);
+        const baseIconWidth = 90;
+        const baseIconHeight = 90;
+        const horizontalPadding = 15;
+        const topPadding = 30;
 
-      let scale = 1;
-      let iconSpacing = baseIconHeight;
+        const availableWidth = viewportWidth - (horizontalPadding * 2);
+        const iconWidth = availableWidth / cols;
+        const scale = Math.min(1, iconWidth / baseIconWidth);
 
-      // If icons don't fit, scale them down
-      if (requiredHeight > availableHeight) {
-        const maxSpacing = (availableHeight - topPadding) / iconCount;
-        iconSpacing = Math.max(minIconHeight, maxSpacing);
-        scale = Math.max(0.6, iconSpacing / baseIconHeight);
+        const icons = [
+          'hd', 'finder', 'resume', 'terminal',
+          'safari', 'paint', 'messages'
+        ];
+
+        const newPositions: any = {};
+        icons.forEach((icon, index) => {
+          const col = index % cols;
+          const row = Math.floor(index / cols);
+          newPositions[icon] = {
+            x: horizontalPadding + (col * iconWidth),
+            y: topPadding + (row * baseIconHeight * scale)
+          };
+        });
+
+        setIconPos(newPositions);
+        setIconScale(scale);
+      } else {
+        // Desktop: Single column
+        const baseIconHeight = 110;
+        const minIconHeight = 70;
+        const topPadding = 40;
+        const requiredHeight = (iconCount * baseIconHeight) + topPadding;
+
+        let scale = 1;
+        let iconSpacing = baseIconHeight;
+
+        if (requiredHeight > availableHeight) {
+          const maxSpacing = (availableHeight - topPadding) / iconCount;
+          iconSpacing = Math.max(minIconHeight, maxSpacing);
+          scale = Math.max(0.6, iconSpacing / baseIconHeight);
+        }
+
+        setIconPos({
+          hd: { x: 20, y: topPadding },
+          finder: { x: 20, y: topPadding + iconSpacing },
+          resume: { x: 20, y: topPadding + iconSpacing * 2 },
+          terminal: { x: 20, y: topPadding + iconSpacing * 3 },
+          safari: { x: 20, y: topPadding + iconSpacing * 4 },
+          paint: { x: 20, y: topPadding + iconSpacing * 5 },
+          messages: { x: 20, y: topPadding + iconSpacing * 6 }
+        });
+
+        setIconScale(scale);
       }
-
-      // Update icon positions
-      setIconPos({
-        hd: { x: 20, y: topPadding },
-        finder: { x: 20, y: topPadding + iconSpacing },
-        resume: { x: 20, y: topPadding + iconSpacing * 2 },
-        terminal: { x: 20, y: topPadding + iconSpacing * 3 },
-        contact: { x: 20, y: topPadding + iconSpacing * 4 },
-        safari: { x: 20, y: topPadding + iconSpacing * 5 },
-        paint: { x: 20, y: topPadding + iconSpacing * 6 },
-        messages: { x: 20, y: topPadding + iconSpacing * 7 }
-      });
-
-      setIconScale(scale);
     };
 
     calculateIconLayout();
@@ -240,27 +325,114 @@ export default function MacOsPortfolio() {
   const openWindow = (id: string) => {
     const windowId = id as WindowId;
     focusWindow(id);
-    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isOpen: true, isMinimized: false } }));
+
+    // Haptic feedback for opening app
+    haptic();
+
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      // On mobile, center window and size it to fit viewport
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const menuBarHeight = 24;
+      const dockHeight = 80;
+
+      const availableWidth = viewportWidth - 40; // 20px padding on each side
+      const availableHeight = viewportHeight - menuBarHeight - dockHeight - 40; // Extra padding
+
+      const currentWindow = windows[windowId];
+      const windowWidth = Math.min(currentWindow.size.width, availableWidth);
+      const windowHeight = Math.min(currentWindow.size.height, availableHeight);
+
+      const centerX = (viewportWidth - windowWidth) / 2;
+      const centerY = menuBarHeight + ((availableHeight - windowHeight) / 2);
+
+      setWindows(prev => ({
+        ...prev,
+        [windowId]: {
+          ...prev[windowId],
+          isOpen: true,
+          isMinimized: false,
+          pos: { x: Math.max(0, centerX), y: Math.max(menuBarHeight, centerY) },
+          size: { width: windowWidth, height: windowHeight }
+        }
+      }));
+    } else {
+      setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isOpen: true, isMinimized: false } }));
+    }
+
+    // Clear messages notification when opened
+    if (windowId === 'messages') {
+      setHasMessagesNotification(false);
+    }
   };
 
   const closeWindow = (id: string) => {
     const windowId = id as WindowId;
+
+    // Haptic feedback for closing app
+    haptic();
+
     setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isOpen: false } }));
   };
 
   const minimizeWindow = (id: string) => {
     const windowId = id as WindowId;
+
+    // Haptic feedback for minimizing app
+    haptic();
+
     setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isMinimized: true } }));
   };
 
   const restoreWindow = (id: string) => {
     const windowId = id as WindowId;
     focusWindow(id);
-    setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isMinimized: false } }));
+
+    // Haptic feedback for restoring app
+    haptic();
+
+    const isMobile = window.innerWidth < 768;
+
+    if (isMobile) {
+      // On mobile, re-center window when restoring
+      const viewportWidth = window.innerWidth;
+      const viewportHeight = window.innerHeight;
+      const menuBarHeight = 24;
+      const dockHeight = 80;
+
+      const availableWidth = viewportWidth - 40;
+      const availableHeight = viewportHeight - menuBarHeight - dockHeight - 40;
+
+      const currentWindow = windows[windowId];
+      const windowWidth = Math.min(currentWindow.size.width, availableWidth);
+      const windowHeight = Math.min(currentWindow.size.height, availableHeight);
+
+      const centerX = (viewportWidth - windowWidth) / 2;
+      const centerY = menuBarHeight + ((availableHeight - windowHeight) / 2);
+
+      setWindows(prev => ({
+        ...prev,
+        [windowId]: {
+          ...prev[windowId],
+          isMinimized: false,
+          pos: { x: Math.max(0, centerX), y: Math.max(menuBarHeight, centerY) },
+          size: { width: windowWidth, height: windowHeight }
+        }
+      }));
+    } else {
+      setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isMinimized: false } }));
+    }
   };
 
   const maximizeWindow = (id: string) => {
     const windowId = id as WindowId;
+
+    // Pulsing haptic feedback during resize animation
+    // Uses three rapid haptics for a pulsing feel
+    haptic.error();
+
     setWindows(prev => ({ ...prev, [windowId]: { ...prev[windowId], isMaximized: !prev[windowId].isMaximized } }));
   };
 
@@ -300,7 +472,9 @@ export default function MacOsPortfolio() {
       finder: 'finder',
       resume: 'resume',
       terminal: 'terminal',
-      contact: 'contact'
+      safari: 'safari',
+      paint: 'paint',
+      messages: 'messages',
     };
 
     const items: ContextMenuItem[] = [
@@ -412,7 +586,7 @@ export default function MacOsPortfolio() {
          <DesktopIcon
            id="hd"
            label={iconLabels.hd}
-           type="drive"
+           type="notes"
            initialPos={iconPos.hd}
            scale={iconScale}
            onDoubleClick={() => openWindow('welcome')}
@@ -450,16 +624,6 @@ export default function MacOsPortfolio() {
            onContextMenu={handleIconContextMenu}
          />
          <DesktopIcon
-           id="contact"
-           label={iconLabels.contact}
-           type="folder"
-           initialPos={iconPos.contact}
-           scale={iconScale}
-           onDoubleClick={() => openWindow('contact')}
-           onRename={handleIconRename}
-           onContextMenu={handleIconContextMenu}
-         />
-         <DesktopIcon
            id="safari"
            label={iconLabels.safari}
            type="safari"
@@ -472,7 +636,7 @@ export default function MacOsPortfolio() {
          <DesktopIcon
            id="paint"
            label={iconLabels.paint}
-           type="doc"
+           type="paint"
            initialPos={iconPos.paint}
            scale={iconScale}
            onDoubleClick={() => openWindow('paint')}
@@ -482,7 +646,7 @@ export default function MacOsPortfolio() {
          <DesktopIcon
            id="messages"
            label={iconLabels.messages}
-           type="folder"
+           type="messages"
            initialPos={iconPos.messages}
            scale={iconScale}
            onDoubleClick={() => openWindow('messages')}
@@ -507,6 +671,7 @@ export default function MacOsPortfolio() {
         onOpenWindow={openWindow}
         onRestoreWindow={restoreWindow}
         onFocusWindow={focusWindow}
+        hasMessagesNotification={hasMessagesNotification}
       />
 
       {/* --- WINDOWS --- */}
@@ -526,105 +691,7 @@ export default function MacOsPortfolio() {
         onMaximize={maximizeWindow}
         onFocus={focusWindow}
       >
-         <div className="flex flex-col h-full bg-[#F5F5F7] text-[#1d1d1f] font-sans">
-            <div className="flex-1 overflow-y-auto p-5 custom-scrollbar">
-              <div className="flex flex-col items-center mb-6">
-                <div className="relative group">
-                  <div className="w-24 h-24 rounded-full bg-gradient-to-b from-gray-200 to-gray-300 shadow-md border-4 border-white overflow-hidden mb-3">
-                    <img src="/me.png" alt="Kyle" className="w-full h-full object-cover" />
-                  </div>
-                  <div className="absolute bottom-3 right-0 w-6 h-6 bg-green-500 border-2 border-white rounded-full" title="Online / Open to work"></div>
-                </div>
-                <h1 className="text-xl font-bold tracking-tight text-black">Kyle O'Sullivan</h1>
-                <p className="text-sm text-gray-500 font-medium">Apple ID: kyle@bath.ac.uk</p>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.06)] overflow-hidden mb-4 border border-gray-200/60">
-                <div className="p-4">
-                  <h3 className="text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">Overview</h3>
-                  <p className="text-[13px] leading-relaxed text-gray-700">
-                    I'm a Master's student in Computer Science at the <span className="font-semibold text-black">University of Bath</span>. 
-                    I bridge the gap between complex backend logic and clean, Apple-inspired frontend design.
-                    Currently exploring how AI can optimize strategic decision-making.
-                  </p>
-                </div>
-                <div className="bg-gray-50 px-4 py-2 border-t border-gray-100 flex justify-between items-center">
-                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                      <MapPin size={12} /> Bath, United Kingdom
-                   </div>
-                   <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                      <Calendar size={12} /> Class of 2026
-                   </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.06)] mb-4 border border-gray-200/60">
-                <div className="p-3 border-b border-gray-100 flex items-center gap-2">
-                   <Cpu size={14} className="text-blue-500" />
-                   <span className="text-sm font-semibold">System Specifications</span>
-                </div>
-                <div className="p-4 grid grid-cols-2 gap-y-3 gap-x-2">
-                   <div>
-                      <span className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Core</span>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[11px] rounded font-medium border border-blue-100">React</span>
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[11px] rounded font-medium border border-blue-100">Next.js</span>
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-600 text-[11px] rounded font-medium border border-blue-100">TS</span>
-                      </div>
-                   </div>
-                   <div>
-                      <span className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Memory</span>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-[11px] rounded font-medium border border-purple-100">Python</span>
-                        <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-[11px] rounded font-medium border border-purple-100">SQL</span>
-                        <span className="px-2 py-0.5 bg-purple-50 text-purple-600 text-[11px] rounded font-medium border border-purple-100">AI/ML</span>
-                      </div>
-                   </div>
-                   <div className="col-span-2">
-                      <span className="text-[10px] text-gray-400 uppercase font-bold block mb-1">Architecture</span>
-                      <div className="flex flex-wrap gap-1">
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] rounded border border-gray-200">Flutter</span>
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] rounded border border-gray-200">Firebase</span>
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] rounded border border-gray-200">Tailwind</span>
-                        <span className="px-2 py-0.5 bg-gray-100 text-gray-600 text-[11px] rounded border border-gray-200">Git</span>
-                      </div>
-                   </div>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-xl shadow-[0_1px_2px_rgba(0,0,0,0.06)] border border-gray-200/60">
-                 <div className="p-3 flex items-center gap-2 border-b border-gray-100">
-                    <Heart size={14} className="text-red-500" />
-                    <span className="text-sm font-semibold">User Data</span>
-                 </div>
-                 <div className="p-4 flex justify-between items-center text-xs">
-                    <div className="flex flex-col items-center gap-1 text-gray-600">
-                       <span className="text-lg">✈️</span>
-                       <span>Travel</span>
-                    </div>
-                     <div className="w-[1px] h-8 bg-gray-200"></div>
-                    <div className="flex flex-col items-center gap-1 text-gray-600">
-                       <span className="text-lg">🏸</span>
-                       <span>Sports</span>
-                    </div>
-                    <div className="w-[1px] h-8 bg-gray-200"></div>
-                    <div className="flex flex-col items-center gap-1 text-gray-600">
-                       <span className="text-lg">☕</span>
-                       <span>Coffee</span>
-                    </div>
-                    <div className="w-[1px] h-8 bg-gray-200"></div>
-                    <div className="flex flex-col items-center gap-1 text-gray-600">
-                       <span className="text-lg">🎮</span>
-                       <span>Gaming</span>
-                    </div>
-                 </div>
-              </div>
-            </div>
-
-            <div className="p-3 text-center border-t border-gray-200 bg-gray-50/50 rounded-b-md">
-               <p className="text-[10px] text-gray-400 font-medium">Designed in Bath • {new Date().getFullYear()}</p>
-            </div>
-         </div>
+        <NotesApp />
       </MacWindow>
 
       {/* FINDER WINDOW */}
@@ -750,27 +817,6 @@ export default function MacOsPortfolio() {
 }`}
              </pre>
              <p className="mt-2">Kyles-MacBook-Pro:~ kyle$ <span className="animate-pulse">_</span></p>
-         </div>
-      </MacWindow>
-
-      {/* CONTACT WINDOW (Placeholder) */}
-      <MacWindow
-        id="contact"
-        title={windows.contact.title}
-        isOpen={windows.contact.isOpen}
-        isMinimized={windows.contact.isMinimized}
-        isMaximized={windows.contact.isMaximized}
-        zIndex={windows.contact.zIndex}
-        pos={windows.contact.pos}
-        size={windows.contact.size}
-        onClose={closeWindow}
-        onMinimize={minimizeWindow}
-        onMaximize={maximizeWindow}
-        onFocus={focusWindow}
-      >
-         <div className="p-10 text-center">
-            <h2 className="text-2xl font-bold mb-4">Get in Touch</h2>
-            <p className="text-gray-600">kyle@bath.ac.uk</p>
          </div>
       </MacWindow>
 

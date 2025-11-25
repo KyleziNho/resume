@@ -52,8 +52,22 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   // Hire Me tool state
   const [lastHireMePos, setLastHireMePos] = useState<{ x: number; y: number } | null>(null);
 
+  // Mobile state
+  const [showPatterns, setShowPatterns] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
   // Pattern cache
   const patternCache = useRef<Map<string, CanvasPattern | null>>(new Map());
+
+  // Detect mobile on mount
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Initialize Canvas & Load Image
   useEffect(() => {
@@ -118,9 +132,13 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       clientY = (e as React.MouseEvent).clientY;
     }
 
+    // Account for canvas scaling
+    const scaleX = canvasRef.current.width / rect.width;
+    const scaleY = canvasRef.current.height / rect.height;
+
     return {
-      x: clientX - rect.left,
-      y: clientY - rect.top
+      x: (clientX - rect.left) * scaleX,
+      y: (clientY - rect.top) * scaleY
     };
   };
 
@@ -496,72 +514,144 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     <div className="flex flex-col h-full bg-[#c0c0c0] font-sans selection:bg-transparent" style={{ pointerEvents: 'auto' }}>
 
       {/* 1. Paint Menu Bar */}
-      <div className="h-6 bg-white border-b border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none">
-        <span className="mr-4 font-bold">File</span>
-        <span className="mr-4">Edit</span>
-        <span className="mr-4">Goodies</span>
-        <span className="mr-4">Font</span>
-        <span className="mr-4">FontSize</span>
-        <span className="mr-4">Style</span>
-        <div className="flex-1 text-center font-bold italic">{fileName}</div>
+      <div className="h-6 bg-white border-b border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none overflow-x-auto">
+        <span className="mr-4 font-bold whitespace-nowrap">File</span>
+        <span className="mr-4 whitespace-nowrap">Edit</span>
+        <span className="mr-4 whitespace-nowrap hidden md:inline">Goodies</span>
+        <span className="mr-4 whitespace-nowrap hidden md:inline">Font</span>
+        <span className="mr-4 whitespace-nowrap hidden md:inline">FontSize</span>
+        <span className="mr-4 whitespace-nowrap hidden md:inline">Style</span>
+        <div className="flex-1 text-center font-bold italic truncate">{fileName}</div>
       </div>
 
-      <div className="flex flex-1 overflow-hidden p-1 gap-1 relative">
+      {/* Mobile Toolbar - Top */}
+      {isMobile && (
+        <div className="bg-[#c0c0c0] border-b-2 border-black p-2 flex gap-2 overflow-x-auto relative z-50">
+          {/* Tools - horizontal scroll */}
+          <div className="flex gap-1 bg-white border-2 border-black p-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)]">
+            <ToolBtn id="pencil" icon={Pencil} />
+            <ToolBtn id="brush" icon={Brush} />
+            <ToolBtn id="eraser" icon={Eraser} />
+            <ToolBtn id="line" icon={Minus} />
+            <ToolBtn id="rect" icon={Square} />
+            <ToolBtn id="circle" icon={Circle} />
+            <ToolBtn id="text" icon={Type} />
+            <ToolBtn id="fill" icon={PaintBucket} />
+            <ToolBtn id="select" icon={MousePointer} />
+            <ToolBtn id="hireme" icon={HelpCircle} />
+          </div>
 
-        {/* 2. Left Toolbar */}
-        <div className="w-20 bg-[#c0c0c0] border-2 border-black p-1 flex flex-col gap-2 shrink-0 relative z-50">
-           {/* Tools Grid */}
-           <div
-             className="grid grid-cols-2 gap-1 bg-white border-2 border-black p-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] relative z-10"
-             style={{ pointerEvents: 'auto' }}
-           >
-              <ToolBtn id="pencil" icon={Pencil} />
-              <ToolBtn id="brush" icon={Brush} />
-              <ToolBtn id="eraser" icon={Eraser} />
-              <ToolBtn id="line" icon={Minus} />
-              <ToolBtn id="rect" icon={Square} />
-              <ToolBtn id="circle" icon={Circle} />
-              <ToolBtn id="text" icon={Type} />
-              <ToolBtn id="fill" icon={PaintBucket} />
-              <ToolBtn id="select" icon={MousePointer} />
-              <ToolBtn id="hireme" icon={HelpCircle} />
-           </div>
+          {/* Brush Size */}
+          <div className="border-2 border-black bg-white px-3 py-1 flex items-center gap-2 whitespace-nowrap">
+            <span className="text-[9px] font-bold uppercase">Size:</span>
+            <input
+              type="range"
+              min="1"
+              max="20"
+              value={brushSize}
+              onChange={(e) => setBrushSize(Number(e.target.value))}
+              className="w-20 h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-black"
+              style={{
+                background: `linear-gradient(to right, #000 0%, #000 ${((brushSize - 1) / 19) * 100}%, #d1d5db ${((brushSize - 1) / 19) * 100}%, #d1d5db 100%)`
+              }}
+            />
+            <span className="text-[8px] font-mono">{brushSize}px</span>
+          </div>
 
-           {/* Brush Size Slider */}
-           <div className="border-2 border-black bg-white p-2 pointer-events-auto">
-              <div className="text-[9px] font-bold text-center uppercase leading-none mb-2">Size</div>
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={brushSize}
-                onChange={(e) => setBrushSize(Number(e.target.value))}
-                className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-black"
-                style={{
-                  background: `linear-gradient(to right, #000 0%, #000 ${((brushSize - 1) / 19) * 100}%, #d1d5db ${((brushSize - 1) / 19) * 100}%, #d1d5db 100%)`
-                }}
-              />
-              <div className="text-[8px] text-center mt-1 font-mono">{brushSize}px</div>
-           </div>
+          {/* Pattern Toggle */}
+          <button
+            onClick={() => setShowPatterns(!showPatterns)}
+            className="border-2 border-black bg-white px-2 py-1 flex items-center gap-1 whitespace-nowrap active:bg-black active:text-white"
+          >
+            <div className="w-6 h-6 border border-black" style={activePattern.style}></div>
+            <span className="text-[9px] font-bold uppercase">Pattern</span>
+          </button>
 
-           {/* Current Pattern Preview */}
-           <div className="mt-auto border-2 border-black bg-white p-1 pointer-events-auto">
-              <div className="h-8 w-full border border-black mb-1" style={activePattern.style}></div>
-              <div className="text-[9px] font-bold text-center uppercase leading-none">Pattern</div>
-           </div>
-
-           {/* Undo/Save Buttons */}
-           <div className="grid grid-cols-2 gap-1 pointer-events-auto">
-             <button onClick={undo} className="bg-white border-2 border-black p-1 active:bg-black active:text-white" title="Undo">
-                <RotateCcw size={14} className="mx-auto"/>
-             </button>
-             <button className="bg-white border-2 border-black p-1 active:bg-black active:text-white" title="Save">
-                <Save size={14} className="mx-auto"/>
-             </button>
-           </div>
+          {/* Undo/Save */}
+          <button onClick={undo} className="bg-white border-2 border-black px-2 py-1 active:bg-black active:text-white" title="Undo">
+            <RotateCcw size={16} />
+          </button>
+          <button className="bg-white border-2 border-black px-2 py-1 active:bg-black active:text-white" title="Save">
+            <Save size={16} />
+          </button>
         </div>
+      )}
 
-        {/* 3. Main Workspace */}
+      {/* Mobile Pattern Palette (collapsible) */}
+      {isMobile && showPatterns && (
+        <div className="bg-white border-b-2 border-black p-2 flex flex-wrap gap-1">
+          {PATTERNS.map((p) => (
+            <button
+              key={p.id}
+              onClick={() => {
+                setActivePattern(p);
+                setShowPatterns(false);
+              }}
+              className={`w-10 h-10 border border-gray-400 hover:border-black ${activePattern.id === p.id ? 'ring-2 ring-blue-500' : ''}`}
+              style={p.style}
+            />
+          ))}
+        </div>
+      )}
+
+      <div className={`flex flex-1 overflow-hidden p-1 gap-1 relative ${isMobile ? 'flex-col' : ''}`}>
+
+        {/* Desktop Left Toolbar */}
+        {!isMobile && (
+          <div className="w-20 bg-[#c0c0c0] border-2 border-black p-1 flex flex-col gap-2 shrink-0 relative z-50">
+             {/* Tools Grid */}
+             <div
+               className="grid grid-cols-2 gap-1 bg-white border-2 border-black p-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] relative z-10"
+               style={{ pointerEvents: 'auto' }}
+             >
+                <ToolBtn id="pencil" icon={Pencil} />
+                <ToolBtn id="brush" icon={Brush} />
+                <ToolBtn id="eraser" icon={Eraser} />
+                <ToolBtn id="line" icon={Minus} />
+                <ToolBtn id="rect" icon={Square} />
+                <ToolBtn id="circle" icon={Circle} />
+                <ToolBtn id="text" icon={Type} />
+                <ToolBtn id="fill" icon={PaintBucket} />
+                <ToolBtn id="select" icon={MousePointer} />
+                <ToolBtn id="hireme" icon={HelpCircle} />
+             </div>
+
+             {/* Brush Size Slider */}
+             <div className="border-2 border-black bg-white p-2 pointer-events-auto">
+                <div className="text-[9px] font-bold text-center uppercase leading-none mb-2">Size</div>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={brushSize}
+                  onChange={(e) => setBrushSize(Number(e.target.value))}
+                  className="w-full h-2 bg-gray-300 rounded-lg appearance-none cursor-pointer accent-black"
+                  style={{
+                    background: `linear-gradient(to right, #000 0%, #000 ${((brushSize - 1) / 19) * 100}%, #d1d5db ${((brushSize - 1) / 19) * 100}%, #d1d5db 100%)`
+                  }}
+                />
+                <div className="text-[8px] text-center mt-1 font-mono">{brushSize}px</div>
+             </div>
+
+             {/* Current Pattern Preview */}
+             <div className="mt-auto border-2 border-black bg-white p-1 pointer-events-auto">
+                <div className="h-8 w-full border border-black mb-1" style={activePattern.style}></div>
+                <div className="text-[9px] font-bold text-center uppercase leading-none">Pattern</div>
+             </div>
+
+             {/* Undo/Save Buttons */}
+             <div className="grid grid-cols-2 gap-1 pointer-events-auto">
+               <button onClick={undo} className="bg-white border-2 border-black p-1 active:bg-black active:text-white" title="Undo">
+                  <RotateCcw size={14} className="mx-auto"/>
+               </button>
+               <button className="bg-white border-2 border-black p-1 active:bg-black active:text-white" title="Save">
+                  <Save size={14} className="mx-auto"/>
+               </button>
+             </div>
+          </div>
+        )}
+
+        {/* Main Workspace */}
         <div className="flex-1 flex flex-col gap-1 overflow-hidden relative z-0">
 
            {/* The Canvas Area */}
@@ -573,7 +663,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                 ref={canvasRef}
                 width={800}
                 height={600}
-                className="block mx-auto my-4 bg-white shadow-lg cursor-crosshair"
+                className={`block bg-white shadow-lg cursor-crosshair ${isMobile ? 'w-full h-auto' : 'mx-auto my-4'}`}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
@@ -597,23 +687,26 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                     left: `${textInput.x}px`,
                     top: `${textInput.y - 16}px`,
                     color: 'black',
-                    width: '200px'
+                    width: '200px',
+                    fontSize: '16px'
                   }}
                 />
               )}
            </div>
 
-           {/* 4. Bottom Pattern Palette */}
-           <div className="h-12 bg-white border-2 border-black flex flex-wrap content-start p-1 overflow-hidden shadow-[2px_2px_0_rgba(0,0,0,0.2)] pointer-events-auto">
-              {PATTERNS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setActivePattern(p)}
-                  className={`w-8 h-8 border border-gray-400 mr-[1px] mb-[1px] hover:border-black hover:scale-105 transition-transform ${activePattern.id === p.id ? 'ring-2 ring-blue-500 z-10' : ''}`}
-                  style={p.style}
-                />
-              ))}
-           </div>
+           {/* Desktop Bottom Pattern Palette */}
+           {!isMobile && (
+             <div className="h-12 bg-white border-2 border-black flex flex-wrap content-start p-1 overflow-hidden shadow-[2px_2px_0_rgba(0,0,0,0.2)] pointer-events-auto">
+                {PATTERNS.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setActivePattern(p)}
+                    className={`w-8 h-8 border border-gray-400 mr-[1px] mb-[1px] hover:border-black hover:scale-105 transition-transform ${activePattern.id === p.id ? 'ring-2 ring-blue-500 z-10' : ''}`}
+                    style={p.style}
+                  />
+                ))}
+             </div>
+           )}
         </div>
       </div>
     </div>

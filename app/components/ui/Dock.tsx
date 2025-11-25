@@ -1,9 +1,9 @@
-import React from 'react';
-import { Github, Linkedin } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { FloatingDock } from './floating-dock';
-import { MacFolderIcon, MacDocIcon, MacTerminalIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon, MacMessagesIcon } from './Icons';
+import { MacFolderIcon, MacDocIcon, MacTerminalIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon, MacMessagesIcon, MacPaintIcon, MacNotesIcon } from './Icons';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'contact' | 'safari' | 'paint' | 'messages';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages';
 
 interface WindowState {
   isOpen: boolean;
@@ -11,7 +11,7 @@ interface WindowState {
   isMaximized: boolean;
   zIndex: number;
   title: string;
-  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages';
+  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes';
   pos: { x: number; y: number };
   size: { width: number; height: number };
 }
@@ -21,10 +21,55 @@ interface DockProps {
   onOpenWindow: (id: WindowId) => void;
   onRestoreWindow: (id: WindowId) => void;
   onFocusWindow: (id: WindowId) => void;
+  hasMessagesNotification?: boolean;
 }
 
-const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onFocusWindow }) => {
-  const renderIcon = (iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages') => {
+const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onFocusWindow, hasMessagesNotification = false }) => {
+  const [dockVisible, setDockVisible] = useState(true);
+  const [isHoveringDock, setIsHoveringDock] = useState(false);
+
+  // Check if any window is maximized
+  const hasMaximizedWindow = Object.values(windows).some(
+    (win) => win.isOpen && win.isMaximized && !win.isMinimized
+  );
+
+  // Immediately hide dock when window is maximized
+  useEffect(() => {
+    if (hasMaximizedWindow) {
+      setDockVisible(false);
+    } else {
+      setDockVisible(true);
+    }
+  }, [hasMaximizedWindow]);
+
+  // Handle mouse movement to show dock when cursor is at bottom (desktop only)
+  useEffect(() => {
+    if (!hasMaximizedWindow) {
+      return;
+    }
+
+    // Check if device has fine pointer (mouse) - desktop only
+    const hasMousePointer = window.matchMedia('(pointer: fine)').matches;
+    if (!hasMousePointer) {
+      // Mobile/touch device - don't show dock on touch
+      return;
+    }
+
+    const handleMouseMove = (e: MouseEvent) => {
+      const windowHeight = window.innerHeight;
+      const triggerZone = 100; // Show dock when cursor is within 100px of bottom
+
+      if (e.clientY >= windowHeight - triggerZone || isHoveringDock) {
+        setDockVisible(true);
+      } else {
+        setDockVisible(false);
+      }
+    };
+
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [hasMaximizedWindow, isHoveringDock]);
+  const renderIcon = (iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes') => {
     switch (iconType) {
       case 'drive': return <MacDriveIcon />;
       case 'folder': return <MacFolderIcon />;
@@ -33,6 +78,8 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
       case 'preview': return <MacPreviewIcon />;
       case 'safari': return <MacSafariIcon />;
       case 'messages': return <MacMessagesIcon />;
+      case 'paint': return <MacPaintIcon />;
+      case 'notes': return <MacNotesIcon />;
       default: return <MacFolderIcon />;
     }
   };
@@ -46,35 +93,46 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
     { id: 'paint', title: windows.paint.title, icon: renderIcon(windows.paint.iconType), isOpen: windows.paint.isOpen },
     { id: 'resume', title: windows.resume.title, icon: renderIcon(windows.resume.iconType), isOpen: windows.resume.isOpen },
     { id: 'terminal', title: windows.terminal.title, icon: renderIcon(windows.terminal.iconType), isOpen: windows.terminal.isOpen },
-    { id: 'contact', title: windows.contact.title, icon: renderIcon(windows.contact.iconType), isOpen: windows.contact.isOpen },
   ];
 
   const applicationItems = windowItems.map((win) => ({
     title: win.title,
-    icon: <div className="w-full h-full flex items-center justify-center">{win.icon}</div>,
+    icon: (
+      <div className="w-full h-full flex items-center justify-center relative">
+        {win.icon}
+        {win.id === 'messages' && hasMessagesNotification && (
+          <div className="absolute -top-1 -right-1 bg-red-500 text-white text-[10px] font-bold rounded-full w-5 h-5 flex items-center justify-center border-2 border-white shadow-lg">
+            1
+          </div>
+        )}
+      </div>
+    ),
     onClick: () => {
       const window = windows[win.id];
       if (window.isMinimized) {
-        // If minimized, restore it
         onRestoreWindow(win.id);
       } else if (!window.isOpen) {
-        // If closed, open it
         onOpenWindow(win.id);
       } else {
-        // If open and visible, focus it
         onFocusWindow(win.id);
       }
     },
     isOpen: win.isOpen,
   }));
 
-  // Permanent dock apps (GitHub and LinkedIn) - add divider
+  // Permanent dock apps (GitHub and LinkedIn)
   const permanentApps = [
     {
       title: 'GitHub',
       icon: (
-        <div className="w-full h-full bg-[#24292e] rounded-lg flex items-center justify-center">
-          <Github className="text-white" size={24} />
+        <div className="w-full h-full flex items-center justify-center">
+          <Image
+            src="/github-icon.png"
+            alt="GitHub"
+            width={512}
+            height={512}
+            className="w-full h-full object-contain"
+          />
         </div>
       ),
       onClick: () => window.open('https://github.com/KyleziNho', '_blank', 'noopener,noreferrer'),
@@ -83,8 +141,14 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
     {
       title: 'LinkedIn',
       icon: (
-        <div className="w-full h-full bg-[#0077b5] rounded-lg flex items-center justify-center">
-          <Linkedin className="text-white" size={24} />
+        <div className="w-full h-full flex items-center justify-center">
+          <Image
+            src="/linkedin-icon.png"
+            alt="LinkedIn"
+            width={512}
+            height={512}
+            className="w-full h-full object-contain"
+          />
         </div>
       ),
       onClick: () => window.open('https://www.linkedin.com/in/kos33/', '_blank', 'noopener,noreferrer'),
@@ -92,14 +156,23 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
     },
   ];
 
-  // Combine application windows with permanent apps
   const dockItems = [...applicationItems, ...permanentApps];
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[100]">
+    <div
+      className="fixed bottom-4 left-1/2 z-[100] transition-all duration-300 ease-in-out"
+      style={{
+        transform: `translate(-50%, ${dockVisible ? '0' : 'calc(100% + 2rem)'})`,
+        opacity: dockVisible ? 1 : 0,
+      }}
+      onMouseEnter={() => setIsHoveringDock(true)}
+      onMouseLeave={() => setIsHoveringDock(false)}
+    >
       <FloatingDock
         items={dockItems}
-        desktopClassName="bg-black/10 dark:bg-neutral-900/80 backdrop-blur-2xl border border-white/20"
+        // Note: The background of the Dock bar itself is controlled here.
+        // If you want the bar fully transparent, remove bg-black/10 and backdrop-blur.
+        desktopClassName="bg-black/10 dark:bg-neutral-900/80 backdrop-blur-2xl border border-white/20 pb-2"
       />
     </div>
   );

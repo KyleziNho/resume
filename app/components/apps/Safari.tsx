@@ -217,6 +217,7 @@ export default function Safari({ initialUrl = 'https://www.kyro.onl' }: SafariPr
             onFocus={(e) => e.target.select()}
             placeholder="Search or enter URL"
             className="flex-1 text-sm bg-transparent outline-none placeholder:text-gray-400 text-gray-700"
+            style={{ fontSize: '16px' }}
           />
 
           {/* Refresh Button */}

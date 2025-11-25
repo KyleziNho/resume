@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { X, Minus, Maximize2 } from 'lucide-react';
 import { useDraggable, useResizable } from './hooks';
 
@@ -36,6 +36,42 @@ const MacWindow: React.FC<MacWindowProps> = ({
   const windowRef = useRef<HTMLDivElement>(null);
   const { pos: currentPos, setPos, handleMouseDown, handleTouchStart, isDragging, dragOffset } = useDraggable(id, pos, onFocus);
   const { size: currentSize, setSize, startResize, isResizing, resizeDir } = useResizable(size, currentPos, setPos);
+  const [viewportHeight, setViewportHeight] = useState(0);
+  const [viewportOffsetY, setViewportOffsetY] = useState(0);
+
+  // Track visual viewport height changes (for mobile keyboard)
+  useEffect(() => {
+    if (!isMaximized) return;
+
+    const updateViewportHeight = () => {
+      if (window.visualViewport) {
+        setViewportHeight(window.visualViewport.height);
+        setViewportOffsetY(window.visualViewport.offsetTop);
+      } else {
+        setViewportHeight(window.innerHeight);
+        setViewportOffsetY(0);
+      }
+    };
+
+    // Initial set
+    updateViewportHeight();
+
+    // Listen for viewport changes (keyboard open/close)
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('resize', updateViewportHeight);
+      window.visualViewport.addEventListener('scroll', updateViewportHeight);
+    }
+
+    window.addEventListener('resize', updateViewportHeight);
+
+    return () => {
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('resize', updateViewportHeight);
+        window.visualViewport.removeEventListener('scroll', updateViewportHeight);
+      }
+      window.removeEventListener('resize', updateViewportHeight);
+    };
+  }, [isMaximized]);
 
   if (!isOpen || isMinimized) return null;
 
@@ -53,7 +89,10 @@ const MacWindow: React.FC<MacWindowProps> = ({
   const windowStyle = isMaximized ? {
     transform: 'translate3d(0px, 24px, 0)',
     width: '100vw',
-    height: 'calc(100vh - 24px)',
+    height: viewportHeight > 0 ? `${viewportHeight - 24}px` : 'calc(100dvh - 24px)',
+    maxHeight: 'calc(100vh - 24px)',
+    position: 'fixed' as const,
+    top: viewportOffsetY,
   } : {
     transform: `translate3d(${currentPos.x + (isDragging ? dragOffset.x : 0)}px, ${currentPos.y + (isDragging ? dragOffset.y : 0)}px, 0)`,
     width: `${currentSize.width}px`,
@@ -66,7 +105,7 @@ const MacWindow: React.FC<MacWindowProps> = ({
       ref={windowRef}
       style={{ ...windowStyle, zIndex }}
       className={`fixed top-0 left-0 flex flex-col rounded-t-lg rounded-b-md shadow-[0_25px_60px_-12px_rgba(0,0,0,0.6)] ${
-        isMinimized ? 'animate-minimize' : isMaximized ? 'transition-all duration-300' : ''
+        isMinimized ? 'animate-minimize' : isMaximized ? 'transition-all duration-200 ease-out' : ''
       } ${isDragging ? 'cursor-grabbing' : isResizing ? '' : ''}`}
       onMouseDown={() => onFocus(id)}
       onTouchStart={() => onFocus(id)}
