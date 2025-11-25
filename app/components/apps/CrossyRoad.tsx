@@ -1,504 +1,396 @@
 'use client';
 
-import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { RotateCcw, Trophy, Play } from 'lucide-react';
+import React, { useEffect, useRef, useState } from 'react';
+import { RotateCcw, Play } from 'lucide-react';
 import { haptic } from 'ios-haptics';
 
-// --- CONFIGURATION ---
-const TILE_SIZE = 40;
-const MAP_WIDTH = 15; // Number of tiles wide
-const MAP_HEIGHT = 15; // Number of tiles visible
-const COLORS = {
-  grass: '#3b82f6', // macOS Blue
-  road: '#333333',
-  player: '#ffffff',
-  playerShadow: 'rgba(0,0,0,0.2)',
-  text: '#1d1d1f'
-};
+// Game configuration
+const CELL_SIZE = 50;
+const GRID_WIDTH = 11;
+const GRID_HEIGHT = 12;
 
-// --- TYPES ---
-type LaneType = 'grass' | 'road';
+type LaneType = 'grass' | 'road' | 'water';
+type ObstacleType = 'bug' | 'meeting' | 'deadline' | 'coffee' | 'skill';
+
 interface Lane {
-  id: number;
   type: LaneType;
-  y: number; // Grid Y position
-  speed: number; // For roads
+  speed: number;
   obstacles: Obstacle[];
 }
 
 interface Obstacle {
   x: number;
-  type: 'bug' | 'packet';
+  type: ObstacleType;
+  color: string;
 }
 
-// --- HAPTICS HELPER ---
-const triggerHaptic = (type: 'light' | 'heavy' | 'success' | 'error') => {
-  try {
-    if (type === 'light') haptic();
-    if (type === 'heavy') haptic();
-    if (type === 'success') haptic();
-    if (type === 'error') haptic.error();
-  } catch (e) {
-    // Fail silently if haptics not supported
-  }
+interface Player {
+  x: number;
+  y: number;
+}
+
+const OBSTACLE_CONFIG = {
+  bug: { color: '#ef4444', label: 'BUG', deadly: true },
+  meeting: { color: '#8b5cf6', label: 'MTG', deadly: true },
+  deadline: { color: '#f59e0b', label: 'DL', deadly: true },
+  coffee: { color: '#10b981', label: '☕', deadly: false },
+  skill: { color: '#3b82f6', label: '+1', deadly: false }
 };
 
-export default function KernelCrossing() {
+export default function CrossyRoad() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const requestRef = useRef<number | undefined>(undefined);
-
-  // Game State
   const [gameState, setGameState] = useState<'menu' | 'playing' | 'gameover'>('menu');
   const [score, setScore] = useState(0);
   const [highScore, setHighScore] = useState(0);
+  const [skills, setSkills] = useState(0);
 
-  // Game Logic Refs (Mutable to avoid re-renders)
-  const player = useRef({ x: 7, y: 0, hop: 0, targetX: 7, targetY: 0, isDead: false });
-  const lanes = useRef<Lane[]>([]);
-  const cameraY = useRef(0);
-  const frameCount = useRef(0);
+  const playerRef = useRef<Player>({ x: Math.floor(GRID_WIDTH / 2), y: GRID_HEIGHT - 2 });
+  const lanesRef = useRef<Lane[]>([]);
+  const cameraYRef = useRef(0);
+  const animationRef = useRef<number | undefined>(undefined);
 
-  // --- ENGINE: INITIALIZATION ---
   const initGame = () => {
-    player.current = { x: Math.floor(MAP_WIDTH / 2), y: 0, hop: 0, targetX: Math.floor(MAP_WIDTH / 2), targetY: 0, isDead: false };
-    cameraY.current = 0;
+    playerRef.current = { x: Math.floor(GRID_WIDTH / 2), y: GRID_HEIGHT - 2 };
+    cameraYRef.current = 0;
     setScore(0);
+    setSkills(0);
 
-    // Generate initial lanes
-    const newLanes: Lane[] = [];
-    for (let i = -5; i < 20; i++) {
-      newLanes.push(generateLane(i));
+    // Generate lanes
+    const lanes: Lane[] = [];
+    for (let i = 0; i < 30; i++) {
+      lanes.push(generateLane(i));
     }
-    lanes.current = newLanes;
+    lanesRef.current = lanes;
     setGameState('playing');
-    triggerHaptic('success');
+    haptic();
   };
 
-  const generateLane = (yIndex: number): Lane => {
-    // First few lanes are always grass
-    if (yIndex < 3) return { id: yIndex, type: 'grass', y: yIndex, speed: 0, obstacles: [] };
+  const generateLane = (index: number): Lane => {
+    if (index < 3) {
+      return { type: 'grass', speed: 0, obstacles: [] };
+    }
 
-    const isRoad = Math.random() > 0.4;
-    const speed = isRoad ? (Math.random() * 0.08 + 0.03) * (Math.random() > 0.5 ? 1 : -1) : 0;
+    const rand = Math.random();
+    const type: LaneType = rand > 0.7 ? 'water' : rand > 0.4 ? 'road' : 'grass';
+    const speed = type === 'road' || type === 'water' ? (Math.random() * 2 + 1) * (Math.random() > 0.5 ? 1 : -1) : 0;
 
-    // Generate Obstacles
     const obstacles: Obstacle[] = [];
-    if (isRoad) {
-      const count = Math.floor(Math.random() * 3) + 1;
+    if (type !== 'grass') {
+      const count = Math.floor(Math.random() * 2) + 2;
+      const obstacleTypes: ObstacleType[] = type === 'water'
+        ? ['bug', 'deadline']
+        : ['bug', 'meeting', 'deadline', 'coffee', 'skill'];
+
       for (let i = 0; i < count; i++) {
+        const obsType = obstacleTypes[Math.floor(Math.random() * obstacleTypes.length)];
         obstacles.push({
-          x: Math.floor(Math.random() * MAP_WIDTH),
-          type: Math.random() > 0.5 ? 'bug' : 'packet'
+          x: Math.random() * GRID_WIDTH,
+          type: obsType,
+          color: OBSTACLE_CONFIG[obsType].color
         });
       }
     }
 
-    return {
-      id: yIndex,
-      type: isRoad ? 'road' : 'grass',
-      y: yIndex,
-      speed,
-      obstacles
-    };
+    return { type, speed, obstacles };
   };
 
-  // --- ENGINE: UPDATE LOOP ---
+  const movePlayer = (dx: number, dy: number) => {
+    if (gameState !== 'playing') return;
+
+    const player = playerRef.current;
+    const newX = Math.max(0, Math.min(GRID_WIDTH - 1, player.x + dx));
+    const newY = player.y + dy;
+
+    // Check bounds
+    if (newY < 0 || newY >= lanesRef.current.length) return;
+
+    player.x = newX;
+    player.y = newY;
+
+    // Update score when moving forward
+    if (dy < 0 && newY < cameraYRef.current + 5) {
+      setScore(s => Math.max(s, cameraYRef.current + (GRID_HEIGHT - 2) - newY));
+    }
+
+    haptic();
+  };
+
   const update = () => {
     if (gameState !== 'playing') return;
 
-    frameCount.current++;
-    const p = player.current;
+    const player = playerRef.current;
 
-    // 1. Move Player Animation (Linear Interpolation)
-    const speed = 0.2;
-    if (p.x !== p.targetX) p.x += (p.targetX - p.x) * speed;
-    if (p.y !== p.targetY) p.y += (p.targetY - p.y) * speed;
+    // Update camera
+    const targetY = Math.max(0, player.y - (GRID_HEIGHT - 5));
+    cameraYRef.current += (targetY - cameraYRef.current) * 0.1;
 
-    // Hop Animation (Sine wave)
-    const dist = Math.sqrt(Math.pow(p.x - p.targetX, 2) + Math.pow(p.y - p.targetY, 2));
-    p.hop = dist > 0.05 ? Math.sin(dist * Math.PI) * 15 : 0;
+    // Generate new lanes
+    while (lanesRef.current.length < cameraYRef.current + 30) {
+      lanesRef.current.push(generateLane(lanesRef.current.length));
+    }
 
-    // Snap to grid when close
-    if (Math.abs(p.x - p.targetX) < 0.05) p.x = p.targetX;
-    if (Math.abs(p.y - p.targetY) < 0.05) p.y = p.targetY;
+    // Update obstacles and check collisions
+    lanesRef.current.forEach((lane, index) => {
+      lane.obstacles.forEach(obs => {
+        obs.x += lane.speed * 0.02;
+        if (obs.x > GRID_WIDTH + 1) obs.x = -1;
+        if (obs.x < -1) obs.x = GRID_WIDTH + 1;
 
-    // 2. Camera Follow
-    const targetCamY = p.y - 4;
-    cameraY.current += (targetCamY - cameraY.current) * 0.1;
-
-    // 3. Update Obstacles & Lanes
-    lanes.current.forEach(lane => {
-      if (lane.type === 'road') {
-        lane.obstacles.forEach(obs => {
-          obs.x += lane.speed;
-          // Wrap around
-          if (obs.x > MAP_WIDTH + 2) obs.x = -2;
-          if (obs.x < -2) obs.x = MAP_WIDTH + 2;
-
-          // COLLISION DETECTION
-          // Simple box collision on the grid
-          if (
-            Math.abs(obs.x - p.x) < 0.7 && // Width tolerance
-            Math.round(lane.y) === Math.round(p.y) && // Same Row
-            !p.isDead
-          ) {
-            die();
+        // Collision detection
+        if (Math.abs(obs.x - player.x) < 0.6 && Math.abs(index - player.y) < 0.6) {
+          if (OBSTACLE_CONFIG[obs.type].deadly) {
+            gameOver();
+          } else if (obs.type === 'skill') {
+            setSkills(s => s + 1);
+            obs.x = -999; // Remove
+            haptic();
+          } else if (obs.type === 'coffee') {
+            setScore(s => s + 5);
+            obs.x = -999;
+            haptic();
           }
-        });
-      }
+        }
+      });
     });
-
-    // 4. Infinite Lane Generation
-    const lastLane = lanes.current[lanes.current.length - 1];
-    if (lastLane.y < cameraY.current + MAP_HEIGHT + 2) {
-      lanes.current.push(generateLane(lastLane.y + 1));
-    }
-    // Cleanup old lanes
-    if (lanes.current.length > 30) lanes.current.shift();
-
-    // 5. Update Score
-    if (Math.round(p.y) > score) {
-       setScore(Math.round(p.y));
-    }
   };
 
-  const die = () => {
-    player.current.isDead = true;
+  const gameOver = () => {
     setGameState('gameover');
     if (score > highScore) setHighScore(score);
-    triggerHaptic('error');
+    try { haptic.error(); } catch {}
   };
 
-  // --- ENGINE: RENDER LOOP ---
   const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Clear
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-    // Isometric Projection Helpers
-    const offsetX = canvas.width / 2;
-    const offsetY = 200; // Vertical offset
+    const offsetY = cameraYRef.current;
+    const player = playerRef.current;
 
-    const toIso = (x: number, y: number) => {
-      return {
-        x: (x - y) * TILE_SIZE + offsetX,
-        y: (x + y) * (TILE_SIZE / 2) - (cameraY.current * TILE_SIZE) + offsetY
-      };
-    };
+    // Draw lanes
+    for (let i = Math.floor(offsetY); i < Math.floor(offsetY) + GRID_HEIGHT; i++) {
+      if (i < 0 || i >= lanesRef.current.length) continue;
 
-    // Draw Lanes (Painter's Algorithm: Back to Front)
-    lanes.current.forEach(lane => {
-      // Optimization: Don't draw if off screen
-      const isoStart = toIso(0, lane.y);
-      if (isoStart.y < -100 || isoStart.y > canvas.height + 100) return;
+      const lane = lanesRef.current[i];
+      const y = (i - offsetY) * CELL_SIZE;
 
-      // Draw Ground
-      ctx.fillStyle = lane.type === 'grass' ? COLORS.grass : COLORS.road;
+      // Lane background
+      ctx.fillStyle = lane.type === 'grass' ? '#22c55e'
+        : lane.type === 'road' ? '#374151'
+        : '#3b82f6';
+      ctx.fillRect(0, y, canvas.width, CELL_SIZE);
 
-      // Draw the row as a single polygon for performance
-      const p1 = toIso(0, lane.y);
-      const p2 = toIso(MAP_WIDTH, lane.y);
-      const p3 = toIso(MAP_WIDTH, lane.y + 1);
-      const p4 = toIso(0, lane.y + 1);
-
-      ctx.beginPath();
-      ctx.moveTo(p1.x, p1.y);
-      ctx.lineTo(p2.x, p2.y);
-      ctx.lineTo(p3.x, p3.y);
-      ctx.lineTo(p4.x, p4.y);
-      ctx.closePath();
-      ctx.fill();
-
-      // Lane Details (Road Lines)
+      // Road lines
       if (lane.type === 'road') {
-         ctx.strokeStyle = '#555';
-         ctx.setLineDash([10, 10]);
-         ctx.beginPath();
-         const m1 = toIso(0, lane.y + 0.5);
-         const m2 = toIso(MAP_WIDTH, lane.y + 0.5);
-         ctx.moveTo(m1.x, m1.y);
-         ctx.lineTo(m2.x, m2.y);
-         ctx.stroke();
-         ctx.setLineDash([]);
+        ctx.strokeStyle = '#fbbf24';
+        ctx.setLineDash([10, 10]);
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(0, y + CELL_SIZE / 2);
+        ctx.lineTo(canvas.width, y + CELL_SIZE / 2);
+        ctx.stroke();
+        ctx.setLineDash([]);
       }
 
-      // Draw Obstacles
+      // Draw obstacles
       lane.obstacles.forEach(obs => {
-         const pos = toIso(obs.x, lane.y + 0.5); // Center in lane
-         drawEntity(ctx, pos.x, pos.y, obs.type);
+        if (obs.x < -1 || obs.x > GRID_WIDTH) return;
+
+        const x = obs.x * CELL_SIZE + CELL_SIZE / 2;
+        const config = OBSTACLE_CONFIG[obs.type];
+
+        ctx.fillStyle = config.color;
+        ctx.fillRect(x - 20, y + 5, 40, 40);
+
+        ctx.fillStyle = 'white';
+        ctx.font = 'bold 12px monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(config.label, x, y + 30);
       });
-    });
-
-    // Draw Player
-    if (!player.current.isDead || Math.floor(Date.now() / 100) % 2 === 0) {
-      const p = player.current;
-      const pos = toIso(p.x, p.y + 0.5);
-      drawPlayer(ctx, pos.x, pos.y - p.hop);
     }
+
+    // Draw player
+    const px = player.x * CELL_SIZE + CELL_SIZE / 2;
+    const py = (player.y - offsetY) * CELL_SIZE + CELL_SIZE / 2;
+
+    // Player shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.2)';
+    ctx.beginPath();
+    ctx.ellipse(px, py + 20, 15, 8, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Player body
+    ctx.fillStyle = '#f97316';
+    ctx.fillRect(px - 18, py - 25, 36, 36);
+
+    ctx.fillStyle = '#ea580c';
+    ctx.fillRect(px - 18, py - 25, 36, 4);
+
+    // Eyes
+    ctx.fillStyle = 'white';
+    ctx.fillRect(px - 10, py - 15, 8, 8);
+    ctx.fillRect(px + 2, py - 15, 8, 8);
+    ctx.fillStyle = 'black';
+    ctx.fillRect(px - 7, py - 12, 4, 4);
+    ctx.fillRect(px + 5, py - 12, 4, 4);
+
+    // Smile
+    ctx.strokeStyle = 'white';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(px, py - 5, 8, 0, Math.PI);
+    ctx.stroke();
   };
 
-  const drawPlayer = (ctx: CanvasRenderingContext2D, x: number, y: number) => {
-    // Shadow
-    ctx.fillStyle = COLORS.playerShadow;
-    ctx.beginPath();
-    ctx.ellipse(x, y + 15, 12, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Body (White Cube - File Icon style)
-    const size = 26;
-    y -= 10; // Lift up
-
-    // Main face
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(x - size/2, y - size, size, size);
-
-    // Side (3D effect)
-    ctx.fillStyle = '#ccc';
-    ctx.beginPath();
-    ctx.moveTo(x + size/2, y - size);
-    ctx.lineTo(x + size/2 + 5, y - size - 5);
-    ctx.lineTo(x + size/2 + 5, y - 5);
-    ctx.lineTo(x + size/2, y);
-    ctx.fill();
-
-    // Top
-    ctx.fillStyle = '#eee';
-    ctx.beginPath();
-    ctx.moveTo(x - size/2, y - size);
-    ctx.lineTo(x - size/2 + 5, y - size - 5);
-    ctx.lineTo(x + size/2 + 5, y - size - 5);
-    ctx.lineTo(x + size/2, y - size);
-    ctx.fill();
-
-    // "File" Fold
-    ctx.fillStyle = '#ddd';
-    ctx.beginPath();
-    ctx.moveTo(x + size/2 - 8, y - size);
-    ctx.lineTo(x + size/2, y - size + 8);
-    ctx.lineTo(x + size/2, y - size);
-    ctx.fill();
-
-    // Eyes (Cute face)
-    ctx.fillStyle = '#333';
-    if (gameState === 'gameover') {
-       // X eyes
-       ctx.font = '10px Arial';
-       ctx.fillText('x  x', x - 8, y - 8);
-    } else {
-       ctx.beginPath();
-       ctx.arc(x - 5, y - 8, 2, 0, Math.PI * 2); // Left
-       ctx.arc(x + 5, y - 8, 2, 0, Math.PI * 2); // Right
-       ctx.fill();
-    }
+  const gameLoop = () => {
+    update();
+    draw();
+    animationRef.current = requestAnimationFrame(gameLoop);
   };
 
-  const drawEntity = (ctx: CanvasRenderingContext2D, x: number, y: number, type: string) => {
-    // Determine color/shape
-    const color = type === 'bug' ? '#ef4444' : '#10b981'; // Red Bug or Green Packet
-
-    // Draw simple isometric box car
-    const w = 24;
-    const h = 16;
-    y -= 8;
-
-    // Shadow
-    ctx.fillStyle = 'rgba(0,0,0,0.1)';
-    ctx.beginPath();
-    ctx.ellipse(x, y + 10, 14, 6, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Body
-    ctx.fillStyle = color;
-    // Front face
-    ctx.fillRect(x - w/2, y - h, w, h);
-    // Top face
-    ctx.fillStyle = changeColor(color, 40);
-    ctx.beginPath();
-    ctx.moveTo(x - w/2, y - h);
-    ctx.lineTo(x - w/2 + 5, y - h - 5);
-    ctx.lineTo(x + w/2 + 5, y - h - 5);
-    ctx.lineTo(x + w/2, y - h);
-    ctx.fill();
-    // Side face
-    ctx.fillStyle = changeColor(color, -20);
-    ctx.beginPath();
-    ctx.moveTo(x + w/2, y - h);
-    ctx.lineTo(x + w/2 + 5, y - h - 5);
-    ctx.lineTo(x + w/2 + 5, y - 5);
-    ctx.lineTo(x + w/2, y);
-    ctx.fill();
-
-    // Text label for "Tech" feel
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
-    ctx.font = '8px monospace';
-    ctx.fillText(type === 'bug' ? 'BUG' : 'DATA', x - 8, y - 4);
-  };
-
-  const changeColor = (hex: string, amt: number) => {
-     // Quick hex lighten/darken helper
-     let usePound = false;
-     if (hex[0] === "#") { hex = hex.slice(1); usePound = true; }
-     let num = parseInt(hex, 16);
-     let r = (num >> 16) + amt;
-     if (r > 255) r = 255; else if (r < 0) r = 0;
-     let b = ((num >> 8) & 0x00FF) + amt;
-     if (b > 255) b = 255; else if (b < 0) b = 0;
-     let g = (num & 0x0000FF) + amt;
-     if (g > 255) g = 255; else if (g < 0) g = 0;
-     return (usePound ? "#" : "") + (g | (b << 8) | (r << 16)).toString(16);
-  };
-
-  // --- CONTROLS ---
-  const handleInput = useCallback((dir: 'up' | 'down' | 'left' | 'right') => {
-    if (gameState !== 'playing' || player.current.isDead) return;
-
-    const p = player.current;
-
-    // Only allow move if mostly finished previous move
-    if (Math.abs(p.x - p.targetX) > 0.2 || Math.abs(p.y - p.targetY) > 0.2) return;
-
-    let moved = false;
-    if (dir === 'up') { p.targetY += 1; moved = true; }
-    if (dir === 'down' && p.targetY > cameraY.current - 2) { p.targetY -= 1; moved = true; }
-    if (dir === 'left' && p.targetX > 0) { p.targetX -= 1; moved = true; }
-    if (dir === 'right' && p.targetX < MAP_WIDTH) { p.targetX += 1; moved = true; }
-
-    if (moved) triggerHaptic('light');
-
-  }, [gameState]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'ArrowUp' || e.key === 'w') handleInput('up');
-      if (e.key === 'ArrowDown' || e.key === 's') handleInput('down');
-      if (e.key === 'ArrowLeft' || e.key === 'a') handleInput('left');
-      if (e.key === 'ArrowRight' || e.key === 'd') handleInput('right');
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleInput]);
-
-  // --- GAME LOOP ---
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    // Set canvas size based on container
-    const updateCanvasSize = () => {
-      const container = canvas.parentElement;
-      if (container) {
-        canvas.width = container.clientWidth || 800;
-        canvas.height = container.clientHeight || 600;
-      }
-    };
-    updateCanvasSize();
+    canvas.width = GRID_WIDTH * CELL_SIZE;
+    canvas.height = GRID_HEIGHT * CELL_SIZE;
 
-    const tick = () => {
-      update();
-      draw();
-      requestRef.current = requestAnimationFrame(tick);
-    };
-    requestRef.current = requestAnimationFrame(tick);
+    animationRef.current = requestAnimationFrame(gameLoop);
 
     return () => {
-      if (requestRef.current) {
-        cancelAnimationFrame(requestRef.current);
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [gameState, score]);
+  }, [gameState]);
+
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (gameState !== 'playing') return;
+
+      if (e.key === 'ArrowUp' || e.key === 'w') movePlayer(0, -1);
+      if (e.key === 'ArrowDown' || e.key === 's') movePlayer(0, 1);
+      if (e.key === 'ArrowLeft' || e.key === 'a') movePlayer(-1, 0);
+      if (e.key === 'ArrowRight' || e.key === 'd') movePlayer(1, 0);
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [gameState]);
 
   return (
-    <div className="relative w-full h-full bg-[#a5d5f2] overflow-hidden select-none font-sans">
+    <div className="relative w-full h-full bg-gradient-to-b from-sky-200 to-sky-100 flex flex-col items-center justify-center overflow-hidden">
 
-      {/* BACKGROUND DECORATION */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#bfdbfe] to-[#a5d5f2]"></div>
-
-      {/* CANVAS LAYER */}
-      <canvas
-        ref={canvasRef}
-        width={800}
-        height={600}
-        className="absolute inset-0 w-full h-full"
-        style={{ imageRendering: 'crisp-edges' }}
-      />
-
-      {/* UI OVERLAY: HUD */}
-      <div className="absolute top-4 left-4 flex gap-4 z-20">
-        <div className="bg-white/80 backdrop-blur-md px-4 py-2 rounded-xl shadow-lg border border-white/50">
-           <span className="text-xs text-blue-500 font-bold uppercase block">Current Score</span>
-           <span className="text-2xl font-black text-gray-800">{score}</span>
+      {/* HUD */}
+      <div className="absolute top-4 left-4 flex gap-3 z-20">
+        <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow-lg">
+          <div className="text-xs text-gray-500 font-bold">SCORE</div>
+          <div className="text-2xl font-black text-gray-900">{score}</div>
         </div>
-        <div className="bg-white/50 backdrop-blur-md px-4 py-2 rounded-xl border border-white/30">
-           <span className="text-xs text-gray-500 font-bold uppercase block">Best</span>
-           <span className="text-xl font-bold text-gray-600">{highScore}</span>
+        <div className="bg-white/70 backdrop-blur px-4 py-2 rounded-lg">
+          <div className="text-xs text-gray-500 font-bold">SKILLS</div>
+          <div className="text-2xl font-black text-blue-600">{skills}</div>
+        </div>
+        <div className="bg-white/70 backdrop-blur px-3 py-2 rounded-lg">
+          <div className="text-xs text-gray-400 font-bold">BEST</div>
+          <div className="text-xl font-bold text-gray-600">{highScore}</div>
         </div>
       </div>
 
-      {/* UI OVERLAY: MENU */}
+      {/* Canvas */}
+      <canvas ref={canvasRef} className="border-4 border-white shadow-2xl rounded-lg" />
+
+      {/* Menu */}
       {gameState === 'menu' && (
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-30">
-          <div className="bg-white p-8 rounded-2xl shadow-2xl text-center max-w-sm border border-white/20">
-            <div className="w-16 h-16 bg-blue-500 rounded-xl mx-auto mb-4 flex items-center justify-center shadow-lg transform -rotate-6">
-                <span className="text-3xl">📂</span>
-            </div>
-            <h1 className="text-3xl font-black text-gray-900 mb-2">Kernel Crossing</h1>
-            <p className="text-gray-500 mb-6">Help the file escape the infinite data stream! Use arrow keys to move.</p>
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-30">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl max-w-md text-center">
+            <div className="text-6xl mb-4">👨‍💻</div>
+            <h1 className="text-3xl font-black text-gray-900 mb-2">kyle's career path</h1>
+            <p className="text-gray-600 mb-6">
+              navigate through your career! avoid bugs, meetings, and deadlines.
+              collect skills (+1) and coffee (☕) for bonus points.
+            </p>
             <button
               onClick={initGame}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
             >
-              <Play size={20} fill="currentColor" /> Start Process
+              <Play size={20} /> start journey
             </button>
           </div>
         </div>
       )}
 
-      {/* UI OVERLAY: GAME OVER */}
+      {/* Game Over */}
       {gameState === 'gameover' && (
-        <div className="absolute inset-0 bg-red-500/20 backdrop-blur-sm flex items-center justify-center z-30 animate-fade-in">
-          <div className="bg-white p-8 rounded-2xl shadow-2xl text-center border-4 border-red-100">
-            <div className="text-6xl mb-2">💥</div>
-            <h2 className="text-2xl font-black text-gray-800 mb-1">Process Terminated</h2>
-            <p className="text-gray-500 text-sm mb-6 uppercase tracking-wider font-bold">You hit a bug!</p>
+        <div className="absolute inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-30">
+          <div className="bg-white p-8 rounded-2xl shadow-2xl text-center border-4 border-red-200">
+            <div className="text-6xl mb-3">💥</div>
+            <h2 className="text-2xl font-black text-gray-900 mb-1">career setback!</h2>
+            <p className="text-gray-500 text-sm mb-6">you hit a {Math.random() > 0.5 ? 'critical bug' : 'impossible deadline'}!</p>
 
-            <div className="flex justify-center gap-8 mb-8 border-t border-b border-gray-100 py-4">
-               <div>
-                 <div className="text-xs text-gray-400 font-bold uppercase">Score</div>
-                 <div className="text-3xl font-black text-gray-800">{score}</div>
-               </div>
-               <div>
-                 <div className="text-xs text-yellow-500 font-bold uppercase flex items-center gap-1"><Trophy size={10} /> High</div>
-                 <div className="text-3xl font-black text-yellow-500">{Math.max(score, highScore)}</div>
-               </div>
+            <div className="flex justify-center gap-6 mb-6 border-t border-b py-4">
+              <div>
+                <div className="text-xs text-gray-400 font-bold">SCORE</div>
+                <div className="text-3xl font-black text-gray-900">{score}</div>
+              </div>
+              <div>
+                <div className="text-xs text-blue-500 font-bold">SKILLS</div>
+                <div className="text-3xl font-black text-blue-600">{skills}</div>
+              </div>
+              <div>
+                <div className="text-xs text-orange-500 font-bold">BEST</div>
+                <div className="text-3xl font-black text-orange-500">{Math.max(score, highScore)}</div>
+              </div>
             </div>
 
             <button
               onClick={initGame}
-              className="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 px-6 rounded-xl shadow-lg active:scale-95 transition-all flex items-center justify-center gap-2"
+              className="w-full bg-gray-900 hover:bg-black text-white font-bold py-3 px-6 rounded-xl shadow-lg flex items-center justify-center gap-2 transition-all active:scale-95"
             >
-              <RotateCcw size={18} /> Reboot System
+              <RotateCcw size={18} /> try again
             </button>
           </div>
         </div>
       )}
 
-      {/* MOBILE CONTROLS (Invisible Touch Zones) */}
+      {/* Mobile Controls */}
       {gameState === 'playing' && (
-        <div className="absolute inset-0 z-0 grid grid-rows-3 grid-cols-3 opacity-0">
-           {/* Top for Up */}
-           <div className="col-start-2 row-start-1" onTouchStart={() => handleInput('up')}></div>
-           {/* Bottom for Down */}
-           <div className="col-start-2 row-start-3" onTouchStart={() => handleInput('down')}></div>
-           {/* Left */}
-           <div className="row-start-2 col-start-1" onTouchStart={() => handleInput('left')}></div>
-           {/* Right */}
-           <div className="row-start-2 col-start-3" onTouchStart={() => handleInput('right')}></div>
-           {/* Center (Tap to go up too) */}
-           <div className="row-start-2 col-start-2" onTouchStart={() => handleInput('up')}></div>
+        <div className="absolute bottom-4 right-4 grid grid-cols-3 gap-2 z-20 md:hidden">
+          <div></div>
+          <button onTouchStart={() => movePlayer(0, -1)} className="bg-white/80 p-4 rounded-lg shadow-lg active:scale-95">⬆️</button>
+          <div></div>
+          <button onTouchStart={() => movePlayer(-1, 0)} className="bg-white/80 p-4 rounded-lg shadow-lg active:scale-95">⬅️</button>
+          <div></div>
+          <button onTouchStart={() => movePlayer(1, 0)} className="bg-white/80 p-4 rounded-lg shadow-lg active:scale-95">➡️</button>
+          <div></div>
+          <button onTouchStart={() => movePlayer(0, 1)} className="bg-white/80 p-4 rounded-lg shadow-lg active:scale-95">⬇️</button>
+          <div></div>
+        </div>
+      )}
+
+      {/* Legend */}
+      {gameState === 'playing' && (
+        <div className="absolute top-4 right-4 bg-white/80 backdrop-blur p-3 rounded-lg shadow-lg text-xs z-20">
+          <div className="font-bold mb-2">LEGEND:</div>
+          <div className="flex gap-2 items-center mb-1">
+            <span className="w-4 h-4 bg-red-500 rounded"></span> BUG (avoid)
+          </div>
+          <div className="flex gap-2 items-center mb-1">
+            <span className="w-4 h-4 bg-purple-500 rounded"></span> MEETING (avoid)
+          </div>
+          <div className="flex gap-2 items-center mb-1">
+            <span className="w-4 h-4 bg-orange-500 rounded"></span> DEADLINE (avoid)
+          </div>
+          <div className="flex gap-2 items-center mb-1">
+            <span className="w-4 h-4 bg-green-500 rounded"></span> COFFEE (+5)
+          </div>
+          <div className="flex gap-2 items-center">
+            <span className="w-4 h-4 bg-blue-500 rounded"></span> SKILL (+1)
+          </div>
         </div>
       )}
     </div>
