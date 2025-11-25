@@ -108,6 +108,33 @@ export default function AppDetail({ app }: AppDetailProps) {
           </div>
         </div>
 
+        {/* Screenshots Carousel - horizontal scroll */}
+        {app.images.length > 0 && (
+          <div className="-mx-4">
+            <div className="flex gap-3 overflow-x-auto px-4 pb-2 snap-x snap-mandatory scrollbar-hide">
+              {app.images.map((image, index) => (
+                <div
+                  key={index}
+                  className="shrink-0 snap-start rounded-xl overflow-hidden"
+                  style={{
+                    height: '220px',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                  }}
+                >
+                  <Image
+                    src={`${image}?v=2`}
+                    alt={`${app.name} screenshot ${index + 1}`}
+                    width={110}
+                    height={220}
+                    className="h-full w-auto object-contain"
+                    unoptimized
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Description Section */}
         <div
           className="p-3 rounded-lg border border-[#aaa]"
@@ -224,47 +251,6 @@ export default function AppDetail({ app }: AppDetailProps) {
             ))}
           </div>
         </div>
-
-        {/* App Images */}
-        {app.images.length > 0 && (
-          <div
-            className="p-3 rounded-lg border border-[#aaa]"
-            style={{
-              background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-            }}
-          >
-            <h2
-              className="text-sm font-bold mb-3"
-              style={{
-                color: '#333',
-                textShadow: '0 1px 0 rgba(255,255,255,0.7)',
-              }}
-            >
-              Screenshots
-            </h2>
-            <div className="grid grid-cols-1 gap-3">
-              {app.images.map((image, index) => (
-                <div
-                  key={index}
-                  className="rounded-lg overflow-hidden"
-                  style={{
-                    boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                  }}
-                >
-                  <Image
-                    src={`${image}?v=2`}
-                    alt={`${app.name} screenshot ${index + 1}`}
-                    width={400}
-                    height={400}
-                    className="w-full h-auto object-cover"
-                    unoptimized
-                  />
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
       </div>
     </div>
   );
