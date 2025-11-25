@@ -72,8 +72,28 @@ export default function MessagesApp() {
     if (!isMobile) return;
 
     const handleFocus = () => {
-      // Scroll page to top when keyboard opens
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      // Multiple attempts to scroll to top to override browser behavior
+      window.scrollTo(0, 0);
+
+      // Use setTimeout to run after browser's automatic scroll
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 100);
+
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 300);
+
+      setTimeout(() => {
+        window.scrollTo(0, 0);
+      }, 500);
+    };
+
+    // Also listen to visualViewport scroll events
+    const handleViewportScroll = () => {
+      if (document.activeElement === inputRef.current) {
+        window.scrollTo(0, 0);
+      }
     };
 
     const inputElement = inputRef.current;
@@ -81,9 +101,16 @@ export default function MessagesApp() {
       inputElement.addEventListener('focus', handleFocus);
     }
 
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener('scroll', handleViewportScroll);
+    }
+
     return () => {
       if (inputElement) {
         inputElement.removeEventListener('focus', handleFocus);
+      }
+      if (window.visualViewport) {
+        window.visualViewport.removeEventListener('scroll', handleViewportScroll);
       }
     };
   }, []);
