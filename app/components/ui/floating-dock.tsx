@@ -46,6 +46,7 @@ const FloatingDockMobile = ({
   const itemRefs = useRef<(HTMLDivElement | null)[]>([]);
   const [lastHoveredIndex, setLastHoveredIndex] = useState<number | null>(null);
   const [isTouching, setIsTouching] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
 
   // Calculate dynamic sizing based on number of items
   const itemCount = items.length;
@@ -70,26 +71,23 @@ const FloatingDockMobile = ({
 
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsTouching(true);
+    setIsDragging(false);
     const touch = e.touches[0];
     mouseX.set(touch.pageX);
 
-    // Find initial icon and trigger haptic
-    const touchX = touch.clientX;
+    // Use elementFromPoint to find which icon is being touched
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+
+    // Find which icon this element belongs to
     let startIndex = -1;
     itemRefs.current.forEach((ref, index) => {
-      if (!ref) return;
-      const bounds = ref.getBoundingClientRect();
-      // Expand hit area by 10px on each side for better detection
-      if (
-        touchX >= bounds.left - 10 &&
-        touchX <= bounds.right + 10
-      ) {
+      if (ref && ref.contains(element as Node)) {
         startIndex = index;
       }
     });
 
     if (startIndex !== -1) {
-      haptic();
       setLastHoveredIndex(startIndex);
     }
   };
@@ -98,38 +96,37 @@ const FloatingDockMobile = ({
     if (!isTouching) return;
 
     const touch = e.touches[0];
-    const touchX = touch.clientX;
 
     // Update mouseX for magnification effect
     mouseX.set(touch.pageX);
 
-    // Find which icon is being touched for haptic feedback
+    // Use elementFromPoint to find which icon is under the touch
+    const element = document.elementFromPoint(touch.clientX, touch.clientY);
+    if (!element) return;
+
+    // Find which icon this element belongs to
     let currentIndex = -1;
-    let closestDistance = Infinity;
-
     itemRefs.current.forEach((ref, index) => {
-      if (!ref) return;
-      const bounds = ref.getBoundingClientRect();
-      const centerX = bounds.left + bounds.width / 2;
-      const distance = Math.abs(touchX - centerX);
-
-      // Find the closest icon to the touch point
-      if (distance < closestDistance && distance < bounds.width) {
-        closestDistance = distance;
+      if (ref && ref.contains(element as Node)) {
         currentIndex = index;
       }
     });
 
     // Trigger haptic if moved to a different icon
     if (currentIndex !== -1 && currentIndex !== lastHoveredIndex) {
+      setIsDragging(true);
       haptic();
       setLastHoveredIndex(currentIndex);
     }
   };
 
   const handleTouchEnd = () => {
-    setIsTouching(false);
-    setLastHoveredIndex(null);
+    // Small delay before resetting to allow click to fire
+    setTimeout(() => {
+      setIsTouching(false);
+      setIsDragging(false);
+      setLastHoveredIndex(null);
+    }, 50);
     mouseX.set(Infinity);
   };
 
@@ -158,7 +155,7 @@ const FloatingDockMobile = ({
           index={index}
           minSize={min}
           maxSize={max}
-          isTouching={isTouching}
+          isDragging={isDragging}
           itemRef={(el) => (itemRefs.current[index] = el)}
           {...item}
         />
@@ -201,7 +198,7 @@ function IconContainerMobile({
   minSize,
   maxSize,
   index,
-  isTouching,
+  isDragging,
   itemRef,
 }: {
   mouseX: MotionValue;
@@ -213,7 +210,7 @@ function IconContainerMobile({
   minSize: number;
   maxSize: number;
   index: number;
-  isTouching: boolean;
+  isDragging: boolean;
   itemRef?: (el: HTMLDivElement | null) => void;
 }) {
   let ref = useRef<HTMLDivElement>(null);
@@ -269,8 +266,8 @@ function IconContainerMobile({
   const dotSize = maxSize < 45 ? 'w-0.5 h-0.5' : 'w-1 h-1';
 
   const handleClick = (e: React.MouseEvent) => {
-    // Prevent click if currently touching/dragging
-    if (isTouching) {
+    // Only prevent click if user was dragging across icons
+    if (isDragging) {
       e.preventDefault();
       e.stopPropagation();
       return;
@@ -324,8 +321,7 @@ function IconContainerMobile({
       <button
         onClick={handleClick}
         style={{
-          WebkitTapHighlightColor: 'transparent',
-          pointerEvents: isTouching ? 'none' : 'auto'
+          WebkitTapHighlightColor: 'transparent'
         }}
       >
         {content}
