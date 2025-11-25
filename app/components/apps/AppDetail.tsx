@@ -283,6 +283,42 @@ export default function AppDetail({ app }: AppDetailProps) {
           </p>
         </div>
 
+        {/* Video Section - Vimeo Embed */}
+        {app.videoId && (
+          <div
+            className="p-3 rounded-lg border border-[#aaa]"
+            style={{
+              background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+            }}
+          >
+            <h2
+              className="text-sm font-bold mb-3"
+              style={{
+                color: '#333',
+                textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+              }}
+            >
+              Demo Video
+            </h2>
+            <div
+              className="relative rounded-lg overflow-hidden"
+              style={{
+                paddingBottom: '56.25%', // 16:9 aspect ratio
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              }}
+            >
+              <iframe
+                src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+                className="absolute inset-0 w-full h-full"
+                frameBorder="0"
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                title={`${app.name} demo video`}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Progress Section */}
         <div
           className="p-3 rounded-lg border border-[#aaa]"
