@@ -14,6 +14,7 @@ import MacPaint from './components/apps/MacPaint';
 import MessagesApp from './components/apps/MessagesApp';
 import NotesApp from './components/apps/NotesApp';
 import KernelCrossing from './components/apps/CrossyRoad';
+import AppStore from './components/apps/AppStore';
 import LetterGlitch from './components/ui/LetterGlitch';
 import { projects } from './data/projects';
 import { haptic } from 'ios-haptics';
@@ -49,7 +50,7 @@ const TerminalBackground = React.memo(() => {
 
 TerminalBackground.displayName = 'TerminalBackground';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages' | 'game';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages' | 'game' | 'appstore';
 
 interface WindowState {
   isOpen: boolean;
@@ -57,7 +58,7 @@ interface WindowState {
   isMaximized: boolean;
   zIndex: number;
   title: string;
-  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes';
+  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes' | 'appstore';
   pos: { x: number; y: number };
   size: { width: number; height: number };
 }
@@ -129,6 +130,12 @@ export default function MacOsPortfolio() {
       title: 'Kernel Crossing',
       iconType: 'folder' as const,
       pos: { x: 100, y: 50 }, size: { width: 800, height: 650 }
+    },
+    appstore: {
+      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
+      title: 'App Store',
+      iconType: 'appstore' as const,
+      pos: { x: 200, y: 80 }, size: { width: 400, height: 500 }
     }
   });
 
@@ -142,7 +149,8 @@ export default function MacOsPortfolio() {
     safari: { x: 20, y: 480 },
     paint: { x: 20, y: 590 },
     messages: { x: 20, y: 700 },
-    game: { x: 20, y: 810 }
+    game: { x: 20, y: 810 },
+    appstore: { x: 20, y: 920 }
   });
 
   const [iconScale, setIconScale] = useState(1);
@@ -155,7 +163,8 @@ export default function MacOsPortfolio() {
     safari: 'Safari',
     paint: 'Paint',
     messages: 'KyleBOT',
-    game: 'Game.app'
+    game: 'Game.app',
+    appstore: 'App Store'
   });
 
   const [contextMenu, setContextMenu] = useState<{
@@ -272,7 +281,7 @@ export default function MacOsPortfolio() {
       const dockHeight = 80; // Bottom dock area
       const availableHeight = viewportHeight - menuBarHeight - dockHeight;
 
-      const iconCount = 8; // Number of desktop icons
+      const iconCount = 9; // Number of desktop icons
       const isMobile = viewportWidth < 768;
 
       if (isMobile) {
@@ -290,7 +299,7 @@ export default function MacOsPortfolio() {
 
         const icons = [
           'hd', 'finder', 'resume', 'terminal',
-          'safari', 'paint', 'messages', 'game'
+          'safari', 'paint', 'messages', 'game', 'appstore'
         ];
 
         // Generate random positions with collision detection
@@ -368,7 +377,8 @@ export default function MacOsPortfolio() {
           safari: { x: 20, y: topPadding + iconSpacing * 4 },
           paint: { x: 20, y: topPadding + iconSpacing * 5 },
           messages: { x: 20, y: topPadding + iconSpacing * 6 },
-          game: { x: 20, y: topPadding + iconSpacing * 7 }
+          game: { x: 20, y: topPadding + iconSpacing * 7 },
+          appstore: { x: 20, y: topPadding + iconSpacing * 8 }
         });
 
         setIconScale(scale);
@@ -545,6 +555,7 @@ export default function MacOsPortfolio() {
       paint: 'paint',
       messages: 'messages',
       game: 'game',
+      appstore: 'appstore',
     };
 
     const items: ContextMenuItem[] = [
@@ -688,7 +699,7 @@ export default function MacOsPortfolio() {
 
             {/* Apple Menu Dropdown with LetterGlitch */}
             {showAppleMenu && (
-              <div className="absolute top-full left-0 mt-1 w-[300px] h-[220px] bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/10 overflow-hidden">
+              <div className="absolute top-full left-0 mt-1 w-[320px] md:w-[300px] h-[220px] bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/10 overflow-hidden">
                 <LetterGlitch
                   glitchSpeed={50}
                   centerVignette={true}
@@ -802,6 +813,16 @@ export default function MacOsPortfolio() {
            initialPos={iconPos.game}
            scale={iconScale}
            onDoubleClick={() => openWindow('game')}
+           onRename={handleIconRename}
+           onContextMenu={handleIconContextMenu}
+         />
+         <DesktopIcon
+           id="appstore"
+           label={iconLabels.appstore}
+           type="appstore"
+           initialPos={iconPos.appstore}
+           scale={iconScale}
+           onDoubleClick={() => openWindow('appstore')}
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
@@ -1007,6 +1028,24 @@ export default function MacOsPortfolio() {
         onFocus={focusWindow}
       >
          <KernelCrossing />
+      </MacWindow>
+
+      {/* APP STORE WINDOW */}
+      <MacWindow
+        id="appstore"
+        title={windows.appstore.title}
+        isOpen={windows.appstore.isOpen}
+        isMinimized={windows.appstore.isMinimized}
+        isMaximized={windows.appstore.isMaximized}
+        zIndex={windows.appstore.zIndex}
+        pos={windows.appstore.pos}
+        size={windows.appstore.size}
+        onClose={closeWindow}
+        onMinimize={minimizeWindow}
+        onMaximize={maximizeWindow}
+        onFocus={focusWindow}
+      >
+         <AppStore />
       </MacWindow>
 
       {/* Global Styles */}
