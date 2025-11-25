@@ -549,12 +549,15 @@ export default function MacOsPortfolio() {
 
       const mobileWindowWidth = viewportWidth - (padding * 2);
 
-      // Safari and Paint get more height, welcome/notes gets less
+      // Safari and Paint get more height, welcome/notes gets less, messages shorter for keyboard
       let mobileWindowHeight: number;
       if (windowId === 'safari' || windowId === 'paint') {
         mobileWindowHeight = viewportHeight * 0.845;
       } else if (windowId === 'welcome') {
         mobileWindowHeight = viewportHeight * 0.45;
+      } else if (windowId === 'messages') {
+        // Shorter height so keyboard doesn't cover input field
+        mobileWindowHeight = viewportHeight * 0.5;
       } else {
         mobileWindowHeight = viewportHeight * 0.65;
       }
