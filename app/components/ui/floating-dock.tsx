@@ -14,7 +14,7 @@ import {
   useTransform,
 } from "framer-motion";
 import Link from "next/link";
-import { useRef, useState } from "react";
+import { useRef, useState, useEffect } from "react";
 import { haptic } from 'ios-haptics';
 
 export const FloatingDock = ({
@@ -48,6 +48,7 @@ const FloatingDockMobile = ({
   const [isTouching, setIsTouching] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const lastHapticTime = useRef<number>(0);
+  const scrollCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
   // Calculate dynamic sizing based on number of items
   const itemCount = items.length;
@@ -70,27 +71,72 @@ const FloatingDockMobile = ({
 
   const { min, max, gap, height } = getIconSizes();
 
+  // Cleanup interval on unmount
+  useEffect(() => {
+    return () => {
+      if (scrollCheckInterval.current) {
+        clearInterval(scrollCheckInterval.current);
+      }
+    };
+  }, []);
+
+  const checkIconUnderTouch = (clientX: number, clientY: number) => {
+    const element = document.elementFromPoint(clientX, clientY);
+    if (!element) return -1;
+
+    let currentIndex = -1;
+    itemRefs.current.forEach((ref, index) => {
+      if (ref && ref.contains(element as Node)) {
+        currentIndex = index;
+      }
+    });
+
+    return currentIndex;
+  };
+
+  const triggerHapticForIndex = (index: number) => {
+    if (index === -1 || index === lastHoveredIndex) return;
+
+    const now = Date.now();
+    if (now - lastHapticTime.current >= 80) {
+      try {
+        // Defer haptic to next frame
+        setTimeout(() => {
+          haptic();
+        }, 0);
+        lastHapticTime.current = now;
+      } catch (error) {
+        console.log('Haptic feedback not available');
+      }
+    }
+    setLastHoveredIndex(index);
+  };
+
   const handleTouchStart = (e: React.TouchEvent) => {
     setIsTouching(true);
     setIsDragging(false);
     const touch = e.touches[0];
     mouseX.set(touch.pageX);
 
-    // Use elementFromPoint to find which icon is being touched
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!element) return;
-
-    // Find which icon this element belongs to
-    let startIndex = -1;
-    itemRefs.current.forEach((ref, index) => {
-      if (ref && ref.contains(element as Node)) {
-        startIndex = index;
-      }
-    });
-
+    const startIndex = checkIconUnderTouch(touch.clientX, touch.clientY);
     if (startIndex !== -1) {
       setLastHoveredIndex(startIndex);
     }
+
+    // Start interval to check icon position every 50ms
+    // This separates haptic triggering from touchmove event handler
+    scrollCheckInterval.current = setInterval(() => {
+      if (!isTouching) return;
+
+      const touch = (document as any).__lastTouch;
+      if (touch) {
+        const currentIndex = checkIconUnderTouch(touch.clientX, touch.clientY);
+        if (currentIndex !== -1 && currentIndex !== lastHoveredIndex) {
+          setIsDragging(true);
+          triggerHapticForIndex(currentIndex);
+        }
+      }
+    }, 50);
   };
 
   const handleTouchMove = (e: React.TouchEvent) => {
@@ -101,43 +147,23 @@ const FloatingDockMobile = ({
 
     const touch = e.touches[0];
 
+    // Store touch position for interval to access
+    (document as any).__lastTouch = { clientX: touch.clientX, clientY: touch.clientY };
+
     // Update mouseX for magnification effect
     mouseX.set(touch.pageX);
-
-    // Use elementFromPoint to find which icon is under the touch
-    const element = document.elementFromPoint(touch.clientX, touch.clientY);
-    if (!element) return;
-
-    // Find which icon this element belongs to
-    let currentIndex = -1;
-    itemRefs.current.forEach((ref, index) => {
-      if (ref && ref.contains(element as Node)) {
-        currentIndex = index;
-      }
-    });
-
-    // Trigger haptic if moved to a different icon
-    // Throttle haptics to max one every 80ms to prevent iOS from ignoring rapid calls
-    if (currentIndex !== -1 && currentIndex !== lastHoveredIndex) {
-      setIsDragging(true);
-      const now = Date.now();
-      if (now - lastHapticTime.current >= 80) {
-        try {
-          // Use setTimeout to defer haptic slightly, might help with Safari timing
-          requestAnimationFrame(() => {
-            haptic();
-          });
-          lastHapticTime.current = now;
-        } catch (error) {
-          // Silently fail if haptic not available
-          console.log('Haptic feedback not available');
-        }
-      }
-      setLastHoveredIndex(currentIndex);
-    }
   };
 
   const handleTouchEnd = () => {
+    // Clear interval
+    if (scrollCheckInterval.current) {
+      clearInterval(scrollCheckInterval.current);
+      scrollCheckInterval.current = null;
+    }
+
+    // Clear stored touch
+    delete (document as any).__lastTouch;
+
     // Small delay before resetting to allow click to fire
     setTimeout(() => {
       setIsTouching(false);
