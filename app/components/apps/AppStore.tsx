@@ -20,51 +20,51 @@ export interface AppData {
 export const apps: AppData[] = [
   {
     id: 'onlybills',
-    name: 'OnlyBills',
-    tagline: 'AI Receipt Splitter',
+    name: 'SplitSwift',
+    tagline: 'Split bills, not friendships',
     icon: '/app-onlybills.png',
-    link: 'https://apps.apple.com/app/onlybills',
-    description: 'AI-powered receipt splitting app that makes group expenses effortless. Snap a photo of any receipt and OnlyBills intelligently divides the costs among friends.',
+    link: 'https://apps.apple.com/app/splitswift',
+    description: 'The easiest way to split receipts. Snap a photo and AI extracts items, prices, tax and tips. Assign items to friends and see exactly who owes what.',
     images: ['/app-onlybills.png'],
-    progress: 95,
-    stage: 'Live on App Store',
-    technologies: ['React Native', 'TypeScript', 'OpenAI', 'Supabase']
+    progress: 90,
+    stage: 'In Development',
+    technologies: ['SwiftUI', 'SwiftData', 'Google Gemini', 'Vision']
   },
   {
     id: 'frift',
     name: 'Frift',
-    tagline: 'Student Marketplace',
+    tagline: 'Your campus marketplace',
     icon: '/app-frift.png',
-    link: 'https://apps.apple.com/app/frift',
-    description: 'The ultimate student marketplace for buying and selling textbooks, furniture, and campus essentials. Built exclusively for university students.',
+    link: 'https://apps.apple.com/gb/app/frift-student-marketplace/id6745021634',
+    description: 'The app for university students to buy, sell and connect. Zero fees, safe on-campus meetups, and eco-friendly. Stay plugged into campus life.',
     images: ['/app-frift.png'],
     progress: 100,
     stage: 'Live on App Store',
-    technologies: ['React Native', 'TypeScript', 'Firebase', 'Stripe']
+    technologies: ['Flutter', 'Firebase', 'OpenAI', 'Cloud Functions']
   },
   {
     id: 'arcadeus',
     name: 'Arcadeus',
-    tagline: 'Real Estate AI',
+    tagline: 'M&A Deal Modeling',
     icon: '/app-arcadeus.png',
     link: 'https://arcadeus.com',
-    description: 'Revolutionary AI platform transforming real estate investment analysis. Get instant insights on property valuations, market trends, and investment opportunities.',
+    description: 'Professional Excel add-in for M&A and PE deal modeling. AI-powered data extraction from financial documents with automated model generation.',
     images: ['/app-arcadeus.png'],
-    progress: 80,
+    progress: 85,
     stage: 'In Development',
-    technologies: ['Next.js', 'Python', 'TensorFlow', 'PostgreSQL']
+    technologies: ['Node.js', 'Python', 'OpenAI', 'Excel API']
   },
   {
     id: 'kyro',
     name: 'Kyro',
-    tagline: 'Online Card Game',
+    tagline: 'Multiplayer Card Game',
     icon: '/app-kyro.png',
     link: 'https://kyro.onl',
-    description: 'Strategic multiplayer card game with real-time battles. Collect cards, build decks, and compete against players worldwide in this fast-paced TCG.',
+    description: 'Real-time multiplayer card game where you compete for the lowest score. Use power cards strategically, match cards to eliminate them, and call Kyro to win.',
     images: ['/app-kyro.png'],
-    progress: 70,
-    stage: 'Beta Testing',
-    technologies: ['Unity', 'C#', 'WebSocket', 'MongoDB']
+    progress: 100,
+    stage: 'Live',
+    technologies: ['Node.js', 'Express', 'Socket.IO', 'HTML5']
   },
 ];
 

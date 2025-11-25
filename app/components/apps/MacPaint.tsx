@@ -557,50 +557,55 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
             </div>
 
             {/* Brush Size Slider - Apple Liquid Glass Style */}
-            <div className="p-3 border-b-2 border-black bg-gradient-to-b from-gray-100 to-gray-200">
-              <div className="text-[8px] font-bold text-center uppercase mb-2 text-gray-600">Size</div>
+            <div className="px-2 py-4 border-b-2 border-black bg-gradient-to-b from-gray-100 to-gray-200">
+              <div className="text-[9px] font-bold text-center uppercase mb-3 text-gray-600">Size: {brushSize}px</div>
               <div
-                className="relative h-7 rounded-full overflow-hidden"
+                className="relative h-10 rounded-full mx-1"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(240,240,245,0.8) 100%)',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 2px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-                  border: '1px solid rgba(0,0,0,0.15)',
-                  backdropFilter: 'blur(10px)',
+                  background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(235,235,240,0.9) 100%)',
+                  boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.15), inset 0 -2px 4px rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.1)',
+                  border: '1px solid rgba(0,0,0,0.12)',
                 }}
               >
                 {/* Track fill */}
                 <div
-                  className="absolute top-1 bottom-1 left-1 rounded-full transition-all duration-100"
+                  className="absolute top-1.5 bottom-1.5 left-1.5 rounded-full transition-all duration-75 pointer-events-none"
                   style={{
-                    width: `calc(${((brushSize - 1) / 19) * 100}% - 4px)`,
-                    minWidth: '8px',
-                    background: 'linear-gradient(180deg, #4A9EFF 0%, #0066FF 50%, #0052CC 100%)',
-                    boxShadow: '0 1px 3px rgba(0,102,255,0.4), inset 0 1px 1px rgba(255,255,255,0.3)',
+                    width: `calc(${((brushSize - 1) / 19) * 100}%)`,
+                    maxWidth: 'calc(100% - 12px)',
+                    minWidth: '4px',
+                    background: 'linear-gradient(180deg, #5AB0FF 0%, #007AFF 50%, #0062CC 100%)',
+                    boxShadow: '0 2px 4px rgba(0,122,255,0.4), inset 0 1px 2px rgba(255,255,255,0.4)',
                   }}
                 />
                 {/* Thumb */}
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 w-6 h-6 rounded-full transition-all duration-100"
+                  className="absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full transition-all duration-75 pointer-events-none"
                   style={{
-                    left: `calc(${((brushSize - 1) / 19) * 100}% - 12px)`,
-                    minLeft: '2px',
-                    background: 'linear-gradient(180deg, #FFFFFF 0%, #F0F0F5 100%)',
-                    boxShadow: '0 2px 6px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,1)',
-                    border: '0.5px solid rgba(0,0,0,0.1)',
+                    left: `clamp(4px, calc(${((brushSize - 1) / 19) * 100}% - 16px), calc(100% - 36px))`,
+                    background: 'linear-gradient(180deg, #FFFFFF 0%, #F5F5FA 100%)',
+                    boxShadow: '0 3px 8px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15), inset 0 2px 2px rgba(255,255,255,1)',
+                    border: '0.5px solid rgba(0,0,0,0.08)',
                   }}
                 />
-                {/* Invisible range input */}
+                {/* Invisible range input - larger touch target */}
                 <input
                   type="range"
                   min="1"
                   max="20"
                   value={brushSize}
-                  onChange={(e) => setBrushSize(Number(e.target.value))}
+                  onChange={(e) => {
+                    const newValue = Number(e.target.value);
+                    if (newValue !== brushSize) {
+                      haptic();
+                      setBrushSize(newValue);
+                    }
+                  }}
+                  onTouchStart={() => haptic()}
                   className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  style={{ touchAction: 'none' }}
+                  style={{ touchAction: 'none', margin: 0, padding: 0 }}
                 />
               </div>
-              <div className="text-[9px] text-center mt-1.5 font-mono text-gray-500">{brushSize}px</div>
             </div>
 
             {/* Undo Button */}
@@ -721,34 +726,34 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
              {/* Brush Size Slider - Apple Liquid Glass Style */}
              <div className="border-2 border-black bg-gradient-to-b from-gray-100 to-gray-200 p-2 pointer-events-auto">
-                <div className="text-[9px] font-bold text-center uppercase leading-none mb-2 text-gray-600">Size</div>
+                <div className="text-[9px] font-bold text-center uppercase leading-none mb-2 text-gray-600">Size: {brushSize}px</div>
                 <div
-                  className="relative h-5 rounded-full overflow-hidden"
+                  className="relative h-6 rounded-full"
                   style={{
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.9) 0%, rgba(240,240,245,0.8) 100%)',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1), inset 0 -1px 2px rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-                    border: '1px solid rgba(0,0,0,0.15)',
-                    backdropFilter: 'blur(10px)',
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(235,235,240,0.9) 100%)',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.12), inset 0 -1px 2px rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.1)',
+                    border: '1px solid rgba(0,0,0,0.12)',
                   }}
                 >
                   {/* Track fill */}
                   <div
-                    className="absolute top-0.5 bottom-0.5 left-0.5 rounded-full transition-all duration-100"
+                    className="absolute top-1 bottom-1 left-1 rounded-full transition-all duration-75 pointer-events-none"
                     style={{
-                      width: `calc(${((brushSize - 1) / 19) * 100}% - 2px)`,
-                      minWidth: '6px',
-                      background: 'linear-gradient(180deg, #4A9EFF 0%, #0066FF 50%, #0052CC 100%)',
-                      boxShadow: '0 1px 3px rgba(0,102,255,0.4), inset 0 1px 1px rgba(255,255,255,0.3)',
+                      width: `calc(${((brushSize - 1) / 19) * 100}%)`,
+                      maxWidth: 'calc(100% - 8px)',
+                      minWidth: '4px',
+                      background: 'linear-gradient(180deg, #5AB0FF 0%, #007AFF 50%, #0062CC 100%)',
+                      boxShadow: '0 1px 3px rgba(0,122,255,0.4), inset 0 1px 1px rgba(255,255,255,0.3)',
                     }}
                   />
                   {/* Thumb */}
                   <div
-                    className="absolute top-1/2 -translate-y-1/2 w-4 h-4 rounded-full transition-all duration-100"
+                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-75 pointer-events-none"
                     style={{
-                      left: `calc(${((brushSize - 1) / 19) * 100}% - 8px)`,
-                      background: 'linear-gradient(180deg, #FFFFFF 0%, #F0F0F5 100%)',
+                      left: `clamp(2px, calc(${((brushSize - 1) / 19) * 100}% - 10px), calc(100% - 22px))`,
+                      background: 'linear-gradient(180deg, #FFFFFF 0%, #F5F5FA 100%)',
                       boxShadow: '0 2px 6px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,1)',
-                      border: '0.5px solid rgba(0,0,0,0.1)',
+                      border: '0.5px solid rgba(0,0,0,0.08)',
                     }}
                   />
                   {/* Invisible range input */}
@@ -761,7 +766,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                     className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
                   />
                 </div>
-                <div className="text-[8px] text-center mt-1 font-mono text-gray-500">{brushSize}px</div>
              </div>
 
              {/* Current Pattern Preview */}
