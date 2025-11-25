@@ -79,7 +79,7 @@ export default function MacOsPortfolio() {
 
   const [windows, setWindows] = useState<Record<WindowId, WindowState>>({
     welcome: {
-      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 10,
+      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'About Kyle',
       iconType: 'notes' as const,
       pos: { x: 300, y: 100 }, size: { width: 600, height: 500 }
@@ -121,7 +121,7 @@ export default function MacOsPortfolio() {
       pos: { x: 180, y: 90 }, size: { width: 900, height: 650 }
     },
     messages: {
-      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
+      isOpen: true, isMinimized: false, isMaximized: false, zIndex: 10,
       title: 'KyleBOT',
       iconType: 'messages' as const,
       pos: { x: 150, y: 80 }, size: { width: 850, height: 600 }
@@ -140,7 +140,7 @@ export default function MacOsPortfolio() {
     }
   });
 
-  const [hasMessagesNotification, setHasMessagesNotification] = useState(true);
+  const [hasMessagesNotification, setHasMessagesNotification] = useState(false);
 
   const [iconPos, setIconPos] = useState({
     hd: { x: 20, y: 40 },
