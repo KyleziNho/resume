@@ -145,7 +145,8 @@ const FloatingDockMobile = ({
       )}
       style={{
         height: `${height * 4}px`,
-        gap: `${gap * 4}px`
+        gap: `${gap * 4}px`,
+        touchAction: 'none'
       }}
     >
       {items.map((item, index) => (
