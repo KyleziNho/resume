@@ -269,7 +269,7 @@ export default function MacOsPortfolio() {
     }
   }, [installedApps]);
 
-  // Position initial welcome window on mobile
+  // Position initial messages (KyleBOT) window on mobile
   useEffect(() => {
     const isMobile = window.innerWidth < 768;
 
@@ -280,12 +280,12 @@ export default function MacOsPortfolio() {
       const padding = 10; // Equal spacing on sides and from top
 
       const mobileWindowWidth = viewportWidth - (padding * 2);
-      const mobileWindowHeight = viewportHeight * 0.35; // Shorter for notes app
+      const mobileWindowHeight = viewportHeight * 0.5; // Shorter for keyboard visibility
 
       setWindows(prev => ({
         ...prev,
-        welcome: {
-          ...prev.welcome,
+        messages: {
+          ...prev.messages,
           pos: { x: padding, y: menuBarHeight + padding },
           size: { width: mobileWindowWidth, height: mobileWindowHeight }
         }
