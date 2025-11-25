@@ -64,6 +64,7 @@ interface WindowState {
 
 export default function MacOsPortfolio() {
   const [booted, setBooted] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(0);
   const [time, setTime] = useState('');
   const [zIndex, setZIndex] = useState(10);
   const [activeProject, setActiveProject] = useState<any>(null);
@@ -95,7 +96,7 @@ export default function MacOsPortfolio() {
     },
     resume: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
-      title: 'Bio.pdf',
+      title: 'resume.pdf',
       iconType: 'doc' as const,
       pos: { x: 400, y: 100 }, size: { width: 600, height: 600 }
     },
@@ -168,8 +169,30 @@ export default function MacOsPortfolio() {
         const now = new Date();
         setTime(now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     }, 1000);
-    setTimeout(() => setBooted(true), 3000);
-    return () => clearInterval(timer);
+
+    // Animate loading progress with haptic feedback
+    let progress = 0;
+    const loadingInterval = setInterval(() => {
+      progress += Math.random() * 15 + 5; // Random increment between 5-20
+      if (progress >= 100) {
+        progress = 100;
+        setLoadingProgress(100);
+        clearInterval(loadingInterval);
+        haptic(); // Final haptic when complete
+        setTimeout(() => setBooted(true), 300);
+      } else {
+        setLoadingProgress(progress);
+        // Haptic feedback at certain milestones
+        if (Math.floor(progress) % 25 === 0) {
+          haptic();
+        }
+      }
+    }, 150);
+
+    return () => {
+      clearInterval(timer);
+      clearInterval(loadingInterval);
+    };
   }, []);
 
   // Prevent pull-to-refresh on mobile
@@ -207,24 +230,17 @@ export default function MacOsPortfolio() {
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const menuBarHeight = 24;
-      const dockHeight = 80;
+      const padding = 10; // Equal spacing on sides and from top
 
-      const availableWidth = viewportWidth - 40;
-      const availableHeight = viewportHeight - menuBarHeight - dockHeight - 40;
-
-      const welcomeWindow = windows.welcome;
-      const windowWidth = Math.min(welcomeWindow.size.width, availableWidth);
-      const windowHeight = Math.min(welcomeWindow.size.height, availableHeight);
-
-      const centerX = (viewportWidth - windowWidth) / 2;
-      const centerY = menuBarHeight + ((availableHeight - windowHeight) / 2);
+      const mobileWindowWidth = viewportWidth - (padding * 2);
+      const mobileWindowHeight = viewportHeight * 0.35; // Shorter for notes app
 
       setWindows(prev => ({
         ...prev,
         welcome: {
           ...prev.welcome,
-          pos: { x: Math.max(0, centerX), y: Math.max(menuBarHeight, centerY) },
-          size: { width: windowWidth, height: windowHeight }
+          pos: { x: padding, y: menuBarHeight + padding },
+          size: { width: mobileWindowWidth, height: mobileWindowHeight }
         }
       }));
     }
@@ -260,31 +276,70 @@ export default function MacOsPortfolio() {
       const isMobile = viewportWidth < 768;
 
       if (isMobile) {
-        // Mobile: Grid layout (2-3 columns)
-        const cols = viewportWidth < 400 ? 2 : 3;
-        const rows = Math.ceil(iconCount / cols);
-        const baseIconWidth = 90;
-        const baseIconHeight = 90;
+        // Mobile: Random scattered layout like a messy desktop
+        const baseIconSize = 70; // Icon hitbox size
+        const minSpacing = 25; // Minimum space between icons
         const horizontalPadding = 15;
-        const topPadding = 30;
+        const topPadding = 40;
+        const bottomPadding = 100; // Space for dock
 
-        const availableWidth = viewportWidth - (horizontalPadding * 2);
-        const iconWidth = availableWidth / cols;
-        const scale = Math.min(1, iconWidth / baseIconWidth);
+        const usableWidth = viewportWidth - (horizontalPadding * 2) - baseIconSize;
+        const usableHeight = viewportHeight - topPadding - bottomPadding - baseIconSize;
+
+        const scale = viewportWidth < 400 ? 0.85 : 0.95;
 
         const icons = [
           'hd', 'finder', 'resume', 'terminal',
           'safari', 'paint', 'messages', 'game'
         ];
 
+        // Generate random positions with collision detection
         const newPositions: any = {};
+        const placedPositions: { x: number; y: number }[] = [];
+
+        // Seeded random for consistent positions (based on viewport)
+        const seededRandom = (seed: number) => {
+          const x = Math.sin(seed) * 10000;
+          return x - Math.floor(x);
+        };
+
         icons.forEach((icon, index) => {
-          const col = index % cols;
-          const row = Math.floor(index / cols);
-          newPositions[icon] = {
-            x: horizontalPadding + (col * iconWidth),
-            y: topPadding + (row * baseIconHeight * scale)
-          };
+          let attempts = 0;
+          let x: number, y: number;
+          let validPosition = false;
+
+          // Try to find a non-overlapping position
+          while (!validPosition && attempts < 50) {
+            // Use seeded random for consistent layout
+            const seedX = (index + 1) * 1337 + attempts * 7;
+            const seedY = (index + 1) * 2749 + attempts * 13;
+
+            x = horizontalPadding + seededRandom(seedX) * usableWidth;
+            y = topPadding + seededRandom(seedY) * usableHeight;
+
+            // Check for collisions with already placed icons
+            validPosition = true;
+            for (const pos of placedPositions) {
+              const distance = Math.sqrt(Math.pow(x - pos.x, 2) + Math.pow(y - pos.y, 2));
+              if (distance < baseIconSize + minSpacing) {
+                validPosition = false;
+                break;
+              }
+            }
+            attempts++;
+          }
+
+          // Fallback to grid if can't find valid position
+          if (!validPosition) {
+            const cols = 3;
+            const col = index % cols;
+            const row = Math.floor(index / cols);
+            x = horizontalPadding + (col * (usableWidth / cols));
+            y = topPadding + (row * (baseIconSize + minSpacing));
+          }
+
+          newPositions[icon] = { x: x!, y: y! };
+          placedPositions.push({ x: x!, y: y! });
         });
 
         setIconPos(newPositions);
@@ -342,39 +397,23 @@ export default function MacOsPortfolio() {
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      // On mobile, center window and size it appropriately for mobile screens
+      // On mobile, full width with small equal padding
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const menuBarHeight = 24;
-      const dockHeight = 80;
+      const padding = 10; // Equal spacing on sides and from top
 
-      // App-specific sizing for better mobile experience
-      let mobileWindowWidth: number;
+      const mobileWindowWidth = viewportWidth - (padding * 2);
+
+      // Safari and Paint get more height, welcome/notes gets less
       let mobileWindowHeight: number;
-
-      switch (windowId) {
-        case 'paint':
-        case 'safari':
-        case 'messages':
-          // Larger content apps - use more screen space but still contained
-          mobileWindowWidth = Math.min(viewportWidth - 30, 380);
-          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 50, 550);
-          break;
-        case 'finder':
-        case 'preview':
-          // Medium-sized apps
-          mobileWindowWidth = Math.min(viewportWidth - 40, 350);
-          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 60, 500);
-          break;
-        default:
-          // Smaller apps (terminal, resume, welcome)
-          mobileWindowWidth = Math.min(viewportWidth - 50, 320);
-          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 70, 480);
+      if (windowId === 'safari' || windowId === 'paint') {
+        mobileWindowHeight = viewportHeight * 0.845;
+      } else if (windowId === 'welcome') {
+        mobileWindowHeight = viewportHeight * 0.45;
+      } else {
+        mobileWindowHeight = viewportHeight * 0.65;
       }
-
-      // Center the window
-      const centerX = (viewportWidth - mobileWindowWidth) / 2;
-      const centerY = menuBarHeight + ((viewportHeight - menuBarHeight - dockHeight - mobileWindowHeight) / 2);
 
       setWindows(prev => ({
         ...prev,
@@ -382,7 +421,7 @@ export default function MacOsPortfolio() {
           ...prev[windowId],
           isOpen: true,
           isMinimized: false,
-          pos: { x: Math.max(0, centerX), y: Math.max(menuBarHeight + 10, centerY) },
+          pos: { x: padding, y: menuBarHeight + padding },
           size: { width: mobileWindowWidth, height: mobileWindowHeight }
         }
       }));
@@ -424,46 +463,30 @@ export default function MacOsPortfolio() {
     const isMobile = window.innerWidth < 768;
 
     if (isMobile) {
-      // On mobile, re-center window when restoring with appropriate sizes
+      // On mobile, full width with small equal padding
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
       const menuBarHeight = 24;
-      const dockHeight = 80;
+      const padding = 10; // Equal spacing on sides and from top
 
-      // App-specific sizing for better mobile experience
-      let mobileWindowWidth: number;
+      const mobileWindowWidth = viewportWidth - (padding * 2);
+
+      // Safari and Paint get more height, welcome/notes gets less
       let mobileWindowHeight: number;
-
-      switch (windowId) {
-        case 'paint':
-        case 'safari':
-        case 'messages':
-          // Larger content apps - use more screen space but still contained
-          mobileWindowWidth = Math.min(viewportWidth - 30, 380);
-          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 50, 550);
-          break;
-        case 'finder':
-        case 'preview':
-          // Medium-sized apps
-          mobileWindowWidth = Math.min(viewportWidth - 40, 350);
-          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 60, 500);
-          break;
-        default:
-          // Smaller apps (terminal, resume, welcome)
-          mobileWindowWidth = Math.min(viewportWidth - 50, 320);
-          mobileWindowHeight = Math.min(viewportHeight - menuBarHeight - dockHeight - 70, 480);
+      if (windowId === 'safari' || windowId === 'paint') {
+        mobileWindowHeight = viewportHeight * 0.8;
+      } else if (windowId === 'welcome') {
+        mobileWindowHeight = viewportHeight * 0.45;
+      } else {
+        mobileWindowHeight = viewportHeight * 0.65;
       }
-
-      // Center the window
-      const centerX = (viewportWidth - mobileWindowWidth) / 2;
-      const centerY = menuBarHeight + ((viewportHeight - menuBarHeight - dockHeight - mobileWindowHeight) / 2);
 
       setWindows(prev => ({
         ...prev,
         [windowId]: {
           ...prev[windowId],
           isMinimized: false,
-          pos: { x: Math.max(0, centerX), y: Math.max(menuBarHeight + 10, centerY) },
+          pos: { x: padding, y: menuBarHeight + padding },
           size: { width: mobileWindowWidth, height: mobileWindowHeight }
         }
       }));
@@ -565,11 +588,80 @@ export default function MacOsPortfolio() {
 
   if (!booted) {
     return (
-        <div className="h-screen w-screen bg-[#ddd] flex flex-col items-center justify-center cursor-wait">
-            <div className="text-[#555] mb-8">
-                <svg width="80" height="80" viewBox="0 0 170 170" fill="currentColor"><path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"/></svg>
+        <div className="h-screen w-screen bg-[#c0c0c0] flex flex-col items-center justify-center"
+          style={{
+            background: 'linear-gradient(180deg, #7a7a7a 0%, #a8a8a8 15%, #c8c8c8 50%, #a8a8a8 85%, #7a7a7a 100%)'
+          }}
+        >
+            {/* Apple Logo - Glossy Chrome Style */}
+            <div className="mb-10 relative">
+                <svg width="80" height="96" viewBox="0 0 170 170" className="drop-shadow-lg">
+                  <defs>
+                    <linearGradient id="appleGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#6a6a6a" />
+                      <stop offset="40%" stopColor="#4a4a4a" />
+                      <stop offset="60%" stopColor="#3a3a3a" />
+                      <stop offset="100%" stopColor="#2a2a2a" />
+                    </linearGradient>
+                  </defs>
+                  <path fill="url(#appleGradient)" d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"/>
+                </svg>
             </div>
-            <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
+
+            {/* Aqua Gel Progress Bar - Snow Leopard Style */}
+            <div
+              className="w-52 h-3 rounded-full overflow-hidden relative"
+              style={{
+                background: 'linear-gradient(180deg, #1a1a1a 0%, #3d3d3d 20%, #2a2a2a 80%, #1a1a1a 100%)',
+                boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.8), inset 0 -1px 2px rgba(255,255,255,0.1), 0 2px 8px rgba(0,0,0,0.4)',
+                border: '1px solid #0a0a0a'
+              }}
+            >
+              {/* Progress Fill - Aqua Blue Gel */}
+              <div
+                className="h-full rounded-full transition-all duration-150 ease-out relative overflow-hidden"
+                style={{
+                  width: `${loadingProgress}%`,
+                  background: 'linear-gradient(180deg, #6cb4f5 0%, #3d9df5 25%, #1a7de8 50%, #1565c0 75%, #0d47a1 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 2px rgba(0,0,0,0.3)'
+                }}
+              >
+                {/* Glossy Shine Overlay */}
+                <div
+                  className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                  style={{
+                    background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%)'
+                  }}
+                />
+                {/* Animated Stripe Effect */}
+                <div
+                  className="absolute inset-0 opacity-20"
+                  style={{
+                    backgroundImage: 'repeating-linear-gradient(-45deg, transparent, transparent 8px, rgba(255,255,255,0.3) 8px, rgba(255,255,255,0.3) 16px)',
+                    animation: 'stripes 1s linear infinite'
+                  }}
+                />
+              </div>
+            </div>
+
+            {/* Loading Text - Embossed Style */}
+            <p
+              className="text-sm mt-5 font-medium tracking-wide"
+              style={{
+                color: '#4a4a4a',
+                textShadow: '0 1px 0 rgba(255,255,255,0.5)'
+              }}
+            >
+              launching KyleOS
+            </p>
+
+            {/* Stripe Animation Keyframes */}
+            <style jsx>{`
+              @keyframes stripes {
+                0% { background-position: 0 0; }
+                100% { background-position: 32px 0; }
+              }
+            `}</style>
         </div>
     );
   }
@@ -588,7 +680,7 @@ export default function MacOsPortfolio() {
                 setShowAppleMenu(!showAppleMenu);
               }}
             >
-               <svg width="14" height="14" viewBox="0 0 170 170" fill="currentColor">
+               <svg width="14" height="14" viewBox="0 0 170 170" fill="currentColor" className="relative -top-px">
                  <path d="M150.37 130.25c-2.45 5.66-5.35 10.87-8.71 15.66-4.58 6.53-8.33 11.05-11.22 13.56-4.48 4.12-9.28 6.23-14.42 6.35-3.69 0-8.14-1.05-13.32-3.18-5.197-2.12-9.973-3.17-14.34-3.17-4.58 0-9.492 1.05-14.746 3.17-5.262 2.13-9.501 3.24-12.742 3.35-4.929.21-9.842-1.96-14.746-6.52-3.13-2.73-7.045-7.41-11.735-14.04-5.032-7.08-9.169-15.29-12.41-24.65-3.471-10.11-5.211-19.9-5.211-29.378 0-10.857 2.346-20.221 7.045-28.068 3.693-6.303 8.606-11.275 14.755-14.925s12.793-5.51 19.948-5.629c3.915 0 9.049 1.211 15.429 3.591 6.362 2.388 10.447 3.599 12.238 3.599 1.339 0 5.877-1.416 13.57-4.239 7.275-2.618 13.415-3.702 18.445-3.275 13.63 1.1 23.87 6.473 30.68 16.153-12.19 7.386-18.22 17.731-18.1 31.002.11 10.337 3.86 18.939 11.23 25.769 3.34 3.17 7.07 5.62 11.22 7.36-.9 2.61-1.85 5.11-2.86 7.51zM119.11 7.24c0 8.102-2.96 15.667-8.86 22.669-7.12 8.324-15.732 13.134-25.071 12.375a25.222 25.222 0 0 1-.188-3.07c0-7.778 3.386-16.102 9.399-22.908 3.002-3.446 6.82-6.311 11.45-8.597 4.62-2.252 8.99-3.497 13.1-3.71.12 1.083.17 2.166.17 3.24z"/>
                </svg>
                <span className="font-bold">KyleOS</span>
@@ -596,7 +688,7 @@ export default function MacOsPortfolio() {
 
             {/* Apple Menu Dropdown with LetterGlitch */}
             {showAppleMenu && (
-              <div className="absolute top-full left-0 mt-1 w-[280px] h-[320px] bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/10 overflow-hidden">
+              <div className="absolute top-full left-0 mt-1 w-[300px] h-[220px] bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/10 overflow-hidden">
                 <LetterGlitch
                   glitchSpeed={50}
                   centerVignette={true}
@@ -604,18 +696,18 @@ export default function MacOsPortfolio() {
                   smooth={true}
                 />
                 {/* Text Overlay */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 pointer-events-none">
-                  <div className="bg-black/80 backdrop-blur-sm rounded-lg p-6 border border-white/20 shadow-2xl pointer-events-auto">
-                    <p className="text-white text-center text-lg font-semibold mb-4 leading-relaxed">
+                <div className="absolute inset-0 flex flex-col items-center justify-center p-4 pointer-events-none">
+                  <div className="bg-black/80 backdrop-blur-sm rounded-lg p-5 border border-white/20 shadow-2xl pointer-events-auto">
+                    <p className="text-white text-center text-base font-semibold mb-3 leading-relaxed">
                       Hire me to create a<br />resume website :)
                     </p>
                     <a
                       href="https://www.linkedin.com/in/kos33/"
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 bg-[#0077b5] hover:bg-[#006396] text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105"
+                      className="flex items-center justify-center gap-2 bg-[#0077b5] hover:bg-[#006396] text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 text-sm"
                     >
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
                         <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
                       </svg>
                       Connect on LinkedIn
@@ -805,47 +897,13 @@ export default function MacOsPortfolio() {
         onMaximize={maximizeWindow}
         onFocus={focusWindow}
       >
-          <div className="bg-[#555] p-4 h-full flex justify-center">
-              <div className="bg-white w-full max-w-md shadow-2xl p-8 text-xs font-serif text-gray-900 overflow-y-auto">
-                  <div className="text-center border-b border-gray-300 pb-4 mb-4">
-                     <h1 className="text-2xl font-bold uppercase tracking-widest">Kyle O'Sullivan</h1>
-                     <p className="text-gray-500 italic mt-1">MSc Computer Science • Bath, UK</p>
-                  </div>
-
-                  <div className="space-y-4">
-                     <section>
-                        <h3 className="font-sans font-bold text-gray-500 uppercase border-b border-gray-200 mb-2">Education</h3>
-                        <div className="mb-2">
-                           <div className="flex justify-between font-bold"><span>University of Bath</span> <span>2025-26</span></div>
-                           <p>MSc Computer Science (£15k Scholarship)</p>
-                        </div>
-                        <div className="mb-2">
-                           <div className="flex justify-between font-bold"><span>University of Bath</span> <span>2022-25</span></div>
-                           <p>BSc Management (First Class). #1 in Strategy w/ AI.</p>
-                        </div>
-                     </section>
-
-                     <section>
-                        <h3 className="font-sans font-bold text-gray-500 uppercase border-b border-gray-200 mb-2">Experience</h3>
-                        <div className="mb-2">
-                           <div className="flex justify-between font-bold"><span>180 Degrees Consulting</span> <span>2024</span></div>
-                           <p>Strategy Consultant. Market analysis for Museums.</p>
-                        </div>
-                        <div className="mb-2">
-                           <div className="flex justify-between font-bold"><span>SOBIC</span> <span>2024</span></div>
-                           <p>Global Markets Researcher. Financial Modelling (DCF).</p>
-                        </div>
-                     </section>
-
-                     <section>
-                        <h3 className="font-sans font-bold text-gray-500 uppercase border-b border-gray-200 mb-2">Awards</h3>
-                        <ul className="list-disc pl-4">
-                           <li>Gold Scholarship (Top 50 recipients)</li>
-                           <li>$7,000+ Won in Esports Competitions</li>
-                        </ul>
-                     </section>
-                  </div>
-              </div>
+          <div className="bg-[#525252] h-full flex flex-col overflow-hidden">
+            <iframe
+              src="/resume.pdf#view=FitH"
+              className="flex-1 w-full border-0"
+              title="Kyle O'Sullivan Resume"
+              style={{ minHeight: '100%' }}
+            />
           </div>
       </MacWindow>
 
