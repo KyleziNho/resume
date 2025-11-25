@@ -43,6 +43,8 @@ const MacWindow: React.FC<MacWindowProps> = ({
   const [isMobile, setIsMobile] = useState(false);
 
   const [isFlashing, setIsFlashing] = useState(false);
+  const [hasBeenClosed, setHasBeenClosed] = useState(false);
+  const [wasEverOpen, setWasEverOpen] = useState(false);
 
   // Detect mobile
   useEffect(() => {
@@ -52,17 +54,37 @@ const MacWindow: React.FC<MacWindowProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Flash close button after delay
+  // Track if window has been closed after being open
   useEffect(() => {
-    if (flashCloseButton && isOpen && !isMinimized) {
-      const timer = setTimeout(() => {
-        setIsFlashing(true);
-        // Stop flashing after 2 seconds (4 flashes)
-        setTimeout(() => setIsFlashing(false), 2000);
-      }, 3500);
-      return () => clearTimeout(timer);
+    if (isOpen) {
+      setWasEverOpen(true);
+    } else if (wasEverOpen) {
+      setHasBeenClosed(true);
     }
-  }, [flashCloseButton, isOpen, isMinimized]);
+  }, [isOpen, wasEverOpen]);
+
+  // Flash close button repeatedly every 5 seconds (only if never closed)
+  useEffect(() => {
+    if (!flashCloseButton || !isOpen || isMinimized || hasBeenClosed) {
+      return;
+    }
+
+    const doFlash = () => {
+      setIsFlashing(true);
+      setTimeout(() => setIsFlashing(false), 2000);
+    };
+
+    // Initial flash after 3.5 seconds
+    const initialTimer = setTimeout(doFlash, 3500);
+
+    // Then repeat every 5 seconds (after the initial 3.5s + 2s flash = 5.5s, so next at ~8.5s, etc)
+    const intervalTimer = setInterval(doFlash, 5000);
+
+    return () => {
+      clearTimeout(initialTimer);
+      clearInterval(intervalTimer);
+    };
+  }, [flashCloseButton, isOpen, isMinimized, hasBeenClosed]);
 
   // Track visual viewport height changes (for mobile keyboard)
   useEffect(() => {
