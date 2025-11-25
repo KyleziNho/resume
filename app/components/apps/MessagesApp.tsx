@@ -66,6 +66,28 @@ export default function MessagesApp() {
     }
   }, [messages, isTyping]);
 
+  // Scroll to top when keyboard opens on mobile
+  useEffect(() => {
+    const isMobile = window.innerWidth < 768;
+    if (!isMobile) return;
+
+    const handleFocus = () => {
+      // Scroll page to top when keyboard opens
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    const inputElement = inputRef.current;
+    if (inputElement) {
+      inputElement.addEventListener('focus', handleFocus);
+    }
+
+    return () => {
+      if (inputElement) {
+        inputElement.removeEventListener('focus', handleFocus);
+      }
+    };
+  }, []);
+
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault();
     if (!input.trim()) return;
@@ -81,6 +103,13 @@ export default function MessagesApp() {
     setMessages(currentMessages);
     setInput('');
     setIsTyping(true);
+
+    // Keep keyboard open by refocusing input (mobile)
+    setTimeout(() => {
+      if (inputRef.current) {
+        inputRef.current.focus();
+      }
+    }, 0);
 
     // Get AI response
     const responseText = await getBotResponse(userMsg.text, currentMessages);
