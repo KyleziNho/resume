@@ -13,6 +13,7 @@ import Safari from './components/apps/Safari';
 import MacPaint from './components/apps/MacPaint';
 import MessagesApp from './components/apps/MessagesApp';
 import NotesApp from './components/apps/NotesApp';
+import KernelCrossing from './components/apps/CrossyRoad';
 import LetterGlitch from './components/ui/LetterGlitch';
 import { projects } from './data/projects';
 import { haptic } from 'ios-haptics';
@@ -48,7 +49,7 @@ const TerminalBackground = React.memo(() => {
 
 TerminalBackground.displayName = 'TerminalBackground';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages' | 'game';
 
 interface WindowState {
   isOpen: boolean;
@@ -121,6 +122,12 @@ export default function MacOsPortfolio() {
       title: 'KyleBOT',
       iconType: 'messages' as const,
       pos: { x: 150, y: 80 }, size: { width: 850, height: 600 }
+    },
+    game: {
+      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
+      title: 'Kernel Crossing',
+      iconType: 'folder' as const,
+      pos: { x: 100, y: 50 }, size: { width: 800, height: 650 }
     }
   });
 
@@ -133,7 +140,8 @@ export default function MacOsPortfolio() {
     terminal: { x: 20, y: 370 },
     safari: { x: 20, y: 480 },
     paint: { x: 20, y: 590 },
-    messages: { x: 20, y: 700 }
+    messages: { x: 20, y: 700 },
+    game: { x: 20, y: 810 }
   });
 
   const [iconScale, setIconScale] = useState(1);
@@ -145,7 +153,8 @@ export default function MacOsPortfolio() {
     terminal: 'Terminal',
     safari: 'Safari',
     paint: 'Paint',
-    messages: 'KyleBOT'
+    messages: 'KyleBOT',
+    game: 'Game.app'
   });
 
   const [contextMenu, setContextMenu] = useState<{
@@ -247,7 +256,7 @@ export default function MacOsPortfolio() {
       const dockHeight = 80; // Bottom dock area
       const availableHeight = viewportHeight - menuBarHeight - dockHeight;
 
-      const iconCount = 7; // Number of desktop icons
+      const iconCount = 8; // Number of desktop icons
       const isMobile = viewportWidth < 768;
 
       if (isMobile) {
@@ -265,7 +274,7 @@ export default function MacOsPortfolio() {
 
         const icons = [
           'hd', 'finder', 'resume', 'terminal',
-          'safari', 'paint', 'messages'
+          'safari', 'paint', 'messages', 'game'
         ];
 
         const newPositions: any = {};
@@ -303,7 +312,8 @@ export default function MacOsPortfolio() {
           terminal: { x: 20, y: topPadding + iconSpacing * 3 },
           safari: { x: 20, y: topPadding + iconSpacing * 4 },
           paint: { x: 20, y: topPadding + iconSpacing * 5 },
-          messages: { x: 20, y: topPadding + iconSpacing * 6 }
+          messages: { x: 20, y: topPadding + iconSpacing * 6 },
+          game: { x: 20, y: topPadding + iconSpacing * 7 }
         });
 
         setIconScale(scale);
@@ -511,6 +521,7 @@ export default function MacOsPortfolio() {
       safari: 'safari',
       paint: 'paint',
       messages: 'messages',
+      game: 'game',
     };
 
     const items: ContextMenuItem[] = [
@@ -689,6 +700,16 @@ export default function MacOsPortfolio() {
            initialPos={iconPos.messages}
            scale={iconScale}
            onDoubleClick={() => openWindow('messages')}
+           onRename={handleIconRename}
+           onContextMenu={handleIconContextMenu}
+         />
+         <DesktopIcon
+           id="game"
+           label={iconLabels.game}
+           type="folder"
+           initialPos={iconPos.game}
+           scale={iconScale}
+           onDoubleClick={() => openWindow('game')}
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
@@ -911,6 +932,23 @@ export default function MacOsPortfolio() {
         onFocus={focusWindow}
       >
          <MessagesApp />
+      </MacWindow>
+
+      <MacWindow
+        id="game"
+        title={windows.game.title}
+        isOpen={windows.game.isOpen}
+        isMinimized={windows.game.isMinimized}
+        isMaximized={windows.game.isMaximized}
+        zIndex={windows.game.zIndex}
+        pos={windows.game.pos}
+        size={windows.game.size}
+        onClose={closeWindow}
+        onMinimize={minimizeWindow}
+        onMaximize={maximizeWindow}
+        onFocus={focusWindow}
+      >
+         <KernelCrossing />
       </MacWindow>
 
       {/* Global Styles */}
