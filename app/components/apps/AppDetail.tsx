@@ -1,9 +1,9 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import { AppData } from './AppStore';
-import { ExternalLink, Globe } from 'lucide-react';
+import { ExternalLink, Globe, ChevronLeft } from 'lucide-react';
 import { haptic } from 'ios-haptics';
 
 interface AppDetailProps {
@@ -11,6 +11,126 @@ interface AppDetailProps {
 }
 
 export default function AppDetail({ app }: AppDetailProps) {
+  const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
+
+  const openFullscreen = (index: number) => {
+    haptic();
+    setFullscreenIndex(index);
+  };
+
+  const closeFullscreen = () => {
+    haptic();
+    setFullscreenIndex(null);
+  };
+
+  const goToPrevious = () => {
+    if (fullscreenIndex === null) return;
+    haptic();
+    setFullscreenIndex(fullscreenIndex === 0 ? app.images.length - 1 : fullscreenIndex - 1);
+  };
+
+  const goToNext = () => {
+    if (fullscreenIndex === null) return;
+    haptic();
+    setFullscreenIndex(fullscreenIndex === app.images.length - 1 ? 0 : fullscreenIndex + 1);
+  };
+
+  // Fullscreen Image Viewer
+  if (fullscreenIndex !== null) {
+    return (
+      <div
+        className="h-full flex flex-col font-sans select-none overflow-hidden relative"
+        style={{
+          background: 'linear-gradient(180deg, #2a2a2a 0%, #1a1a1a 100%)',
+        }}
+      >
+        {/* Back Button - Top Left */}
+        <button
+          onClick={closeFullscreen}
+          className="absolute top-3 left-3 z-20 flex items-center gap-1 px-3 py-2 rounded-lg text-white text-sm font-semibold transition-all duration-150 active:scale-95"
+          style={{
+            background: 'linear-gradient(180deg, #4a4a4a 0%, #3a3a3a 50%, #2a2a2a 100%)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2), 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.3)',
+            border: '1px solid #555',
+          }}
+        >
+          <ChevronLeft size={16} />
+          <span>Back</span>
+        </button>
+
+        {/* Image Counter */}
+        <div
+          className="absolute top-3 right-3 z-20 px-3 py-2 rounded-lg text-white text-sm font-mono"
+          style={{
+            background: 'rgba(0,0,0,0.6)',
+            border: '1px solid #444',
+          }}
+        >
+          {fullscreenIndex + 1} / {app.images.length}
+        </div>
+
+        {/* Main Image Area */}
+        <div className="flex-1 flex items-center justify-center px-16 py-4">
+          <Image
+            src={`${app.images[fullscreenIndex]}?v=2`}
+            alt={`${app.name} screenshot ${fullscreenIndex + 1}`}
+            width={400}
+            height={800}
+            className="max-h-full max-w-full object-contain rounded-xl"
+            style={{
+              boxShadow: '0 8px 32px rgba(0,0,0,0.5)',
+            }}
+            unoptimized
+          />
+        </div>
+
+        {/* Left Arrow - 1990s Style */}
+        <button
+          onClick={goToPrevious}
+          className="absolute left-2 top-1/2 -translate-y-1/2 z-20 w-12 h-16 flex items-center justify-center transition-all duration-100 active:scale-90"
+          style={{
+            background: 'linear-gradient(180deg, #d0d0d0 0%, #a0a0a0 20%, #808080 80%, #606060 100%)',
+            boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -2px 0 rgba(0,0,0,0.3), 2px 2px 4px rgba(0,0,0,0.5)',
+            border: '2px solid #404040',
+            borderRadius: '4px',
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M15 6L9 12L15 18"
+              stroke="#333"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+
+        {/* Right Arrow - 1990s Style */}
+        <button
+          onClick={goToNext}
+          className="absolute right-2 top-1/2 -translate-y-1/2 z-20 w-12 h-16 flex items-center justify-center transition-all duration-100 active:scale-90"
+          style={{
+            background: 'linear-gradient(180deg, #d0d0d0 0%, #a0a0a0 20%, #808080 80%, #606060 100%)',
+            boxShadow: 'inset 0 2px 0 rgba(255,255,255,0.5), inset 0 -2px 0 rgba(0,0,0,0.3), 2px 2px 4px rgba(0,0,0,0.5)',
+            border: '2px solid #404040',
+            borderRadius: '4px',
+          }}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+            <path
+              d="M9 6L15 12L9 18"
+              stroke="#333"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+          </svg>
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div
       className="h-full flex flex-col font-sans select-none overflow-hidden"
@@ -119,9 +239,10 @@ export default function AppDetail({ app }: AppDetailProps) {
               }}
             >
               {app.images.map((image, index) => (
-                <div
+                <button
                   key={index}
-                  className="shrink-0 snap-start rounded-xl overflow-hidden"
+                  onClick={() => openFullscreen(index)}
+                  className="shrink-0 snap-start rounded-xl overflow-hidden cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]"
                   style={{
                     boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                   }}
@@ -134,7 +255,7 @@ export default function AppDetail({ app }: AppDetailProps) {
                     className="h-[220px] md:h-[380px] w-auto object-contain"
                     unoptimized
                   />
-                </div>
+                </button>
               ))}
             </div>
           </div>
