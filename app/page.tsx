@@ -1238,6 +1238,7 @@ export default function MacOsPortfolio() {
         onMinimize={minimizeWindow}
         onMaximize={maximizeWindow}
         onFocus={focusWindow}
+        flashCloseButton={true}
       >
          <MessagesApp />
       </MacWindow>

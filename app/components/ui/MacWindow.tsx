@@ -16,6 +16,7 @@ interface MacWindowProps {
   onMaximize: (id: string) => void;
   onFocus: (id: string) => void;
   children: React.ReactNode;
+  flashCloseButton?: boolean; // Flash the close button to show interactivity
 }
 
 const MacWindow: React.FC<MacWindowProps> = ({
@@ -31,7 +32,8 @@ const MacWindow: React.FC<MacWindowProps> = ({
   onMinimize,
   onMaximize,
   onFocus,
-  children
+  children,
+  flashCloseButton = false
 }) => {
   const windowRef = useRef<HTMLDivElement>(null);
   const { pos: currentPos, setPos, handleMouseDown, handleTouchStart, isDragging, dragOffset } = useDraggable(id, pos, onFocus);
@@ -40,6 +42,8 @@ const MacWindow: React.FC<MacWindowProps> = ({
   const [viewportOffsetY, setViewportOffsetY] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  const [isFlashing, setIsFlashing] = useState(false);
+
   // Detect mobile
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -47,6 +51,18 @@ const MacWindow: React.FC<MacWindowProps> = ({
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
+
+  // Flash close button after delay
+  useEffect(() => {
+    if (flashCloseButton && isOpen && !isMinimized) {
+      const timer = setTimeout(() => {
+        setIsFlashing(true);
+        // Stop flashing after 2 seconds (4 flashes)
+        setTimeout(() => setIsFlashing(false), 2000);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [flashCloseButton, isOpen, isMinimized]);
 
   // Track visual viewport height changes (for mobile keyboard)
   useEffect(() => {
@@ -148,21 +164,22 @@ const MacWindow: React.FC<MacWindowProps> = ({
         <div className={`absolute left-2 flex ${isMobile ? 'gap-3' : 'gap-2'} z-20`} onMouseDown={e => e.stopPropagation()} onTouchStart={e => e.stopPropagation()}>
           <button
             onClick={() => onClose(id)}
-            className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-[#ff5f57] border border-[#b93a35] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group ${isMobile ? 'active:scale-90' : ''}`}
+            className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-[#ff5f57] border border-[#b93a35] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group ${isMobile ? 'active:scale-90' : ''} ${isFlashing ? 'animate-pulse' : ''}`}
+            style={isFlashing ? { animation: 'flash-button 0.5s ease-in-out infinite' } : {}}
           >
-             <X size={isMobile ? 10 : 6} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
+             <X size={isMobile ? 12 : 6} className={`text-black/60 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} ${isFlashing ? 'opacity-100' : ''}`} strokeWidth={3} />
           </button>
           <button
             onClick={() => onMinimize(id)}
             className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-[#febc2e] border border-[#c99627] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group ${isMobile ? 'active:scale-90' : ''}`}
           >
-             <Minus size={isMobile ? 10 : 6} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
+             <Minus size={isMobile ? 12 : 6} className={`text-black/60 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} strokeWidth={3} />
           </button>
           <button
             onClick={() => onMaximize(id)}
             className={`${isMobile ? 'w-5 h-5' : 'w-3 h-3'} rounded-full bg-[#28c840] border border-[#1c8a23] shadow-[inset_0_1px_2px_rgba(0,0,0,0.2)] hover:brightness-90 active:brightness-75 flex items-center justify-center group ${isMobile ? 'active:scale-90' : ''}`}
           >
-             <Maximize2 size={isMobile ? 9 : 5} className="text-black/50 opacity-0 group-hover:opacity-100" strokeWidth={3} />
+             <Maximize2 size={isMobile ? 10 : 5} className={`text-black/60 ${isMobile ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'}`} strokeWidth={3} />
           </button>
         </div>
 
