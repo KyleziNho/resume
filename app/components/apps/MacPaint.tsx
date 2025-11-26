@@ -8,17 +8,24 @@ import {
 } from 'lucide-react';
 import { haptic } from 'ios-haptics';
 
-// --- CSS PATTERNS FOR RETRO VIBE ---
+// --- CSS PATTERNS FOR RETRO VIBE (expanded for 2 rows) ---
 const PATTERNS = [
   { id: 'solid', style: { background: '#000' } },
-  { id: 'gray', style: { backgroundImage: 'radial-gradient(#000 15%, transparent 16%)', backgroundSize: '4px 4px' } },
-  { id: 'dots', style: { backgroundImage: 'radial-gradient(#000 15%, transparent 16%)', backgroundSize: '8px 8px' } },
-  { id: 'lines-v', style: { backgroundImage: 'repeating-linear-gradient(90deg, #000 0, #000 1px, transparent 0, transparent 4px)' } },
-  { id: 'lines-h', style: { backgroundImage: 'repeating-linear-gradient(0deg, #000 0, #000 1px, transparent 0, transparent 4px)' } },
-  { id: 'check', style: { backgroundImage: 'repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)', backgroundPosition: '0 0, 4px 4px', backgroundSize: '8px 8px' } },
-  { id: 'diag', style: { backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 6px)' } },
-  { id: 'grid', style: { backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '8px 8px' } },
-  { id: 'bricks', style: { backgroundImage: 'linear-gradient(335deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(155deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(335deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(155deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px)', backgroundSize: '10px 10px', backgroundColor: '#fff' } },
+  { id: 'white', style: { background: '#fff' } },
+  { id: 'gray', style: { backgroundImage: 'radial-gradient(#000 15%, transparent 16%)', backgroundSize: '4px 4px', backgroundColor: '#fff' } },
+  { id: 'gray-dark', style: { backgroundImage: 'radial-gradient(#000 25%, transparent 26%)', backgroundSize: '3px 3px', backgroundColor: '#fff' } },
+  { id: 'dots', style: { backgroundImage: 'radial-gradient(#000 20%, transparent 21%)', backgroundSize: '6px 6px', backgroundColor: '#fff' } },
+  { id: 'lines-v', style: { backgroundImage: 'repeating-linear-gradient(90deg, #000 0, #000 1px, transparent 0, transparent 4px)', backgroundColor: '#fff' } },
+  { id: 'lines-h', style: { backgroundImage: 'repeating-linear-gradient(0deg, #000 0, #000 1px, transparent 0, transparent 4px)', backgroundColor: '#fff' } },
+  { id: 'diag-r', style: { backgroundImage: 'repeating-linear-gradient(45deg, #000 0, #000 1px, transparent 0, transparent 4px)', backgroundColor: '#fff' } },
+  { id: 'diag-l', style: { backgroundImage: 'repeating-linear-gradient(-45deg, #000 0, #000 1px, transparent 0, transparent 4px)', backgroundColor: '#fff' } },
+  { id: 'check', style: { backgroundImage: 'repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000), repeating-linear-gradient(45deg, #000 25%, transparent 25%, transparent 75%, #000 75%, #000)', backgroundPosition: '0 0, 2px 2px', backgroundSize: '4px 4px', backgroundColor: '#fff' } },
+  { id: 'grid', style: { backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '4px 4px', backgroundColor: '#fff' } },
+  { id: 'grid-lg', style: { backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '8px 8px', backgroundColor: '#fff' } },
+  { id: 'bricks', style: { backgroundImage: 'linear-gradient(#000 1px, transparent 1px)', backgroundSize: '8px 4px', backgroundColor: '#fff' } },
+  { id: 'weave', style: { backgroundImage: 'linear-gradient(45deg, #000 12.5%, transparent 12.5%, transparent 37.5%, #000 37.5%, #000 62.5%, transparent 62.5%, transparent 87.5%, #000 87.5%)', backgroundSize: '4px 4px', backgroundColor: '#fff' } },
+  { id: 'dots-lg', style: { backgroundImage: 'radial-gradient(#000 30%, transparent 31%)', backgroundSize: '8px 8px', backgroundColor: '#fff' } },
+  { id: 'cross', style: { backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '8px 8px', backgroundPosition: '3px 3px', backgroundColor: '#fff' } },
 ];
 
 type ToolType = 'pencil' | 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill' | 'hireme';
@@ -46,7 +53,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   const [lastHireMePos, setLastHireMePos] = useState<{ x: number; y: number } | null>(null);
 
   // Mobile state
-  const [showPatterns, setShowPatterns] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
 
   // Pattern cache
@@ -65,10 +71,15 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   // Initialize Canvas & Load Image
   useEffect(() => {
     const canvas = canvasRef.current;
-    if (!canvas) return;
+    const container = containerRef.current;
+    if (!canvas || !container) return;
 
-    // Small delay to ensure canvas is properly sized in DOM
     const initCanvas = () => {
+      // Set canvas size to match container
+      const rect = container.getBoundingClientRect();
+      canvas.width = rect.width;
+      canvas.height = rect.height;
+
       const context = canvas.getContext('2d', { willReadFrequently: true });
       if (!context) return;
 
@@ -92,7 +103,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           context.fillStyle = 'white';
           context.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Use cover-style scaling (fill canvas, crop if needed)
+          // Scale to fill the entire canvas (cover style)
           const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
           const scaledWidth = img.width * scale;
           const scaledHeight = img.height * scale;
@@ -119,7 +130,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   const saveHistory = (context: CanvasRenderingContext2D) => {
     if (!canvasRef.current) return;
     const data = context.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
-    setHistory(prev => [...prev.slice(-9), data]); // Keep last 10
+    setHistory(prev => [...prev.slice(-9), data]);
   };
 
   const undo = () => {
@@ -140,7 +151,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
     } else if ('changedTouches' in e && e.changedTouches.length > 0) {
-      // For touchend events, use changedTouches
       clientX = e.changedTouches[0].clientX;
       clientY = e.changedTouches[0].clientY;
     } else if ('clientX' in e) {
@@ -150,7 +160,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       return { x: 0, y: 0 };
     }
 
-    // Account for canvas scaling
     const scaleX = canvasRef.current.width / rect.width;
     const scaleY = canvasRef.current.height / rect.height;
 
@@ -164,66 +173,59 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   const createPattern = (patternObj: typeof PATTERNS[0]): string | CanvasPattern => {
     if (!ctx || !canvasRef.current) return 'black';
 
-    // Use cached pattern if available
     if (patternCache.current.has(patternObj.id)) {
       const cached = patternCache.current.get(patternObj.id);
       return cached || 'black';
     }
 
-    // For solid, just return black
-    if (patternObj.id === 'solid') {
-      return 'black';
-    }
+    if (patternObj.id === 'solid') return 'black';
+    if (patternObj.id === 'white') return 'white';
 
-    // Create a small canvas to generate the pattern
     const patternCanvas = document.createElement('canvas');
     const patternCtx = patternCanvas.getContext('2d');
     if (!patternCtx) return 'black';
 
-    // Set canvas size based on pattern
-    const size = patternObj.id === 'dots' || patternObj.id === 'grid' ? 8 : 4;
+    const size = 8;
     patternCanvas.width = size;
     patternCanvas.height = size;
 
-    // Fill white background
     patternCtx.fillStyle = 'white';
     patternCtx.fillRect(0, 0, size, size);
     patternCtx.fillStyle = 'black';
 
-    // Draw pattern
     switch (patternObj.id) {
       case 'gray':
+      case 'gray-dark':
         patternCtx.fillRect(0, 0, 1, 1);
-        patternCtx.fillRect(2, 2, 1, 1);
+        patternCtx.fillRect(4, 4, 1, 1);
         break;
       case 'dots':
-        patternCtx.fillRect(1, 1, 2, 2);
+      case 'dots-lg':
+        patternCtx.fillRect(3, 3, 2, 2);
         break;
       case 'lines-v':
         patternCtx.fillRect(0, 0, 1, size);
+        patternCtx.fillRect(4, 0, 1, size);
         break;
       case 'lines-h':
         patternCtx.fillRect(0, 0, size, 1);
+        patternCtx.fillRect(0, 4, size, 1);
         break;
-      case 'diag':
-        for (let i = 0; i < size; i++) {
-          patternCtx.fillRect(i, i, 1, 1);
-        }
+      case 'diag-r':
+      case 'diag-l':
+        for (let i = 0; i < size; i++) patternCtx.fillRect(i, i, 1, 1);
         break;
       case 'check':
-        patternCtx.fillRect(0, 0, size/2, size/2);
-        patternCtx.fillRect(size/2, size/2, size/2, size/2);
+        patternCtx.fillRect(0, 0, 4, 4);
+        patternCtx.fillRect(4, 4, 4, 4);
         break;
       case 'grid':
+      case 'grid-lg':
         patternCtx.fillRect(0, 0, size, 1);
         patternCtx.fillRect(0, 0, 1, size);
         break;
-      case 'bricks':
-        patternCtx.fillRect(0, 0, size, 1);
-        patternCtx.fillRect(0, size/2, size, 1);
-        patternCtx.fillRect(size/2, 0, 1, size/2);
-        patternCtx.fillRect(0, size/2, 1, size/2);
-        break;
+      default:
+        patternCtx.fillRect(0, 0, 1, 1);
     }
 
     const pattern = ctx.createPattern(patternCanvas, 'repeat');
@@ -231,7 +233,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     return pattern || 'black';
   };
 
-  // Flood fill algorithm for paint bucket
+  // Flood fill algorithm
   const floodFill = (startX: number, startY: number) => {
     if (!ctx || !canvasRef.current) return;
 
@@ -242,7 +244,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     const sx = Math.floor(startX);
     const sy = Math.floor(startY);
 
-    // Bounds check
     if (sx < 0 || sx >= canvas.width || sy < 0 || sy >= canvas.height) return;
 
     const startPos = (sy * canvas.width + sx) * 4;
@@ -251,13 +252,9 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     const startB = data[startPos + 2];
     const startA = data[startPos + 3];
 
-    // Fill color (black)
     const fillR = 0, fillG = 0, fillB = 0, fillA = 255;
-
-    // Tolerance for similar colors (helps with anti-aliased/dithered images)
     const tolerance = 32;
 
-    // Check if colors are similar within tolerance
     const colorMatch = (r: number, g: number, b: number, a: number) => {
       return Math.abs(r - startR) <= tolerance &&
              Math.abs(g - startG) <= tolerance &&
@@ -265,7 +262,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
              Math.abs(a - startA) <= tolerance;
     };
 
-    // Don't fill if clicking on same color as fill color
     if (Math.abs(startR - fillR) <= tolerance &&
         Math.abs(startG - fillG) <= tolerance &&
         Math.abs(startB - fillB) <= tolerance) return;
@@ -306,25 +302,20 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
   // Drawing Handlers
   const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
-    // Prevent default touch behavior to stop scrolling
-    if ('touches' in e) {
-      e.preventDefault();
-    }
+    if ('touches' in e) e.preventDefault();
 
     if (!ctx || !canvasRef.current) return;
     const { x, y } = getMousePos(e);
 
-    // Fill tool - flood fill
     if (tool === 'fill') {
       floodFill(x, y);
       return;
     }
 
-    // Hire Me tool - start drawing "HIRE ME" text
     if (tool === 'hireme') {
       setIsDrawing(true);
       setLastHireMePos({ x, y });
-      const fontSize = 10 + brushSize * 2; // Scale font size with brush size (12px to 50px)
+      const fontSize = 10 + brushSize * 2;
       ctx.save();
       ctx.font = `bold ${fontSize}px Arial`;
       ctx.fillStyle = '#ff0000';
@@ -340,43 +331,32 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     ctx.beginPath();
     ctx.moveTo(x, y);
 
-    // Tool Styles
     if (tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = brushSize * 4; // Eraser is bigger
+      ctx.lineWidth = brushSize * 4;
     } else {
       ctx.globalCompositeOperation = 'source-over';
       ctx.lineWidth = tool === 'pencil' ? Math.max(1, brushSize / 2) : brushSize;
 
       const pattern = createPattern(activePattern);
-      if (typeof pattern === 'string') {
-        ctx.strokeStyle = pattern;
-        ctx.fillStyle = pattern;
-      } else {
-        ctx.strokeStyle = pattern;
-        ctx.fillStyle = pattern;
-      }
+      ctx.strokeStyle = pattern as string;
+      ctx.fillStyle = pattern as string;
     }
   };
 
   const draw = (e: React.MouseEvent | React.TouchEvent) => {
-    // Prevent default touch behavior
-    if ('touches' in e) {
-      e.preventDefault();
-    }
+    if ('touches' in e) e.preventDefault();
 
     if (!isDrawing || !ctx || !canvasRef.current) return;
     const { x, y } = getMousePos(e);
 
-    // Hire Me tool - draw "HIRE ME" along path
     if (tool === 'hireme') {
       if (lastHireMePos) {
-        const fontSize = 10 + brushSize * 2; // Scale font size with brush size
+        const fontSize = 10 + brushSize * 2;
         const distance = Math.sqrt(
           Math.pow(x - lastHireMePos.x, 2) + Math.pow(y - lastHireMePos.y, 2)
         );
 
-        // Spacing based on font size
         const spacing = fontSize * 3;
         if (distance > spacing) {
           ctx.save();
@@ -392,7 +372,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
     if (!snapshot) return;
 
-    // For Shapes, we clear and redraw from snapshot
     if (['line', 'rect', 'circle'].includes(tool)) {
       ctx.putImageData(snapshot, 0, 0);
       ctx.beginPath();
@@ -425,7 +404,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   const stopDrawing = () => {
     if (!isDrawing || !ctx) return;
 
-    // Hire Me tool - finalize
     if (tool === 'hireme') {
       setIsDrawing(false);
       setLastHireMePos(null);
@@ -438,7 +416,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     saveHistory(ctx);
   };
 
-  // Tool Button Component - Classic MacPaint style
+  // Tool Button Component
   const ToolBtn = ({ id, icon: Icon, compact = false }: any) => (
     <button
       type="button"
@@ -448,20 +426,15 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
         haptic();
         setTool(id);
       }}
-      onMouseDown={(e) => {
-        e.stopPropagation();
-      }}
-      onTouchStart={(e) => {
-        e.stopPropagation();
-      }}
-      className={`${compact ? 'w-11 h-11' : 'w-8 h-8'} flex items-center justify-center border border-black transition-all active:scale-95 cursor-pointer relative z-10 ${
+      onMouseDown={(e) => e.stopPropagation()}
+      onTouchStart={(e) => e.stopPropagation()}
+      className={`${compact ? 'w-10 h-10' : 'w-8 h-8'} flex items-center justify-center border border-black transition-all active:scale-95 cursor-pointer ${
         tool === id
           ? 'bg-black text-white'
           : 'bg-white text-black hover:bg-gray-100'
       }`}
-      style={{ pointerEvents: 'auto' }}
     >
-      <Icon size={compact ? 22 : 16} strokeWidth={1.5} />
+      <Icon size={compact ? 20 : 16} strokeWidth={1.5} />
     </button>
   );
 
@@ -479,133 +452,130 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   };
 
   return (
-    <div className="flex flex-col h-full font-sans selection:bg-transparent" style={{ ...checkerboardStyle, pointerEvents: 'auto' }}>
+    <div className="flex flex-col h-full font-sans selection:bg-transparent" style={{ ...checkerboardStyle }}>
 
-      {/* 1. Paint Menu Bar */}
-      <div className="h-6 bg-white border-b-2 border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none overflow-x-auto">
-        <span className="mr-4 font-bold whitespace-nowrap">File</span>
-        <span className="mr-4 whitespace-nowrap">Edit</span>
-        <span className="mr-4 whitespace-nowrap hidden md:inline">Goodies</span>
-        <span className="mr-4 whitespace-nowrap hidden md:inline">Font</span>
-        <span className="mr-4 whitespace-nowrap hidden md:inline">FontSize</span>
-        <span className="mr-4 whitespace-nowrap hidden md:inline">Style</span>
+      {/* Menu Bar */}
+      <div className="h-6 bg-white border-b-2 border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none">
+        <span className="mr-4 font-bold">File</span>
+        <span className="mr-4">Edit</span>
+        <span className="mr-4 hidden md:inline">Goodies</span>
+        <span className="mr-4 hidden md:inline">Font</span>
+        <span className="mr-4 hidden md:inline">FontSize</span>
+        <span className="mr-4 hidden md:inline">Style</span>
         <div className="flex-1 text-center font-bold italic truncate">{fileName}</div>
       </div>
 
-      {/* Mobile Layout - Classic MacPaint style */}
-      {isMobile && (
-        <div className="flex flex-1 overflow-hidden">
-          {/* Left Tool Panel */}
-          <div className="w-[88px] bg-white border-r-2 border-black flex flex-col shrink-0">
-            {/* Tools Grid - 2 columns like original MacPaint */}
-            <div className="grid grid-cols-2 border-b-2 border-black">
-              <ToolBtn id="fill" icon={PaintBucket} compact />
-              <ToolBtn id="hireme" icon={HelpCircle} compact />
-              <ToolBtn id="pencil" icon={Pencil} compact />
-              <ToolBtn id="brush" icon={Brush} compact />
-              <ToolBtn id="eraser" icon={Eraser} compact />
-              <ToolBtn id="line" icon={Minus} compact />
-              <ToolBtn id="rect" icon={Square} compact />
-              <ToolBtn id="circle" icon={Circle} compact />
-            </div>
-
-            {/* Brush Size Slider - Classic Mac style */}
-            <div className="border-b-2 border-black bg-white px-1 py-4">
-              <input
-                type="range"
-                min="1"
-                max="20"
-                value={brushSize}
-                onChange={(e) => {
-                  const newValue = Number(e.target.value);
-                  if (newValue !== brushSize) {
-                    haptic();
-                    setBrushSize(newValue);
-                  }
-                }}
-                className="mac-slider"
-              />
-              <style jsx>{`
-                .mac-slider {
-                  -webkit-appearance: none;
-                  appearance: none;
-                  width: 100%;
-                  height: 6px;
-                  background: linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%);
-                  border-radius: 3px;
-                  outline: none;
-                  border: 1px solid #777;
-                  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
-                }
-                .mac-slider::-webkit-slider-thumb {
-                  -webkit-appearance: none;
-                  appearance: none;
-                  width: 20px;
-                  height: 20px;
-                  border-radius: 50%;
-                  background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
-                  border: 1px solid #0a4a7a;
-                  cursor: pointer;
-                }
-                .mac-slider::-moz-range-thumb {
-                  width: 20px;
-                  height: 20px;
-                  border-radius: 50%;
-                  background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
-                  border: 1px solid #0a4a7a;
-                  cursor: pointer;
-                }
-              `}</style>
-            </div>
-
-            {/* Undo Button */}
-            <button
-              onClick={() => {
-                haptic();
-                undo();
-              }}
-              className="p-2 bg-white border-b-2 border-black flex items-center justify-center active:bg-gray-200 transition-colors"
-              title="Undo"
-            >
-              <RotateCcw size={20} />
-            </button>
-
-            {/* Spacer */}
-            <div className="flex-1 bg-white"></div>
+      {/* Main Content */}
+      <div className="flex flex-1 overflow-hidden">
+        {/* Left Tool Panel - White with black border */}
+        <div className="w-[86px] bg-white border-r-2 border-black flex flex-col shrink-0">
+          {/* Tools Grid - 2 columns */}
+          <div className="grid grid-cols-2 border-b-2 border-black">
+            <ToolBtn id="fill" icon={PaintBucket} compact />
+            <ToolBtn id="hireme" icon={HelpCircle} compact />
+            <ToolBtn id="pencil" icon={Pencil} compact />
+            <ToolBtn id="brush" icon={Brush} compact />
+            <ToolBtn id="eraser" icon={Eraser} compact />
+            <ToolBtn id="line" icon={Minus} compact />
+            <ToolBtn id="rect" icon={Square} compact />
+            <ToolBtn id="circle" icon={Circle} compact />
           </div>
 
-          {/* Main Canvas Area */}
-          <div className="flex-1 flex flex-col overflow-hidden">
-            {/* Canvas */}
-            <div className="flex-1 bg-white border-2 border-black overflow-hidden relative flex items-center justify-center">
-              <canvas
-                ref={canvasRef}
-                width={800}
-                height={600}
-                className="block bg-white cursor-crosshair max-w-full max-h-full"
-                style={{ touchAction: 'none', aspectRatio: '800 / 600' }}
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-              />
-            </div>
+          {/* Brush Size Slider */}
+          <div className="border-b-2 border-black bg-white px-1 py-3">
+            <input
+              type="range"
+              min="1"
+              max="20"
+              value={brushSize}
+              onChange={(e) => {
+                const newValue = Number(e.target.value);
+                if (newValue !== brushSize) {
+                  haptic();
+                  setBrushSize(newValue);
+                }
+              }}
+              className="mac-slider"
+            />
+            <style jsx>{`
+              .mac-slider {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 100%;
+                height: 6px;
+                background: linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%);
+                border-radius: 3px;
+                outline: none;
+                border: 1px solid #777;
+              }
+              .mac-slider::-webkit-slider-thumb {
+                -webkit-appearance: none;
+                appearance: none;
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+                border: 1px solid #0a4a7a;
+                cursor: pointer;
+              }
+              .mac-slider::-moz-range-thumb {
+                width: 18px;
+                height: 18px;
+                border-radius: 50%;
+                background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
+                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
+                border: 1px solid #0a4a7a;
+                cursor: pointer;
+              }
+            `}</style>
+          </div>
 
-            {/* Bottom Pattern Bar */}
-            <div className="h-14 bg-white border-t-2 border-black flex items-center px-1">
+          {/* Undo Button */}
+          <button
+            onClick={() => { haptic(); undo(); }}
+            className="p-2 bg-white border-b-2 border-black flex items-center justify-center active:bg-gray-200"
+          >
+            <RotateCcw size={18} />
+          </button>
+
+          {/* Spacer */}
+          <div className="flex-1 bg-white"></div>
+        </div>
+
+        {/* Main Area - Canvas + Bottom Patterns */}
+        <div className="flex-1 flex flex-col overflow-hidden">
+          {/* Canvas Area */}
+          <div
+            ref={containerRef}
+            className="flex-1 bg-white border-2 border-black m-1 overflow-hidden"
+          >
+            <canvas
+              ref={canvasRef}
+              className="block w-full h-full cursor-crosshair"
+              style={{ touchAction: 'none' }}
+              onMouseDown={startDrawing}
+              onMouseMove={draw}
+              onMouseUp={stopDrawing}
+              onMouseLeave={stopDrawing}
+              onTouchStart={startDrawing}
+              onTouchMove={draw}
+              onTouchEnd={stopDrawing}
+            />
+          </div>
+
+          {/* Bottom Pattern Palette - Two rows */}
+          <div className="bg-white border-2 border-black m-1 mt-0 p-1">
+            {/* Current pattern preview + patterns grid */}
+            <div className="flex items-start gap-1">
               {/* Current Pattern Preview */}
               <div
-                className="w-12 h-12 border-2 border-black mr-2 shrink-0"
+                className="w-10 h-10 border-2 border-black shrink-0"
                 style={activePattern.style}
               ></div>
 
-              {/* Pattern Options */}
-              <div className="flex-1 overflow-x-auto flex gap-px">
+              {/* Pattern Grid - 2 rows */}
+              <div className="flex-1 grid grid-cols-8 gap-px">
                 {PATTERNS.map((p) => (
                   <button
                     key={p.id}
@@ -621,8 +591,8 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                       haptic();
                       setActivePattern(p);
                     }}
-                    className={`w-10 h-10 border border-black shrink-0 active:scale-95 transition-transform ${
-                      activePattern.id === p.id ? 'ring-2 ring-inset ring-blue-500' : ''
+                    className={`w-5 h-5 border border-black ${
+                      activePattern.id === p.id ? 'ring-2 ring-blue-500 ring-inset' : ''
                     }`}
                     style={p.style}
                   />
@@ -631,128 +601,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
             </div>
           </div>
         </div>
-      )}
-
-      {/* Desktop Layout */}
-      {!isMobile && (
-      <div className="flex flex-1 overflow-hidden p-1 gap-1 relative">
-
-        {/* Desktop Left Toolbar */}
-        <div className="w-20 bg-white border-2 border-black p-1 flex flex-col gap-2 shrink-0 relative z-50">
-             {/* Tools Grid */}
-             <div
-               className="grid grid-cols-2 gap-1 bg-white border-2 border-black p-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] relative z-10"
-               style={{ pointerEvents: 'auto' }}
-             >
-                <ToolBtn id="fill" icon={PaintBucket} />
-                <ToolBtn id="hireme" icon={HelpCircle} />
-                <ToolBtn id="pencil" icon={Pencil} />
-                <ToolBtn id="brush" icon={Brush} />
-                <ToolBtn id="eraser" icon={Eraser} />
-                <ToolBtn id="line" icon={Minus} />
-                <ToolBtn id="rect" icon={Square} />
-                <ToolBtn id="circle" icon={Circle} />
-             </div>
-
-             {/* Brush Size Slider - Classic Mac OS Style */}
-             <div className="border-2 border-black bg-white p-2 pointer-events-auto">
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={brushSize}
-                  onChange={(e) => setBrushSize(Number(e.target.value))}
-                  className="mac-slider-desktop"
-                />
-                <style jsx>{`
-                  .mac-slider-desktop {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 100%;
-                    height: 6px;
-                    background: linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%);
-                    border-radius: 3px;
-                    outline: none;
-                    border: 1px solid #777;
-                    box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
-                  }
-                  .mac-slider-desktop::-webkit-slider-thumb {
-                    -webkit-appearance: none;
-                    appearance: none;
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
-                    border: 1px solid #0a4a7a;
-                    cursor: pointer;
-                  }
-                  .mac-slider-desktop::-moz-range-thumb {
-                    width: 16px;
-                    height: 16px;
-                    border-radius: 50%;
-                    background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
-                    box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
-                    border: 1px solid #0a4a7a;
-                    cursor: pointer;
-                  }
-                `}</style>
-             </div>
-
-             {/* Current Pattern Preview */}
-             <div className="mt-auto border-2 border-black bg-white p-1 pointer-events-auto">
-                <div className="h-8 w-full border border-black mb-1" style={activePattern.style}></div>
-                <div className="text-[9px] font-bold text-center uppercase leading-none">Pattern</div>
-             </div>
-
-             {/* Undo/Save Buttons */}
-             <div className="grid grid-cols-2 gap-1 pointer-events-auto">
-               <button onClick={undo} className="bg-white border-2 border-black p-1 active:bg-black active:text-white" title="Undo">
-                  <RotateCcw size={14} className="mx-auto"/>
-               </button>
-               <button className="bg-white border-2 border-black p-1 active:bg-black active:text-white" title="Save">
-                  <Save size={14} className="mx-auto"/>
-               </button>
-             </div>
-          </div>
-
-        {/* Main Workspace */}
-        <div className="flex-1 flex flex-col gap-1 overflow-hidden relative z-0">
-
-           {/* The Canvas Area */}
-           <div
-             ref={containerRef}
-             className="flex-1 bg-white border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,0.5)] overflow-auto relative"
-           >
-              <canvas
-                ref={canvasRef}
-                width={800}
-                height={600}
-                className="block bg-white shadow-lg cursor-crosshair mx-auto my-4"
-                onMouseDown={startDrawing}
-                onMouseMove={draw}
-                onMouseUp={stopDrawing}
-                onMouseLeave={stopDrawing}
-                onTouchStart={startDrawing}
-                onTouchMove={draw}
-                onTouchEnd={stopDrawing}
-              />
-           </div>
-
-           {/* Desktop Bottom Pattern Palette */}
-           <div className="h-12 bg-white border-2 border-black flex flex-wrap content-start p-1 overflow-hidden shadow-[2px_2px_0_rgba(0,0,0,0.2)] pointer-events-auto">
-              {PATTERNS.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setActivePattern(p)}
-                  className={`w-8 h-8 border border-gray-400 mr-[1px] mb-[1px] hover:border-black hover:scale-105 transition-transform ${activePattern.id === p.id ? 'ring-2 ring-blue-500 z-10' : ''}`}
-                  style={p.style}
-                />
-              ))}
-           </div>
-        </div>
       </div>
-      )}
     </div>
   );
 }
