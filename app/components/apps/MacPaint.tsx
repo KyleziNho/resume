@@ -102,8 +102,8 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           context.fillStyle = 'white';
           context.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Scale to fill the entire canvas (cover style)
-          const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
+          // Scale to fit entire image (contain style) - shows full image
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
           const scaledWidth = img.width * scale;
           const scaledHeight = img.height * scale;
           const x = (canvas.width - scaledWidth) / 2;

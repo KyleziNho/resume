@@ -75,7 +75,7 @@ export default function MacOsPortfolio() {
 
   // Project rename state - maps project IDs to custom names
   const [projectNames, setProjectNames] = useState<Record<string, string>>({});
-  const [paintImage, setPaintImage] = useState('/chicago.jpg');
+  const [paintImage, setPaintImage] = useState('/grinding.jpg');
 
   const [windows, setWindows] = useState<Record<WindowId, WindowState>>({
     welcome: {
