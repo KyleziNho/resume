@@ -136,7 +136,7 @@ export default function MacOsPortfolio() {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'App Store',
       iconType: 'appstore' as const,
-      pos: { x: 200, y: 80 }, size: { width: 400, height: 500 }
+      pos: { x: 200, y: 80 }, size: { width: 400, height: 580 }
     }
   });
 
@@ -1043,7 +1043,6 @@ export default function MacOsPortfolio() {
            onContextMenu={handleIconContextMenu}
          />
 
-{/* Temporarily removed - installed app icons
          {installedApps.map((app) => {
            // Use pre-calculated position that avoids overlap with existing icons
            const position = installedAppPositions[app.id];
@@ -1073,7 +1072,6 @@ export default function MacOsPortfolio() {
              />
            );
          })}
-*/}
       </div>
 
       {/* Context Menu */}
