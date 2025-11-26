@@ -587,6 +587,9 @@ export default function MacOsPortfolio() {
       } else if (windowId === 'messages') {
         // Shorter height so keyboard doesn't cover input field
         mobileWindowHeight = viewportHeight * 0.5;
+      } else if (windowId === 'appstore') {
+        // Taller to show uninstall button
+        mobileWindowHeight = viewportHeight * 0.75;
       } else {
         mobileWindowHeight = viewportHeight * 0.65;
       }

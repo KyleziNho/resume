@@ -44,7 +44,7 @@ export const apps: AppData[] = [
     link: 'https://apps.apple.com/gb/app/frift-student-marketplace/id6745021634',
     website: 'https://www.frift.uk',
     description: 'Started with friends at uni - nightlife tickets were sold across snapchat and whatsapp making them hard to find. Surveyed 100 people, discovered we should also list clothes. Flew to Chicago to learn Flutter from a friend, spent 3 months building it solo. Won Santander X and made it to final round of Dragons Den (Bath).',
-    progressNotes: 'App is fully built and live on the App Store. Won some competitions which was super validating. Now integrated into a Bath uni course module where students work on it as part of their degree. Next step is properly marketing it and getting users - that\'s the hard part. This was my first big software project so it\'s been a massive learning experience. Will keep iterating on it.',
+    progressNotes: 'live on the app store! now integrated into a bath uni module where students handle marketing and business development. excited to see where they take it.',
     videoId: '1068684400',
     images: ['/frift-screenshot-1.png', '/frift-screenshot-2.png', '/frift-screenshot-3.png', '/frift-screenshot-4.png', '/frift-screenshot-5.png'],
     progress: 100,
