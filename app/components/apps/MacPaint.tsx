@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   Pencil, Brush, Eraser, Minus, Square, Circle,
-  Type, MousePointer, Hand, PaintBucket,
+  Hand, PaintBucket,
   RotateCcw, Save, HelpCircle
 } from 'lucide-react';
 import { haptic } from 'ios-haptics';
@@ -21,7 +21,7 @@ const PATTERNS = [
   { id: 'bricks', style: { backgroundImage: 'linear-gradient(335deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(155deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(335deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(155deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px)', backgroundSize: '10px 10px', backgroundColor: '#fff' } },
 ];
 
-type ToolType = 'pencil' | 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'select' | 'lasso' | 'text' | 'fill' | 'hireme';
+type ToolType = 'pencil' | 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'lasso' | 'fill' | 'hireme';
 
 interface MacPaintProps {
   imageSrc?: string;
@@ -42,13 +42,8 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   const [history, setHistory] = useState<ImageData[]>([]);
   const [brushSize, setBrushSize] = useState(3);
 
-  // Selection state
-  const [selection, setSelection] = useState<{ x: number; y: number; width: number; height: number } | null>(null);
+  // Lasso state
   const [lassoPath, setLassoPath] = useState<{ x: number; y: number }[]>([]);
-
-  // Text tool state
-  const [textInput, setTextInput] = useState<{ x: number; y: number; text: string } | null>(null);
-  const [isTyping, setIsTyping] = useState(false);
 
   // Hire Me tool state
   const [lastHireMePos, setLastHireMePos] = useState<{ x: number; y: number } | null>(null);
@@ -100,7 +95,8 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           context.fillStyle = 'white';
           context.fillRect(0, 0, canvas.width, canvas.height);
 
-          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          // Use cover-style scaling (fill canvas, crop if needed)
+          const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
           const x = (canvas.width / 2) - (img.width / 2) * scale;
           const y = (canvas.height / 2) - (img.height / 2) * scale;
           context.drawImage(img, x, y, img.width * scale, img.height * scale);
@@ -300,13 +296,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     if (!ctx || !canvasRef.current) return;
     const { x, y } = getMousePos(e);
 
-    // Text tool - place text cursor
-    if (tool === 'text') {
-      setTextInput({ x, y, text: '' });
-      setIsTyping(true);
-      return;
-    }
-
     // Fill tool - flood fill
     if (tool === 'fill') {
       floodFill(x, y);
@@ -342,9 +331,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     if (tool === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
       ctx.lineWidth = brushSize * 4; // Eraser is bigger
-    } else if (tool === 'select') {
-      // Selection tool doesn't draw yet
-      return;
     } else {
       ctx.globalCompositeOperation = 'source-over';
       ctx.lineWidth = tool === 'pencil' ? Math.max(1, brushSize / 2) : brushSize;
@@ -412,18 +398,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       return;
     }
 
-    // Select tool - show selection rectangle
-    if (tool === 'select') {
-      ctx.putImageData(snapshot, 0, 0);
-      ctx.save();
-      ctx.strokeStyle = '#0066ff';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.strokeRect(startPos.x, startPos.y, x - startPos.x, y - startPos.y);
-      ctx.restore();
-      return;
-    }
-
     // For Shapes, we clear and redraw from snapshot
     if (['line', 'rect', 'circle'].includes(tool)) {
       ctx.putImageData(snapshot, 0, 0);
@@ -465,18 +439,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       return;
     }
 
-    // Finalize selection
-    if (tool === 'select' && snapshot) {
-      ctx.putImageData(snapshot, 0, 0);
-      // Store selection bounds for potential future operations
-      setSelection({
-        x: Math.min(startPos.x, startPos.x),
-        y: Math.min(startPos.y, startPos.y),
-        width: Math.abs(startPos.x - startPos.x),
-        height: Math.abs(startPos.y - startPos.y)
-      });
-    }
-
     // Finalize lasso
     if (tool === 'lasso' && snapshot) {
       ctx.putImageData(snapshot, 0, 0);
@@ -486,34 +448,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     ctx.closePath();
     setIsDrawing(false);
     saveHistory(ctx);
-  };
-
-  // Handle text input
-  const handleTextSubmit = () => {
-    if (!ctx || !textInput || !textInput.text.trim()) {
-      setTextInput(null);
-      setIsTyping(false);
-      return;
-    }
-
-    ctx.save();
-    ctx.font = '16px monospace';
-    ctx.fillStyle = 'black';
-    ctx.fillText(textInput.text, textInput.x, textInput.y);
-    ctx.restore();
-
-    saveHistory(ctx);
-    setTextInput(null);
-    setIsTyping(false);
-  };
-
-  const handleTextKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleTextSubmit();
-    } else if (e.key === 'Escape') {
-      setTextInput(null);
-      setIsTyping(false);
-    }
   };
 
   // Tool Button Component - Classic MacPaint style
@@ -564,53 +498,50 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           <div className="w-[88px] bg-white border-r-2 border-black flex flex-col shrink-0">
             {/* Tools Grid - 2 columns like original MacPaint */}
             <div className="grid grid-cols-2 border-b-2 border-black">
-              <ToolBtn id="select" icon={MousePointer} compact />
-              <ToolBtn id="rect" icon={Square} compact />
               <ToolBtn id="lasso" icon={Hand} compact />
-              <ToolBtn id="text" icon={Type} compact />
               <ToolBtn id="fill" icon={PaintBucket} compact />
               <ToolBtn id="hireme" icon={HelpCircle} compact />
               <ToolBtn id="pencil" icon={Pencil} compact />
               <ToolBtn id="brush" icon={Brush} compact />
-              <ToolBtn id="line" icon={Minus} compact />
               <ToolBtn id="eraser" icon={Eraser} compact />
+              <ToolBtn id="line" icon={Minus} compact />
               <ToolBtn id="rect" icon={Square} compact />
               <ToolBtn id="circle" icon={Circle} compact />
             </div>
 
-            {/* Brush Size Slider - Apple Liquid Glass Style */}
-            <div className="px-2 py-4 border-b-2 border-black bg-gradient-to-b from-gray-100 to-gray-200">
-              <div className="text-[9px] font-bold text-center uppercase mb-3 text-gray-600">Size: {brushSize}px</div>
+            {/* Brush Size Slider - Classic Mac OS Style */}
+            <div className="px-2 py-3 border-b-2 border-black bg-white">
+              {/* Grooved track container */}
               <div
-                className="relative h-10 rounded-full mx-1"
+                className="relative h-5 mx-1"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(235,235,240,0.9) 100%)',
-                  boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.15), inset 0 -2px 4px rgba(255,255,255,0.9), 0 2px 4px rgba(0,0,0,0.1)',
-                  border: '1px solid rgba(0,0,0,0.12)',
+                  background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
+                  borderRadius: '2px',
+                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.5)',
+                  border: '1px solid #666',
                 }}
               >
-                {/* Track fill */}
+                {/* Glossy blue orb thumb */}
                 <div
-                  className="absolute top-1.5 bottom-1.5 left-1.5 rounded-full transition-all duration-75 pointer-events-none"
+                  className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-75 pointer-events-none"
                   style={{
-                    width: `calc(${((brushSize - 1) / 19) * 100}%)`,
-                    maxWidth: 'calc(100% - 12px)',
-                    minWidth: '4px',
-                    background: 'linear-gradient(180deg, #5AB0FF 0%, #007AFF 50%, #0062CC 100%)',
-                    boxShadow: '0 2px 4px rgba(0,122,255,0.4), inset 0 1px 2px rgba(255,255,255,0.4)',
+                    left: `clamp(0px, calc(${((brushSize - 1) / 19) * 100}% - 10px), calc(100% - 20px))`,
+                    background: 'radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%)',
+                    boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.2)',
+                    border: '1px solid #0a4a7a',
                   }}
-                />
-                {/* Thumb */}
-                <div
-                  className="absolute top-1/2 -translate-y-1/2 w-8 h-8 rounded-full transition-all duration-75 pointer-events-none"
-                  style={{
-                    left: `clamp(4px, calc(${((brushSize - 1) / 19) * 100}% - 16px), calc(100% - 36px))`,
-                    background: 'linear-gradient(180deg, #FFFFFF 0%, #F5F5FA 100%)',
-                    boxShadow: '0 3px 8px rgba(0,0,0,0.25), 0 1px 3px rgba(0,0,0,0.15), inset 0 2px 2px rgba(255,255,255,1)',
-                    border: '0.5px solid rgba(0,0,0,0.08)',
-                  }}
-                />
-                {/* Invisible range input - larger touch target */}
+                >
+                  {/* Highlight spot on the orb */}
+                  <div
+                    className="absolute w-2 h-1 rounded-full"
+                    style={{
+                      top: '3px',
+                      left: '4px',
+                      background: 'rgba(255,255,255,0.7)',
+                    }}
+                  />
+                </div>
+                {/* Invisible range input */}
                 <input
                   type="range"
                   min="1"
@@ -654,7 +585,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                 ref={canvasRef}
                 width={800}
                 height={600}
-                className="block bg-white cursor-crosshair w-full h-full"
+                className="block bg-white cursor-crosshair absolute inset-0 w-full h-full"
                 style={{ touchAction: 'none' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
@@ -664,26 +595,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
               />
-
-              {/* Text Input Overlay */}
-              {isTyping && textInput && (
-                <input
-                  type="text"
-                  value={textInput.text}
-                  onChange={(e) => setTextInput({ ...textInput, text: e.target.value })}
-                  onBlur={handleTextSubmit}
-                  onKeyDown={handleTextKeyDown}
-                  autoFocus
-                  className="absolute bg-transparent border-none outline-none font-mono text-base p-0"
-                  style={{
-                    left: `${textInput.x}px`,
-                    top: `${textInput.y - 16}px`,
-                    color: 'black',
-                    width: '200px',
-                    fontSize: '16px'
-                  }}
-                />
-              )}
             </div>
 
             {/* Bottom Pattern Bar */}
@@ -734,50 +645,49 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                className="grid grid-cols-2 gap-1 bg-white border-2 border-black p-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] relative z-10"
                style={{ pointerEvents: 'auto' }}
              >
+                <ToolBtn id="lasso" icon={Hand} />
+                <ToolBtn id="fill" icon={PaintBucket} />
+                <ToolBtn id="hireme" icon={HelpCircle} />
                 <ToolBtn id="pencil" icon={Pencil} />
                 <ToolBtn id="brush" icon={Brush} />
                 <ToolBtn id="eraser" icon={Eraser} />
                 <ToolBtn id="line" icon={Minus} />
                 <ToolBtn id="rect" icon={Square} />
                 <ToolBtn id="circle" icon={Circle} />
-                <ToolBtn id="text" icon={Type} />
-                <ToolBtn id="fill" icon={PaintBucket} />
-                <ToolBtn id="select" icon={MousePointer} />
-                <ToolBtn id="hireme" icon={HelpCircle} />
              </div>
 
-             {/* Brush Size Slider - Apple Liquid Glass Style */}
-             <div className="border-2 border-black bg-gradient-to-b from-gray-100 to-gray-200 p-2 pointer-events-auto">
-                <div className="text-[9px] font-bold text-center uppercase leading-none mb-2 text-gray-600">Size: {brushSize}px</div>
+             {/* Brush Size Slider - Classic Mac OS Style */}
+             <div className="border-2 border-black bg-white p-2 pointer-events-auto">
+                {/* Grooved track container */}
                 <div
-                  className="relative h-6 rounded-full"
+                  className="relative h-5"
                   style={{
-                    background: 'linear-gradient(180deg, rgba(255,255,255,0.95) 0%, rgba(235,235,240,0.9) 100%)',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.12), inset 0 -1px 2px rgba(255,255,255,0.9), 0 1px 3px rgba(0,0,0,0.1)',
-                    border: '1px solid rgba(0,0,0,0.12)',
+                    background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
+                    borderRadius: '2px',
+                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.5)',
+                    border: '1px solid #666',
                   }}
                 >
-                  {/* Track fill */}
-                  <div
-                    className="absolute top-1 bottom-1 left-1 rounded-full transition-all duration-75 pointer-events-none"
-                    style={{
-                      width: `calc(${((brushSize - 1) / 19) * 100}%)`,
-                      maxWidth: 'calc(100% - 8px)',
-                      minWidth: '4px',
-                      background: 'linear-gradient(180deg, #5AB0FF 0%, #007AFF 50%, #0062CC 100%)',
-                      boxShadow: '0 1px 3px rgba(0,122,255,0.4), inset 0 1px 1px rgba(255,255,255,0.3)',
-                    }}
-                  />
-                  {/* Thumb */}
+                  {/* Glossy blue orb thumb */}
                   <div
                     className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-75 pointer-events-none"
                     style={{
-                      left: `clamp(2px, calc(${((brushSize - 1) / 19) * 100}% - 10px), calc(100% - 22px))`,
-                      background: 'linear-gradient(180deg, #FFFFFF 0%, #F5F5FA 100%)',
-                      boxShadow: '0 2px 6px rgba(0,0,0,0.2), 0 1px 2px rgba(0,0,0,0.1), inset 0 1px 1px rgba(255,255,255,1)',
-                      border: '0.5px solid rgba(0,0,0,0.08)',
+                      left: `clamp(0px, calc(${((brushSize - 1) / 19) * 100}% - 10px), calc(100% - 20px))`,
+                      background: 'radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.2)',
+                      border: '1px solid #0a4a7a',
                     }}
-                  />
+                  >
+                    {/* Highlight spot on the orb */}
+                    <div
+                      className="absolute w-2 h-1 rounded-full"
+                      style={{
+                        top: '3px',
+                        left: '4px',
+                        background: 'rgba(255,255,255,0.7)',
+                      }}
+                    />
+                  </div>
                   {/* Invisible range input */}
                   <input
                     type="range"
@@ -828,26 +738,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                 onTouchMove={draw}
                 onTouchEnd={stopDrawing}
               />
-
-              {/* Text Input Overlay */}
-              {isTyping && textInput && (
-                <input
-                  type="text"
-                  value={textInput.text}
-                  onChange={(e) => setTextInput({ ...textInput, text: e.target.value })}
-                  onBlur={handleTextSubmit}
-                  onKeyDown={handleTextKeyDown}
-                  autoFocus
-                  className="absolute bg-transparent border-none outline-none font-mono text-base p-0"
-                  style={{
-                    left: `${textInput.x}px`,
-                    top: `${textInput.y - 16}px`,
-                    color: 'black',
-                    width: '200px',
-                    fontSize: '16px'
-                  }}
-                />
-              )}
            </div>
 
            {/* Desktop Bottom Pattern Palette */}
