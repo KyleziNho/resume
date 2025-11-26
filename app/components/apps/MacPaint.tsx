@@ -92,8 +92,8 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           context.fillStyle = 'white';
           context.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Use contain-style scaling (fit entire image, no stretching)
-          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          // Use cover-style scaling (fill canvas, crop if needed)
+          const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
           const scaledWidth = img.width * scale;
           const scaledHeight = img.height * scale;
           const x = (canvas.width - scaledWidth) / 2;
@@ -324,8 +324,9 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     if (tool === 'hireme') {
       setIsDrawing(true);
       setLastHireMePos({ x, y });
+      const fontSize = 10 + brushSize * 2; // Scale font size with brush size (12px to 50px)
       ctx.save();
-      ctx.font = 'bold 14px Arial';
+      ctx.font = `bold ${fontSize}px Arial`;
       ctx.fillStyle = '#ff0000';
       ctx.fillText('HIRE ME', x, y);
       ctx.restore();
@@ -370,14 +371,16 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     // Hire Me tool - draw "HIRE ME" along path
     if (tool === 'hireme') {
       if (lastHireMePos) {
+        const fontSize = 10 + brushSize * 2; // Scale font size with brush size
         const distance = Math.sqrt(
           Math.pow(x - lastHireMePos.x, 2) + Math.pow(y - lastHireMePos.y, 2)
         );
 
-        // Only draw if moved at least 40px
-        if (distance > 40) {
+        // Spacing based on font size
+        const spacing = fontSize * 3;
+        if (distance > spacing) {
           ctx.save();
-          ctx.font = 'bold 14px Arial';
+          ctx.font = `bold ${fontSize}px Arial`;
           ctx.fillStyle = '#ff0000';
           ctx.fillText('HIRE ME', x, y);
           ctx.restore();
