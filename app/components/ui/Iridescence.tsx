@@ -56,7 +56,7 @@ interface IridescenceProps {
 export default function Iridescence({
   color = [1, 1, 1],
   speed = 1.0,
-  amplitude = 0.1,
+  amplitude = 0.03,
   mouseReact = true
 }: IridescenceProps) {
   const ctnDom = useRef<HTMLDivElement>(null);
