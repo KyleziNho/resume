@@ -28,6 +28,7 @@ export const apps: AppData[] = [
     icon: '/app-onlybills.png',
     link: 'https://apps.apple.com/app/splitswift',
     description: 'The easiest way to split receipts. Snap a photo and AI extracts items, prices, tax and tips. Assign items to friends and see exactly who owes what.',
+    videoId: '1140723788',
     images: ['/app-onlybills.png'],
     progress: 90,
     stage: 'In Development',
