@@ -24,7 +24,6 @@ import {
   trackRating,
   shouldShowRatingPopup,
   markRatingCompleted,
-  markRatingDismissed,
 } from './lib/analytics';
 
 // Memoized background component to prevent restarts
@@ -232,7 +231,7 @@ export default function MacOsPortfolio() {
     };
   }, []);
 
-  // Rating popup: Show after 25 seconds if user hasn't rated
+  // Rating popup: Show after 1 minute if user hasn't rated
   useEffect(() => {
     if (!booted) return;
 
@@ -240,7 +239,7 @@ export default function MacOsPortfolio() {
       if (shouldShowRatingPopup()) {
         setShowRatingPopup(true);
       }
-    }, 25000); // 25 seconds
+    }, 60000); // 1 minute
 
     return () => clearTimeout(timer);
   }, [booted]);
@@ -693,7 +692,7 @@ export default function MacOsPortfolio() {
   // Rating popup handlers
   const handleRatingClose = () => {
     setShowRatingPopup(false);
-    markRatingDismissed();
+    // Don't mark as dismissed - will show again next page load after 1 minute
   };
 
   const handleRatingSubmit = (rating: number, review?: string) => {

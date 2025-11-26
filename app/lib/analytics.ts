@@ -38,30 +38,16 @@ export const trackRating = (rating: number, review?: string) => {
 export const shouldShowRatingPopup = (): boolean => {
   if (typeof window === 'undefined') return false;
 
-  // Check if user has already rated or dismissed
+  // Check if user has already rated - never show again
   const hasRated = localStorage.getItem('has_rated');
-  const dismissedAt = localStorage.getItem('rating_dismissed_at');
-
   if (hasRated) return false;
 
-  // If dismissed, wait 7 days before showing again
-  if (dismissedAt) {
-    const dismissedTime = parseInt(dismissedAt, 10);
-    const sevenDays = 7 * 24 * 60 * 60 * 1000;
-    if (Date.now() - dismissedTime < sevenDays) return false;
-  }
-
+  // If cancelled, show again next time they load the site (no delay)
   return true;
 };
 
-// Mark rating as completed
+// Mark rating as completed - user won't be asked again
 export const markRatingCompleted = () => {
   if (typeof window === 'undefined') return;
   localStorage.setItem('has_rated', 'true');
-};
-
-// Mark rating popup as dismissed
-export const markRatingDismissed = () => {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem('rating_dismissed_at', Date.now().toString());
 };
