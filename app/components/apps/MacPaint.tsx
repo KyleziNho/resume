@@ -75,34 +75,50 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     const canvas = canvasRef.current;
     if (!canvas) return;
 
-    const context = canvas.getContext('2d', { willReadFrequently: true });
-    if (!context) return;
+    // Small delay to ensure canvas is properly sized in DOM
+    const initCanvas = () => {
+      const context = canvas.getContext('2d', { willReadFrequently: true });
+      if (!context) return;
 
-    context.lineCap = 'round';
-    context.lineJoin = 'round';
-    context.strokeStyle = 'black';
-    context.lineWidth = 3;
-    setCtx(context);
+      context.lineCap = 'round';
+      context.lineJoin = 'round';
+      context.strokeStyle = 'black';
+      context.lineWidth = 3;
+      setCtx(context);
 
-    // Load initial image if provided
-    if (imageSrc) {
-      const img = new Image();
-      img.crossOrigin = "anonymous";
-      img.src = imageSrc;
-      img.onload = () => {
-        const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
-        const x = (canvas.width / 2) - (img.width / 2) * scale;
-        const y = (canvas.height / 2) - (img.height / 2) * scale;
-        context.drawImage(img, x, y, img.width * scale, img.height * scale);
-        saveHistory(context);
-      };
-    } else {
-      // White background default
+      // Clear canvas first
       context.fillStyle = 'white';
       context.fillRect(0, 0, canvas.width, canvas.height);
-      saveHistory(context);
-    }
-  }, [imageSrc]);
+
+      // Load initial image if provided
+      if (imageSrc) {
+        const img = new Image();
+        img.crossOrigin = "anonymous";
+        img.src = imageSrc;
+        img.onload = () => {
+          // Clear and redraw
+          context.fillStyle = 'white';
+          context.fillRect(0, 0, canvas.width, canvas.height);
+
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const x = (canvas.width / 2) - (img.width / 2) * scale;
+          const y = (canvas.height / 2) - (img.height / 2) * scale;
+          context.drawImage(img, x, y, img.width * scale, img.height * scale);
+          saveHistory(context);
+        };
+        img.onerror = () => {
+          console.error('Failed to load image:', imageSrc);
+          saveHistory(context);
+        };
+      } else {
+        saveHistory(context);
+      }
+    };
+
+    // Delay initialization slightly to ensure layout is complete
+    const timer = setTimeout(initCanvas, 100);
+    return () => clearTimeout(timer);
+  }, [imageSrc, isMobile]);
 
   // Helpers
   const saveHistory = (context: CanvasRenderingContext2D) => {
@@ -125,12 +141,18 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     const rect = canvasRef.current.getBoundingClientRect();
     let clientX, clientY;
 
-    if ('touches' in e) {
+    if ('touches' in e && e.touches.length > 0) {
       clientX = e.touches[0].clientX;
       clientY = e.touches[0].clientY;
-    } else {
+    } else if ('changedTouches' in e && e.changedTouches.length > 0) {
+      // For touchend events, use changedTouches
+      clientX = e.changedTouches[0].clientX;
+      clientY = e.changedTouches[0].clientY;
+    } else if ('clientX' in e) {
       clientX = (e as React.MouseEvent).clientX;
       clientY = (e as React.MouseEvent).clientY;
+    } else {
+      return { x: 0, y: 0 };
     }
 
     // Account for canvas scaling
