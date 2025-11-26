@@ -493,8 +493,8 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
               <ToolBtn id="circle" icon={Circle} compact />
             </div>
 
-            {/* Brush Size Slider - Large touch-friendly */}
-            <div className="border-b-2 border-black bg-white p-3">
+            {/* Brush Size Slider - Classic Mac style */}
+            <div className="border-b-2 border-black bg-white px-1 py-4">
               <input
                 type="range"
                 min="1"
@@ -507,27 +507,37 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                     setBrushSize(newValue);
                   }
                 }}
-                onTouchStart={() => haptic()}
-                className="w-full h-8 cursor-pointer"
-                style={{
-                  touchAction: 'none',
-                  WebkitAppearance: 'none',
-                  appearance: 'none',
-                  background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
-                  borderRadius: '4px',
-                  outline: 'none',
-                  border: '1px solid #666',
-                }}
+                className="mac-slider"
               />
               <style jsx>{`
-                input[type="range"]::-webkit-slider-thumb {
+                .mac-slider {
                   -webkit-appearance: none;
                   appearance: none;
-                  width: 32px;
-                  height: 32px;
+                  width: 100%;
+                  height: 6px;
+                  background: linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%);
+                  border-radius: 3px;
+                  outline: none;
+                  border: 1px solid #777;
+                  box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+                }
+                .mac-slider::-webkit-slider-thumb {
+                  -webkit-appearance: none;
+                  appearance: none;
+                  width: 20px;
+                  height: 20px;
                   border-radius: 50%;
-                  background: radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%);
-                  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6);
+                  background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+                  border: 1px solid #0a4a7a;
+                  cursor: pointer;
+                }
+                .mac-slider::-moz-range-thumb {
+                  width: 20px;
+                  height: 20px;
+                  border-radius: 50%;
+                  background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
                   border: 1px solid #0a4a7a;
                   cursor: pointer;
                 }
