@@ -282,11 +282,9 @@ export default function FaultyTerminal({
   const ditherValue = useMemo(() => (typeof dither === 'boolean' ? (dither ? 1 : 0) : dither), [dither]);
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    const ctn = containerRef.current;
-    if (!ctn) return;
-    const rect = ctn.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width;
-    const y = 1 - (e.clientY - rect.top) / rect.height;
+    // Use window dimensions for global mouse tracking
+    const x = e.clientX / window.innerWidth;
+    const y = 1 - e.clientY / window.innerHeight;
     mouseRef.current = { x, y };
   }, []);
 
@@ -388,12 +386,13 @@ export default function FaultyTerminal({
     rafRef.current = requestAnimationFrame(update);
     ctn.appendChild(gl.canvas);
 
-    if (mouseReact) ctn.addEventListener('mousemove', handleMouseMove);
+    // Listen on window to capture mouse events even when behind other elements
+    if (mouseReact) window.addEventListener('mousemove', handleMouseMove);
 
     return () => {
       cancelAnimationFrame(rafRef.current);
       resizeObserver.disconnect();
-      if (mouseReact) ctn.removeEventListener('mousemove', handleMouseMove);
+      if (mouseReact) window.removeEventListener('mousemove', handleMouseMove);
       if (gl.canvas.parentElement === ctn) ctn.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
       loadAnimationStartRef.current = 0;
