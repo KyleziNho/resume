@@ -98,12 +98,12 @@ export default function NotesApp() {
   };
 
   return (
-    <div className="flex flex-col h-full font-sans relative" style={{ backgroundColor: '#faf8f0' }}>
+    <div className="flex flex-col h-full font-sans relative" style={{ backgroundColor: '#f5f0d0' }}>
       {/* Subtle pinstripe background */}
       <div
-        className="absolute inset-0 pointer-events-none opacity-30"
+        className="absolute inset-0 pointer-events-none opacity-40"
         style={{
-          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 23px, #e8e4d8 23px, #e8e4d8 24px)',
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 11px, #d4c89a 11px, #d4c89a 12px)',
         }}
       />
       {/* Notes Toolbar */}
