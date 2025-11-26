@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback, useMemo } from 'react';
 import {
   Pencil, Brush, Eraser, Minus, Square, Circle,
   PaintBucket,
-  RotateCcw, Save, HelpCircle
+  RotateCcw, Sparkles
 } from 'lucide-react';
+import { haptic } from 'ios-haptics';
 
 // --- CSS PATTERNS FOR RETRO VIBE (expanded for 2 rows) ---
 const PATTERNS = [
@@ -27,6 +28,20 @@ const PATTERNS = [
   { id: 'cross', style: { backgroundImage: 'linear-gradient(#000 1px, transparent 1px), linear-gradient(90deg, #000 1px, transparent 1px)', backgroundSize: '8px 8px', backgroundPosition: '3px 3px', backgroundColor: '#fff' } },
 ];
 
+// Hire me phrases with colors
+const HIRE_ME_PHRASES = [
+  { text: 'HIRE ME', color: '#ff0000' },
+  { text: 'BEST DEV', color: '#ff6600' },
+  { text: 'AMAZING UI', color: '#9900ff' },
+  { text: 'WOW', color: '#00cc00' },
+  { text: 'HIRE KYLE', color: '#0066ff' },
+  { text: 'SO COOL', color: '#ff0099' },
+  { text: '10/10', color: '#00cccc' },
+  { text: 'LEGEND', color: '#ff3366' },
+  { text: 'NEVER SEEN ANYTHING LIKE IT', color: '#ff4400' },
+  { text: 'CRAZY UX', color: '#6600ff' },
+];
+
 type ToolType = 'pencil' | 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill' | 'hireme';
 
 interface MacPaintProps {
@@ -37,34 +52,33 @@ interface MacPaintProps {
 export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacPaintProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
+  const ctxRef = useRef<CanvasRenderingContext2D | null>(null);
 
   // State
   const [tool, setTool] = useState<ToolType>('hireme');
-  const [isDrawing, setIsDrawing] = useState(false);
-  const [activePattern, setActivePattern] = useState(PATTERNS[0]);
-  const [snapshot, setSnapshot] = useState<ImageData | null>(null);
-  const [startPos, setStartPos] = useState({ x: 0, y: 0 });
-  const [history, setHistory] = useState<ImageData[]>([]);
+  const [activePatternId, setActivePatternId] = useState('solid');
   const [brushSize, setBrushSize] = useState(3);
+  const [, forceUpdate] = useState({});
 
-  // Hire Me tool state
-  const [lastHireMePos, setLastHireMePos] = useState<{ x: number; y: number } | null>(null);
+  // Refs for drawing state (avoid re-renders during draw)
+  const isDrawingRef = useRef(false);
+  const snapshotRef = useRef<ImageData | null>(null);
+  const startPosRef = useRef({ x: 0, y: 0 });
+  const historyRef = useRef<ImageData[]>([]);
+  const lastHireMePosRef = useRef<{ x: number; y: number } | null>(null);
+  const hireMeIndexRef = useRef(0);
+  const patternCacheRef = useRef<Map<string, CanvasPattern | null>>(new Map());
+  const isMobileRef = useRef(false);
 
-  // Mobile state
-  const [isMobile, setIsMobile] = useState(false);
-
-  // Pattern cache
-  const patternCache = useRef<Map<string, CanvasPattern | null>>(new Map());
+  // Get active pattern
+  const activePattern = useMemo(() =>
+    PATTERNS.find(p => p.id === activePatternId) || PATTERNS[0],
+    [activePatternId]
+  );
 
   // Detect mobile on mount
   useEffect(() => {
-    const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
-    };
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    isMobileRef.current = window.innerWidth < 768;
   }, []);
 
   // Initialize Canvas & Load Image
@@ -74,7 +88,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     if (!canvas || !container) return;
 
     const initCanvas = () => {
-      // Set canvas size to match container
       const rect = container.getBoundingClientRect();
       canvas.width = rect.width;
       canvas.height = rect.height;
@@ -86,7 +99,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       context.lineJoin = 'round';
       context.strokeStyle = 'black';
       context.lineWidth = 3;
-      setCtx(context);
+      ctxRef.current = context;
 
       // Clear canvas first
       context.fillStyle = 'white';
@@ -98,12 +111,16 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
         img.crossOrigin = "anonymous";
         img.src = imageSrc;
         img.onload = () => {
-          // Clear and redraw
           context.fillStyle = 'white';
           context.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Scale to fit entire image (contain style) - shows full image
-          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          // Use "cover" style on mobile (fills canvas, may crop)
+          // Use "contain" style on desktop (shows full image)
+          const isMobile = window.innerWidth < 768;
+          const scale = isMobile
+            ? Math.max(canvas.width / img.width, canvas.height / img.height)
+            : Math.min(canvas.width / img.width, canvas.height / img.height);
+
           const scaledWidth = img.width * scale;
           const scaledHeight = img.height * scale;
           const x = (canvas.width - scaledWidth) / 2;
@@ -120,28 +137,27 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       }
     };
 
-    // Delay initialization slightly to ensure layout is complete
     const timer = setTimeout(initCanvas, 100);
     return () => clearTimeout(timer);
-  }, [imageSrc, isMobile]);
+  }, [imageSrc]);
 
   // Helpers
-  const saveHistory = (context: CanvasRenderingContext2D) => {
+  const saveHistory = useCallback((context: CanvasRenderingContext2D) => {
     if (!canvasRef.current) return;
     const data = context.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
-    setHistory(prev => [...prev.slice(-9), data]);
-  };
+    historyRef.current = [...historyRef.current.slice(-9), data];
+  }, []);
 
-  const undo = () => {
-    if (history.length <= 1 || !ctx || !canvasRef.current) return;
-    const newHistory = [...history];
-    newHistory.pop();
-    const prevState = newHistory[newHistory.length - 1];
+  const undo = useCallback(() => {
+    const ctx = ctxRef.current;
+    if (historyRef.current.length <= 1 || !ctx || !canvasRef.current) return;
+    historyRef.current.pop();
+    const prevState = historyRef.current[historyRef.current.length - 1];
     ctx.putImageData(prevState, 0, 0);
-    setHistory(newHistory);
-  };
+    forceUpdate({});
+  }, []);
 
-  const getMousePos = (e: React.MouseEvent | React.TouchEvent) => {
+  const getMousePos = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if (!canvasRef.current) return { x: 0, y: 0 };
     const rect = canvasRef.current.getBoundingClientRect();
     let clientX, clientY;
@@ -166,14 +182,15 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       x: (clientX - rect.left) * scaleX,
       y: (clientY - rect.top) * scaleY
     };
-  };
+  }, []);
 
   // Create actual canvas pattern from pattern definition
-  const createPattern = (patternObj: typeof PATTERNS[0]): string | CanvasPattern => {
+  const createPattern = useCallback((patternObj: typeof PATTERNS[0]): string | CanvasPattern => {
+    const ctx = ctxRef.current;
     if (!ctx || !canvasRef.current) return 'black';
 
-    if (patternCache.current.has(patternObj.id)) {
-      const cached = patternCache.current.get(patternObj.id);
+    if (patternCacheRef.current.has(patternObj.id)) {
+      const cached = patternCacheRef.current.get(patternObj.id);
       return cached || 'black';
     }
 
@@ -228,12 +245,13 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     }
 
     const pattern = ctx.createPattern(patternCanvas, 'repeat');
-    patternCache.current.set(patternObj.id, pattern);
+    patternCacheRef.current.set(patternObj.id, pattern);
     return pattern || 'black';
-  };
+  }, []);
 
   // Flood fill algorithm
-  const floodFill = (startX: number, startY: number) => {
+  const floodFill = useCallback((startX: number, startY: number) => {
+    const ctx = ctxRef.current;
     if (!ctx || !canvasRef.current) return;
 
     const canvas = canvasRef.current;
@@ -297,12 +315,20 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
     ctx.putImageData(imageData, 0, 0);
     saveHistory(ctx);
-  };
+  }, [saveHistory]);
+
+  // Get next hire me phrase
+  const getNextHireMePhrase = useCallback(() => {
+    const phrase = HIRE_ME_PHRASES[hireMeIndexRef.current];
+    hireMeIndexRef.current = (hireMeIndexRef.current + 1) % HIRE_ME_PHRASES.length;
+    return phrase;
+  }, []);
 
   // Drawing Handlers
-  const startDrawing = (e: React.MouseEvent | React.TouchEvent) => {
+  const startDrawing = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if ('touches' in e) e.preventDefault();
 
+    const ctx = ctxRef.current;
     if (!ctx || !canvasRef.current) return;
     const { x, y } = getMousePos(e);
 
@@ -312,20 +338,22 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     }
 
     if (tool === 'hireme') {
-      setIsDrawing(true);
-      setLastHireMePos({ x, y });
+      isDrawingRef.current = true;
+      lastHireMePosRef.current = { x, y };
       const fontSize = 10 + brushSize * 2;
+      const phrase = getNextHireMePhrase();
+      haptic();
       ctx.save();
       ctx.font = `bold ${fontSize}px Arial`;
-      ctx.fillStyle = '#ff0000';
-      ctx.fillText('HIRE ME', x, y);
+      ctx.fillStyle = phrase.color;
+      ctx.fillText(phrase.text, x, y);
       ctx.restore();
       return;
     }
 
-    setIsDrawing(true);
-    setStartPos({ x, y });
-    setSnapshot(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
+    isDrawingRef.current = true;
+    startPosRef.current = { x, y };
+    snapshotRef.current = ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height);
 
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -341,40 +369,45 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       ctx.strokeStyle = pattern as string;
       ctx.fillStyle = pattern as string;
     }
-  };
+  }, [tool, brushSize, activePattern, getMousePos, floodFill, createPattern, getNextHireMePhrase]);
 
-  const draw = (e: React.MouseEvent | React.TouchEvent) => {
+  const draw = useCallback((e: React.MouseEvent | React.TouchEvent) => {
     if ('touches' in e) e.preventDefault();
 
-    if (!isDrawing || !ctx || !canvasRef.current) return;
+    const ctx = ctxRef.current;
+    if (!isDrawingRef.current || !ctx || !canvasRef.current) return;
     const { x, y } = getMousePos(e);
 
     if (tool === 'hireme') {
-      if (lastHireMePos) {
+      if (lastHireMePosRef.current) {
         const fontSize = 10 + brushSize * 2;
         const distance = Math.sqrt(
-          Math.pow(x - lastHireMePos.x, 2) + Math.pow(y - lastHireMePos.y, 2)
+          Math.pow(x - lastHireMePosRef.current.x, 2) + Math.pow(y - lastHireMePosRef.current.y, 2)
         );
 
         const spacing = fontSize * 3;
         if (distance > spacing) {
+          const phrase = getNextHireMePhrase();
+          haptic();
           ctx.save();
           ctx.font = `bold ${fontSize}px Arial`;
-          ctx.fillStyle = '#ff0000';
-          ctx.fillText('HIRE ME', x, y);
+          ctx.fillStyle = phrase.color;
+          ctx.fillText(phrase.text, x, y);
           ctx.restore();
-          setLastHireMePos({ x, y });
+          lastHireMePosRef.current = { x, y };
         }
       }
       return;
     }
 
-    if (!snapshot) return;
+    if (!snapshotRef.current) return;
 
     if (['line', 'rect', 'circle'].includes(tool)) {
-      ctx.putImageData(snapshot, 0, 0);
+      ctx.putImageData(snapshotRef.current, 0, 0);
       ctx.beginPath();
     }
+
+    const startPos = startPosRef.current;
 
     switch (tool) {
       case 'pencil':
@@ -398,40 +431,46 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
         ctx.stroke();
         break;
     }
-  };
+  }, [tool, brushSize, getMousePos, getNextHireMePhrase]);
 
-  const stopDrawing = () => {
-    if (!isDrawing || !ctx) return;
+  const stopDrawing = useCallback(() => {
+    const ctx = ctxRef.current;
+    if (!isDrawingRef.current || !ctx) return;
 
     if (tool === 'hireme') {
-      setIsDrawing(false);
-      setLastHireMePos(null);
+      isDrawingRef.current = false;
+      lastHireMePosRef.current = null;
       saveHistory(ctx);
       return;
     }
 
     ctx.closePath();
-    setIsDrawing(false);
+    isDrawingRef.current = false;
     saveHistory(ctx);
-  };
+  }, [tool, saveHistory]);
 
-  // Tool Button Component - simplified for better mobile performance
-  const ToolBtn = ({ id, icon: Icon, compact = false }: any) => (
-    <button
-      type="button"
-      onClick={() => setTool(id)}
-      className={`${compact ? 'w-10 h-10' : 'w-8 h-8'} flex items-center justify-center border border-black cursor-pointer ${
-        tool === id
-          ? 'bg-black text-white'
-          : 'bg-white text-black'
-      }`}
-    >
-      <Icon size={compact ? 20 : 16} strokeWidth={1.5} />
-    </button>
-  );
+  // Memoized handlers for tools to prevent re-renders
+  const handleToolClick = useCallback((id: ToolType) => {
+    haptic();
+    setTool(id);
+  }, []);
+
+  const handlePatternClick = useCallback((id: string) => {
+    haptic();
+    setActivePatternId(id);
+  }, []);
+
+  const handleBrushSizeChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setBrushSize(Number(e.target.value));
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    haptic();
+    undo();
+  }, [undo]);
 
   // Checkerboard pattern CSS
-  const checkerboardStyle = {
+  const checkerboardStyle = useMemo(() => ({
     backgroundImage: `
       linear-gradient(45deg, #808080 25%, transparent 25%),
       linear-gradient(-45deg, #808080 25%, transparent 25%),
@@ -441,10 +480,22 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     backgroundSize: '8px 8px',
     backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
     backgroundColor: '#c0c0c0',
-  };
+  }), []);
+
+  // Tool buttons data
+  const tools: { id: ToolType; icon: typeof Pencil }[] = [
+    { id: 'fill', icon: PaintBucket },
+    { id: 'hireme', icon: Sparkles },
+    { id: 'pencil', icon: Pencil },
+    { id: 'brush', icon: Brush },
+    { id: 'eraser', icon: Eraser },
+    { id: 'line', icon: Minus },
+    { id: 'rect', icon: Square },
+    { id: 'circle', icon: Circle },
+  ];
 
   return (
-    <div className="flex flex-col h-full font-sans selection:bg-transparent" style={{ ...checkerboardStyle }}>
+    <div className="flex flex-col h-full font-sans selection:bg-transparent" style={checkerboardStyle}>
 
       {/* Menu Bar */}
       <div className="h-6 bg-white border-b-2 border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none">
@@ -463,35 +514,41 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
         <div className="w-[86px] bg-white border-r-2 border-black flex flex-col shrink-0">
           {/* Tools Grid - 2 columns */}
           <div className="grid grid-cols-2 border-b-2 border-black">
-            <ToolBtn id="fill" icon={PaintBucket} compact />
-            <ToolBtn id="hireme" icon={HelpCircle} compact />
-            <ToolBtn id="pencil" icon={Pencil} compact />
-            <ToolBtn id="brush" icon={Brush} compact />
-            <ToolBtn id="eraser" icon={Eraser} compact />
-            <ToolBtn id="line" icon={Minus} compact />
-            <ToolBtn id="rect" icon={Square} compact />
-            <ToolBtn id="circle" icon={Circle} compact />
+            {tools.map(({ id, icon: Icon }) => (
+              <button
+                key={id}
+                type="button"
+                onClick={() => handleToolClick(id)}
+                className={`w-10 h-10 flex items-center justify-center border border-black cursor-pointer ${
+                  tool === id ? 'bg-black text-white' : 'bg-white text-black'
+                }`}
+              >
+                <Icon size={20} strokeWidth={1.5} />
+              </button>
+            ))}
           </div>
 
-          {/* Brush Size Slider - simplified for performance */}
-          <div className="border-b-2 border-black bg-white px-1 py-3">
+          {/* Brush Size Slider */}
+          <div className="border-b-2 border-black bg-white px-2 py-3">
             <input
               type="range"
               min="1"
               max="20"
               value={brushSize}
-              onChange={(e) => setBrushSize(Number(e.target.value))}
-              className="w-full h-2 bg-gray-300 rounded appearance-none cursor-pointer"
+              onChange={handleBrushSizeChange}
+              className="w-full h-3 rounded appearance-none cursor-pointer"
               style={{
                 background: 'linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%)',
+                WebkitAppearance: 'none',
               }}
             />
           </div>
 
           {/* Undo Button */}
           <button
-            onClick={undo}
-            className="p-3 bg-white border-b-2 border-black flex items-center justify-center"
+            type="button"
+            onClick={handleUndo}
+            className="p-3 bg-white border-b-2 border-black flex items-center justify-center cursor-pointer active:bg-gray-200"
           >
             <RotateCcw size={20} />
           </button>
@@ -537,9 +594,9 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => setActivePattern(p)}
+                    onClick={() => handlePatternClick(p.id)}
                     className={`w-5 h-5 border border-black ${
-                      activePattern.id === p.id ? 'ring-2 ring-blue-500 ring-inset' : ''
+                      activePatternId === p.id ? 'ring-2 ring-blue-500 ring-inset' : ''
                     }`}
                     style={p.style}
                   />
