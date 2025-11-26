@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { haptic } from 'ios-haptics';
 
-export type WallpaperType = 'terminal' | 'sequoia-light' | 'sequoia-dark' | 'sonoma' | 'ventura';
+export type WallpaperType = 'terminal' | 'ripple' | 'sequoia-light' | 'sequoia-dark' | 'sonoma' | 'ventura';
 
 interface ControlCenterProps {
   isOpen: boolean;
@@ -14,6 +14,7 @@ interface ControlCenterProps {
 
 const WALLPAPERS: { id: WallpaperType; name: string; gradient: string }[] = [
   { id: 'terminal', name: 'Terminal', gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)' },
+  { id: 'ripple', name: 'Ripple', gradient: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%)' },
   { id: 'sequoia-light', name: 'Sequoia', gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)' },
   { id: 'sequoia-dark', name: 'Sequoia Dark', gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #3d2a1f 100%)' },
   { id: 'sonoma', name: 'Sonoma', gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f093fb 100%)' },
@@ -117,6 +118,16 @@ export default function ControlCenter({ isOpen, onClose, currentWallpaper, onWal
                         radial-gradient(circle at 80% 20%, rgba(200,200,200,0.3) 1px, transparent 1px)
                       `,
                       backgroundSize: '6px 6px',
+                    }} />
+                  )}
+                  {/* Grid pattern overlay for ripple wallpaper */}
+                  {wallpaper.id === 'ripple' && (
+                    <div className="w-full h-full opacity-70" style={{
+                      backgroundImage: `
+                        linear-gradient(rgba(255,255,255,0.3) 1px, transparent 1px),
+                        linear-gradient(90deg, rgba(255,255,255,0.3) 1px, transparent 1px)
+                      `,
+                      backgroundSize: '8px 8px',
                     }} />
                   )}
                 </div>

@@ -19,6 +19,7 @@ import AppDetail from './components/apps/AppDetail';
 import LetterGlitch from './components/ui/LetterGlitch';
 import RatingPopup from './components/ui/RatingPopup';
 import ControlCenter, { ControlCenterButton, WallpaperType } from './components/ui/ControlCenter';
+import RippleGrid from './components/ui/RippleGrid';
 import { projects } from './data/projects';
 import { haptic } from 'ios-haptics';
 import {
@@ -30,6 +31,7 @@ import {
 // Wallpaper configuration
 const WALLPAPER_CONFIGS: Record<WallpaperType, { gradient: string }> = {
   'terminal': { gradient: '' },
+  'ripple': { gradient: '' },
   'sequoia-light': { gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)' },
   'sequoia-dark': { gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #0d0a08 100%)' },
   'sonoma': { gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f093fb 100%)' },
@@ -74,6 +76,35 @@ const TerminalBackground = React.memo(() => {
 });
 
 TerminalBackground.displayName = 'TerminalBackground';
+
+// RippleGrid background component
+const RippleGridBackground = React.memo(() => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  return (
+    <div className="fixed inset-0 z-0 bg-black">
+      <RippleGrid
+        enableRainbow={false}
+        gridColor="#ffffff"
+        rippleIntensity={0.05}
+        gridSize={10}
+        gridThickness={15}
+        mouseInteraction={!isMobile}
+        mouseInteractionRadius={1.2}
+        opacity={0.8}
+      />
+    </div>
+  );
+});
+
+RippleGridBackground.displayName = 'RippleGridBackground';
 
 // Static wallpaper background component
 const WallpaperBackground = React.memo(({ wallpaper }: { wallpaper: WallpaperType }) => {
@@ -1001,6 +1032,8 @@ export default function MacOsPortfolio() {
       <div className={`transition-opacity duration-300 ${wallpaperTransition ? 'opacity-0' : 'opacity-100'}`}>
         {currentWallpaper === 'terminal' ? (
           <TerminalBackground />
+        ) : currentWallpaper === 'ripple' ? (
+          <RippleGridBackground />
         ) : (
           <WallpaperBackground wallpaper={currentWallpaper} />
         )}
