@@ -96,17 +96,7 @@ async function logRating(event: Record<string, unknown>) {
 
 // Extract IP address from request headers
 function getClientIP(request: NextRequest): string {
-  // Next.js 13+ has request.ip on Vercel
-  if (request.ip) {
-    return request.ip;
-  }
-
   // Vercel-specific headers (check these first)
-  const vercelIP = request.headers.get('x-vercel-ip');
-  if (vercelIP) {
-    return vercelIP;
-  }
-
   const vercelForwardedFor = request.headers.get('x-vercel-forwarded-for');
   if (vercelForwardedFor) {
     return vercelForwardedFor.split(',')[0].trim();
@@ -141,22 +131,14 @@ function getClientIP(request: NextRequest): string {
 
 // Get geo info from Vercel headers (available on Vercel deployments)
 function getGeoInfo(request: NextRequest) {
-  // Next.js 13+ has request.geo on Vercel
-  if (request.geo) {
-    return {
-      country: request.geo.country || undefined,
-      region: request.geo.region || undefined,
-      city: request.geo.city || undefined,
-      latitude: request.geo.latitude || undefined,
-      longitude: request.geo.longitude || undefined,
-    };
-  }
+  const city = request.headers.get('x-vercel-ip-city');
 
-  // Fallback to headers
   return {
     country: request.headers.get('x-vercel-ip-country') || undefined,
     region: request.headers.get('x-vercel-ip-country-region') || undefined,
-    city: decodeURIComponent(request.headers.get('x-vercel-ip-city') || '') || undefined,
+    city: city ? decodeURIComponent(city) : undefined,
+    latitude: request.headers.get('x-vercel-ip-latitude') || undefined,
+    longitude: request.headers.get('x-vercel-ip-longitude') || undefined,
   };
 }
 
