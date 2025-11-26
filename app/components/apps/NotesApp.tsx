@@ -98,9 +98,16 @@ export default function NotesApp() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white font-sans">
+    <div className="flex flex-col h-full font-sans relative" style={{ backgroundColor: '#faf8f0' }}>
+      {/* Subtle pinstripe background */}
+      <div
+        className="absolute inset-0 pointer-events-none opacity-30"
+        style={{
+          backgroundImage: 'repeating-linear-gradient(0deg, transparent, transparent 23px, #e8e4d8 23px, #e8e4d8 24px)',
+        }}
+      />
       {/* Notes Toolbar */}
-      <div className={`flex items-center gap-1 ${isMobile ? 'px-2 py-1.5' : 'px-4 py-2'} border-b border-gray-200 bg-white`}>
+      <div className={`relative z-10 flex items-center gap-1 ${isMobile ? 'px-2 py-1.5' : 'px-4 py-2'} border-b border-[#d4d0c4]`} style={{ backgroundColor: '#f5f3eb' }}>
         {/* Format buttons */}
         <button
           onClick={() => execCommand('bold')}
@@ -206,8 +213,8 @@ export default function NotesApp() {
         ref={editorRef}
         contentEditable
         suppressContentEditableWarning
-        className={`flex-1 overflow-y-auto ${isMobile ? 'px-4 py-4' : 'px-12 py-6'} bg-white outline-none`}
-        style={{ fontSize: isMobile ? '14px' : '16px', fontFamily: 'San Francisco, -apple-system, BlinkMacSystemFont, sans-serif' }}
+        className={`relative z-10 flex-1 overflow-y-auto ${isMobile ? 'px-4 py-4' : 'px-12 py-6'} outline-none`}
+        style={{ fontSize: isMobile ? '14px' : '16px', fontFamily: 'San Francisco, -apple-system, BlinkMacSystemFont, sans-serif', backgroundColor: 'transparent' }}
       >
         {/* Image */}
         <img
