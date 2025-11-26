@@ -113,22 +113,22 @@ export default function Iridescence({
     ctn.appendChild(gl.canvas);
 
     function handleMouseMove(e: MouseEvent) {
-      const rect = ctn.getBoundingClientRect();
-      const x = (e.clientX - rect.left) / rect.width;
-      const y = 1.0 - (e.clientY - rect.top) / rect.height;
+      // Use window dimensions for global mouse tracking (same as FaultyTerminal)
+      const x = e.clientX / window.innerWidth;
+      const y = 1.0 - e.clientY / window.innerHeight;
       mousePos.current = { x, y };
       program.uniforms.uMouse.value[0] = x;
       program.uniforms.uMouse.value[1] = y;
     }
     if (mouseReact) {
-      ctn.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousemove', handleMouseMove);
     }
 
     return () => {
       cancelAnimationFrame(animateId);
       window.removeEventListener('resize', resize);
       if (mouseReact) {
-        ctn.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mousemove', handleMouseMove);
       }
       if (gl.canvas.parentElement === ctn) {
         ctn.removeChild(gl.canvas);

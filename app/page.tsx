@@ -110,12 +110,21 @@ RippleGridBackground.displayName = 'RippleGridBackground';
 
 // Iridescence background component
 const IridescenceBackground = React.memo(() => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   return (
     <div className="fixed inset-0 z-0">
       <Iridescence
         color={[1, 1, 1]}
-        mouseReact={false}
-        amplitude={0.1}
+        mouseReact={!isMobile}
+        amplitude={0.3}
         speed={1.0}
       />
     </div>
