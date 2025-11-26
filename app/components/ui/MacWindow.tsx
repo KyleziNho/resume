@@ -160,16 +160,16 @@ const MacWindow: React.FC<MacWindowProps> = ({
       {/* Resize Handles - 4 Corners */}
       {!isMaximized && (
         <>
-          <ResizeHandle direction="nw" cursor="nw-resize" className="-top-1 -left-1 w-5 h-5" />
-          <ResizeHandle direction="ne" cursor="ne-resize" className="-top-1 -right-1 w-5 h-5" />
-          <ResizeHandle direction="sw" cursor="sw-resize" className="-bottom-1 -left-1 w-5 h-5" />
-          <ResizeHandle direction="se" cursor="se-resize" className="-bottom-1 -right-1 w-5 h-5" />
+          <ResizeHandle direction="nw" cursor="nw-resize" className="-top-1 -left-1 w-4 h-4" />
+          <ResizeHandle direction="ne" cursor="ne-resize" className="-top-1 -right-1 w-4 h-4" />
+          <ResizeHandle direction="sw" cursor="sw-resize" className="-bottom-1 -left-1 w-4 h-4" />
+          <ResizeHandle direction="se" cursor="se-resize" className="-bottom-1 -right-1 w-4 h-4" />
 
           {/* 4 Edges */}
-          <ResizeHandle direction="n" cursor="n-resize" className="-top-1 left-4 right-4 h-3" />
-          <ResizeHandle direction="s" cursor="s-resize" className="-bottom-1 left-4 right-4 h-3" />
-          <ResizeHandle direction="w" cursor="w-resize" className="-left-1 top-4 bottom-4 w-3" />
-          <ResizeHandle direction="e" cursor="e-resize" className="-right-1 top-4 bottom-4 w-3" />
+          <ResizeHandle direction="n" cursor="n-resize" className="-top-1 left-8 right-4 h-2" />
+          <ResizeHandle direction="s" cursor="s-resize" className="-bottom-1 left-4 right-4 h-2" />
+          <ResizeHandle direction="w" cursor="w-resize" className="-left-1 top-8 bottom-4 w-2" />
+          <ResizeHandle direction="e" cursor="e-resize" className="-right-1 top-4 bottom-4 w-2" />
         </>
       )}
 
