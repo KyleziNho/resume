@@ -92,11 +92,13 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           context.fillStyle = 'white';
           context.fillRect(0, 0, canvas.width, canvas.height);
 
-          // Use cover-style scaling (fill canvas, crop if needed)
-          const scale = Math.max(canvas.width / img.width, canvas.height / img.height);
-          const x = (canvas.width / 2) - (img.width / 2) * scale;
-          const y = (canvas.height / 2) - (img.height / 2) * scale;
-          context.drawImage(img, x, y, img.width * scale, img.height * scale);
+          // Use contain-style scaling (fit entire image, no stretching)
+          const scale = Math.min(canvas.width / img.width, canvas.height / img.height);
+          const scaledWidth = img.width * scale;
+          const scaledHeight = img.height * scale;
+          const x = (canvas.width - scaledWidth) / 2;
+          const y = (canvas.height - scaledHeight) / 2;
+          context.drawImage(img, x, y, scaledWidth, scaledHeight);
           saveHistory(context);
         };
         img.onerror = () => {
@@ -491,59 +493,45 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
               <ToolBtn id="circle" icon={Circle} compact />
             </div>
 
-            {/* Brush Size Slider - Classic Mac OS Style */}
-            <div className="px-2 py-2 border-b-2 border-black bg-white">
-              {/* Larger touch area container */}
-              <div className="relative h-12 flex items-center">
-                {/* Grooved track - visually smaller but inside larger touch area */}
-                <div
-                  className="relative w-full h-6 mx-1"
-                  style={{
-                    background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
-                    borderRadius: '3px',
-                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.5)',
-                    border: '1px solid #666',
-                  }}
-                >
-                  {/* Glossy blue orb thumb - bigger for easier touch */}
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-7 h-7 rounded-full transition-all duration-75 pointer-events-none"
-                    style={{
-                      left: `clamp(0px, calc(${((brushSize - 1) / 19) * 100}% - 14px), calc(100% - 28px))`,
-                      background: 'radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%)',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.2)',
-                      border: '1px solid #0a4a7a',
-                    }}
-                  >
-                    {/* Highlight spot on the orb */}
-                    <div
-                      className="absolute w-2.5 h-1.5 rounded-full"
-                      style={{
-                        top: '4px',
-                        left: '5px',
-                        background: 'rgba(255,255,255,0.7)',
-                      }}
-                    />
-                  </div>
-                </div>
-                {/* Invisible range input - covers entire touch area */}
-                <input
-                  type="range"
-                  min="1"
-                  max="20"
-                  value={brushSize}
-                  onChange={(e) => {
-                    const newValue = Number(e.target.value);
-                    if (newValue !== brushSize) {
-                      haptic();
-                      setBrushSize(newValue);
-                    }
-                  }}
-                  onTouchStart={() => haptic()}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  style={{ touchAction: 'none', margin: 0, padding: 0 }}
-                />
-              </div>
+            {/* Brush Size Slider - Large touch-friendly */}
+            <div className="border-b-2 border-black bg-white p-3">
+              <input
+                type="range"
+                min="1"
+                max="20"
+                value={brushSize}
+                onChange={(e) => {
+                  const newValue = Number(e.target.value);
+                  if (newValue !== brushSize) {
+                    haptic();
+                    setBrushSize(newValue);
+                  }
+                }}
+                onTouchStart={() => haptic()}
+                className="w-full h-8 cursor-pointer"
+                style={{
+                  touchAction: 'none',
+                  WebkitAppearance: 'none',
+                  appearance: 'none',
+                  background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
+                  borderRadius: '4px',
+                  outline: 'none',
+                  border: '1px solid #666',
+                }}
+              />
+              <style jsx>{`
+                input[type="range"]::-webkit-slider-thumb {
+                  -webkit-appearance: none;
+                  appearance: none;
+                  width: 32px;
+                  height: 32px;
+                  border-radius: 50%;
+                  background: radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%);
+                  box-shadow: 0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6);
+                  border: 1px solid #0a4a7a;
+                  cursor: pointer;
+                }
+              `}</style>
             </div>
 
             {/* Undo Button */}
@@ -565,13 +553,13 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           {/* Main Canvas Area */}
           <div className="flex-1 flex flex-col overflow-hidden">
             {/* Canvas */}
-            <div className="flex-1 bg-white border-2 border-black overflow-hidden relative">
+            <div className="flex-1 bg-white border-2 border-black overflow-hidden relative flex items-center justify-center">
               <canvas
                 ref={canvasRef}
                 width={800}
                 height={600}
-                className="block bg-white cursor-crosshair absolute inset-0 w-full h-full"
-                style={{ touchAction: 'none' }}
+                className="block bg-white cursor-crosshair max-w-full max-h-full"
+                style={{ touchAction: 'none', aspectRatio: '800 / 600' }}
                 onMouseDown={startDrawing}
                 onMouseMove={draw}
                 onMouseUp={stopDrawing}
