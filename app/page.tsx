@@ -29,11 +29,19 @@ import {
 // Memoized background component to prevent restarts
 const TerminalBackground = React.memo(() => {
   const gridMul = useMemo(() => [2, 1] as [number, number], []);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   return (
     <div className="fixed inset-0 z-0">
       <FaultyTerminal
-        scale={1.5}
+        scale={isMobile ? 1.5 : 1.2}
         gridMul={gridMul}
         digitSize={1.2}
         timeScale={0.2}
@@ -46,8 +54,8 @@ const TerminalBackground = React.memo(() => {
         dither={0}
         curvature={0}
         tint="#cccccc"
-        mouseReact={false}
-        mouseStrength={0}
+        mouseReact={!isMobile}
+        mouseStrength={0.3}
         pageLoadAnimation={false}
         brightness={0.3}
       />
