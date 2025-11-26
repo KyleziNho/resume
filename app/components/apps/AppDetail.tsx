@@ -302,9 +302,9 @@ export default function AppDetail({ app }: AppDetailProps) {
               Demo Video
             </h2>
             <div
-              className={`relative rounded-lg overflow-hidden ${app.videoAspectRatio === 'portrait' ? 'w-[120px] md:w-[140px]' : 'w-full'}`}
+              className={`relative rounded-lg overflow-hidden ${app.videoAspectRatio === 'portrait' ? 'h-[220px] md:h-[380px]' : 'w-full'}`}
               style={{
-                paddingBottom: app.videoAspectRatio === 'portrait' ? '216px' : '56.25%', // Fixed height for portrait
+                aspectRatio: app.videoAspectRatio === 'portrait' ? '9/16' : '16/9',
                 boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
               }}
             >

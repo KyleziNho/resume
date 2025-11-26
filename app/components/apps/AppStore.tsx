@@ -31,7 +31,7 @@ export const apps: AppData[] = [
     description: 'The easiest way to split receipts. Snap a photo and AI extracts items, prices, tax and tips. Assign items to friends and see exactly who owes what.',
     videoId: '1140723788',
     videoAspectRatio: 'portrait',
-    images: ['/app-onlybills.png'],
+    images: [],
     progress: 90,
     stage: 'In Development',
     technologies: ['SwiftUI', 'SwiftData', 'Google Gemini', 'Vision']
@@ -71,7 +71,7 @@ export const apps: AppData[] = [
     link: 'https://kyro.onl',
     description: 'Real-time multiplayer card game where you compete for the lowest score. Use power cards strategically, match cards to eliminate them, and call Kyro to win.',
     videoId: '1140726803',
-    images: ['/app-kyro.png'],
+    images: [],
     progress: 100,
     stage: 'Live',
     technologies: ['Node.js', 'Express', 'Socket.IO', 'HTML5']
