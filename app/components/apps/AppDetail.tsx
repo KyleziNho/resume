@@ -261,10 +261,10 @@ export default function AppDetail({ app }: AppDetailProps) {
           </div>
         )}
 
-        {/* About & Video Section - Side by side on desktop for portrait videos */}
+        {/* Portrait Video Layout - Side by side on desktop */}
         {app.videoId && app.videoAspectRatio === 'portrait' ? (
           <div className="flex flex-col md:flex-row gap-4">
-            {/* Video Section - Left on desktop, full width on mobile */}
+            {/* Video Section - Left on desktop */}
             <div
               className="p-3 rounded-lg border border-[#aaa] md:shrink-0"
               style={{
@@ -282,7 +282,7 @@ export default function AppDetail({ app }: AppDetailProps) {
                 Demo Video
               </h2>
               <div
-                className="relative rounded-lg overflow-hidden w-full md:w-auto h-[280px] md:h-[320px]"
+                className="relative rounded-lg overflow-hidden w-full md:w-auto h-[280px] md:h-[380px]"
                 style={{
                   aspectRatio: '9/16',
                   boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
@@ -298,31 +298,124 @@ export default function AppDetail({ app }: AppDetailProps) {
               </div>
             </div>
 
-            {/* About Section - Right on desktop */}
-            <div
-              className="p-3 rounded-lg border border-[#aaa] flex-1"
-              style={{
-                background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-              }}
-            >
-              <h2
-                className="text-sm font-bold mb-2"
+            {/* Right Column - About, Progress, Technologies */}
+            <div className="flex-1 flex flex-col gap-4">
+              {/* About Section */}
+              <div
+                className="p-3 rounded-lg border border-[#aaa]"
                 style={{
-                  color: '#333',
-                  textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                  background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
                 }}
               >
-                About
-              </h2>
-              <p className="text-xs text-gray-700 leading-relaxed">
-                {app.description}
-              </p>
+                <h2
+                  className="text-sm font-bold mb-2"
+                  style={{
+                    color: '#333',
+                    textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                  }}
+                >
+                  About
+                </h2>
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  {app.description}
+                </p>
+              </div>
+
+              {/* Progress Section */}
+              <div
+                className="p-3 rounded-lg border border-[#aaa]"
+                style={{
+                  background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+                }}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h2
+                    className="text-sm font-bold"
+                    style={{
+                      color: '#333',
+                      textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                    }}
+                  >
+                    Progress
+                  </h2>
+                  <span className="text-xs font-semibold text-gray-600">
+                    {app.progress}%
+                  </span>
+                </div>
+                <div
+                  className="h-4 rounded-full overflow-hidden relative mb-3"
+                  style={{
+                    background: 'linear-gradient(180deg, #1a1a1a 0%, #3d3d3d 20%, #2a2a2a 80%, #1a1a1a 100%)',
+                    boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.1), 0 1px 4px rgba(0,0,0,0.3)',
+                    border: '1px solid #0a0a0a',
+                  }}
+                >
+                  <div
+                    className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                    style={{
+                      width: `${app.progress}%`,
+                      background: 'linear-gradient(180deg, #6cb4f5 0%, #3d9df5 25%, #1a7de8 50%, #1565c0 75%, #0d47a1 100%)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 2px rgba(0,0,0,0.3)',
+                    }}
+                  >
+                    <div
+                      className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                      style={{
+                        background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%)',
+                      }}
+                    />
+                  </div>
+                </div>
+                {app.progressNotes && (
+                  <p className="text-xs text-gray-700 leading-relaxed">
+                    {app.progressNotes}
+                  </p>
+                )}
+              </div>
+
+              {/* Technologies Section */}
+              <div
+                className="p-3 rounded-lg border border-[#aaa]"
+                style={{
+                  background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+                }}
+              >
+                <h2
+                  className="text-sm font-bold mb-2"
+                  style={{
+                    color: '#333',
+                    textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                  }}
+                >
+                  Technologies
+                </h2>
+                <div className="flex flex-wrap gap-2">
+                  {app.technologies.map((tech) => (
+                    <div
+                      key={tech}
+                      className="px-2 py-1 rounded text-xs font-medium"
+                      style={{
+                        background: 'linear-gradient(180deg, #d8d8d8 0%, #c0c0c0 100%)',
+                        color: '#333',
+                        textShadow: '0 1px 0 rgba(255,255,255,0.5)',
+                        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 2px rgba(0,0,0,0.2)',
+                        border: '1px solid #999',
+                      }}
+                    >
+                      {tech}
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         ) : (
           <>
-            {/* Description Section - Standard layout */}
+            {/* Standard Layout - Stacked sections */}
+            {/* Description Section */}
             <div
               className="p-3 rounded-lg border border-[#aaa]"
               style={{
@@ -344,7 +437,7 @@ export default function AppDetail({ app }: AppDetailProps) {
               </p>
             </div>
 
-            {/* Video Section - Landscape or no video */}
+            {/* Video Section - Landscape */}
             {app.videoId && (
               <div
                 className="p-3 rounded-lg border border-[#aaa]"
@@ -379,103 +472,97 @@ export default function AppDetail({ app }: AppDetailProps) {
                 </div>
               </div>
             )}
-          </>
-        )}
 
-        {/* Progress Section */}
-        <div
-          className="p-3 rounded-lg border border-[#aaa]"
-          style={{
-            background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-          }}
-        >
-          <div className="flex items-center justify-between mb-2">
-            <h2
-              className="text-sm font-bold"
-              style={{
-                color: '#333',
-                textShadow: '0 1px 0 rgba(255,255,255,0.7)',
-              }}
-            >
-              Progress
-            </h2>
-            <span className="text-xs font-semibold text-gray-600">
-              {app.progress}%
-            </span>
-          </div>
-
-          {/* Aqua Progress Bar */}
-          <div
-            className="h-4 rounded-full overflow-hidden relative mb-3"
-            style={{
-              background: 'linear-gradient(180deg, #1a1a1a 0%, #3d3d3d 20%, #2a2a2a 80%, #1a1a1a 100%)',
-              boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.1), 0 1px 4px rgba(0,0,0,0.3)',
-              border: '1px solid #0a0a0a',
-            }}
-          >
-            {/* Progress Fill - Aqua Blue Gel */}
+            {/* Progress Section */}
             <div
-              className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+              className="p-3 rounded-lg border border-[#aaa]"
               style={{
-                width: `${app.progress}%`,
-                background: 'linear-gradient(180deg, #6cb4f5 0%, #3d9df5 25%, #1a7de8 50%, #1565c0 75%, #0d47a1 100%)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 2px rgba(0,0,0,0.3)',
+                background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
               }}
             >
-              {/* Glossy Shine Overlay */}
+              <div className="flex items-center justify-between mb-2">
+                <h2
+                  className="text-sm font-bold"
+                  style={{
+                    color: '#333',
+                    textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                  }}
+                >
+                  Progress
+                </h2>
+                <span className="text-xs font-semibold text-gray-600">
+                  {app.progress}%
+                </span>
+              </div>
               <div
-                className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                className="h-4 rounded-full overflow-hidden relative mb-3"
                 style={{
-                  background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%)',
-                }}
-              />
-            </div>
-          </div>
-
-          {/* Progress Notes */}
-          {app.progressNotes && (
-            <p className="text-xs text-gray-700 leading-relaxed">
-              {app.progressNotes}
-            </p>
-          )}
-        </div>
-
-        {/* Technologies Section */}
-        <div
-          className="p-3 rounded-lg border border-[#aaa]"
-          style={{
-            background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-          }}
-        >
-          <h2
-            className="text-sm font-bold mb-2"
-            style={{
-              color: '#333',
-              textShadow: '0 1px 0 rgba(255,255,255,0.7)',
-            }}
-          >
-            Technologies
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {app.technologies.map((tech) => (
-              <div
-                key={tech}
-                className="px-2 py-1 rounded text-xs font-medium"
-                style={{
-                  background: 'linear-gradient(180deg, #d8d8d8 0%, #c0c0c0 100%)',
-                  color: '#333',
-                  textShadow: '0 1px 0 rgba(255,255,255,0.5)',
-                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 2px rgba(0,0,0,0.2)',
-                  border: '1px solid #999',
+                  background: 'linear-gradient(180deg, #1a1a1a 0%, #3d3d3d 20%, #2a2a2a 80%, #1a1a1a 100%)',
+                  boxShadow: 'inset 0 2px 3px rgba(0,0,0,0.6), inset 0 -1px 2px rgba(255,255,255,0.1), 0 1px 4px rgba(0,0,0,0.3)',
+                  border: '1px solid #0a0a0a',
                 }}
               >
-                {tech}
+                <div
+                  className="h-full rounded-full transition-all duration-500 ease-out relative overflow-hidden"
+                  style={{
+                    width: `${app.progress}%`,
+                    background: 'linear-gradient(180deg, #6cb4f5 0%, #3d9df5 25%, #1a7de8 50%, #1565c0 75%, #0d47a1 100%)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.4), inset 0 -1px 2px rgba(0,0,0,0.3)',
+                  }}
+                >
+                  <div
+                    className="absolute inset-x-0 top-0 h-1/2 rounded-t-full"
+                    style={{
+                      background: 'linear-gradient(180deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.2) 50%, rgba(255,255,255,0) 100%)',
+                    }}
+                  />
+                </div>
               </div>
-            ))}
-          </div>
-        </div>
+              {app.progressNotes && (
+                <p className="text-xs text-gray-700 leading-relaxed">
+                  {app.progressNotes}
+                </p>
+              )}
+            </div>
+
+            {/* Technologies Section */}
+            <div
+              className="p-3 rounded-lg border border-[#aaa]"
+              style={{
+                background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+              }}
+            >
+              <h2
+                className="text-sm font-bold mb-2"
+                style={{
+                  color: '#333',
+                  textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                }}
+              >
+                Technologies
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                {app.technologies.map((tech) => (
+                  <div
+                    key={tech}
+                    className="px-2 py-1 rounded text-xs font-medium"
+                    style={{
+                      background: 'linear-gradient(180deg, #d8d8d8 0%, #c0c0c0 100%)',
+                      color: '#333',
+                      textShadow: '0 1px 0 rgba(255,255,255,0.5)',
+                      boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.6), 0 1px 2px rgba(0,0,0,0.2)',
+                      border: '1px solid #999',
+                    }}
+                  >
+                    {tech}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
