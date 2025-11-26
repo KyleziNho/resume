@@ -462,11 +462,24 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     </button>
   );
 
+  // Checkerboard pattern CSS
+  const checkerboardStyle = {
+    backgroundImage: `
+      linear-gradient(45deg, #808080 25%, transparent 25%),
+      linear-gradient(-45deg, #808080 25%, transparent 25%),
+      linear-gradient(45deg, transparent 75%, #808080 75%),
+      linear-gradient(-45deg, transparent 75%, #808080 75%)
+    `,
+    backgroundSize: '8px 8px',
+    backgroundPosition: '0 0, 0 4px, 4px -4px, -4px 0px',
+    backgroundColor: '#c0c0c0',
+  };
+
   return (
-    <div className="flex flex-col h-full bg-[#c0c0c0] font-sans selection:bg-transparent" style={{ pointerEvents: 'auto' }}>
+    <div className="flex flex-col h-full font-sans selection:bg-transparent" style={{ ...checkerboardStyle, pointerEvents: 'auto' }}>
 
       {/* 1. Paint Menu Bar */}
-      <div className="h-6 bg-white border-b border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none overflow-x-auto">
+      <div className="h-6 bg-white border-b-2 border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none overflow-x-auto">
         <span className="mr-4 font-bold whitespace-nowrap">File</span>
         <span className="mr-4 whitespace-nowrap">Edit</span>
         <span className="mr-4 whitespace-nowrap hidden md:inline">Goodies</span>
@@ -478,7 +491,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
       {/* Mobile Layout - Classic MacPaint style */}
       {isMobile && (
-        <div className="flex flex-1 overflow-hidden bg-[#c0c0c0]">
+        <div className="flex flex-1 overflow-hidden">
           {/* Left Tool Panel */}
           <div className="w-[88px] bg-white border-r-2 border-black flex flex-col shrink-0">
             {/* Tools Grid - 2 columns like original MacPaint */}
@@ -622,7 +635,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       <div className="flex flex-1 overflow-hidden p-1 gap-1 relative">
 
         {/* Desktop Left Toolbar */}
-        <div className="w-20 bg-[#c0c0c0] border-2 border-black p-1 flex flex-col gap-2 shrink-0 relative z-50">
+        <div className="w-20 bg-white border-2 border-black p-1 flex flex-col gap-2 shrink-0 relative z-50">
              {/* Tools Grid */}
              <div
                className="grid grid-cols-2 gap-1 bg-white border-2 border-black p-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] relative z-10"
@@ -640,46 +653,47 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
              {/* Brush Size Slider - Classic Mac OS Style */}
              <div className="border-2 border-black bg-white p-2 pointer-events-auto">
-                {/* Grooved track container */}
-                <div
-                  className="relative h-5"
-                  style={{
-                    background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
-                    borderRadius: '2px',
-                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.5)',
-                    border: '1px solid #666',
-                  }}
-                >
-                  {/* Glossy blue orb thumb */}
-                  <div
-                    className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-75 pointer-events-none"
-                    style={{
-                      left: `clamp(0px, calc(${((brushSize - 1) / 19) * 100}% - 10px), calc(100% - 20px))`,
-                      background: 'radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%)',
-                      boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.2)',
-                      border: '1px solid #0a4a7a',
-                    }}
-                  >
-                    {/* Highlight spot on the orb */}
-                    <div
-                      className="absolute w-2 h-1 rounded-full"
-                      style={{
-                        top: '3px',
-                        left: '4px',
-                        background: 'rgba(255,255,255,0.7)',
-                      }}
-                    />
-                  </div>
-                  {/* Invisible range input */}
-                  <input
-                    type="range"
-                    min="1"
-                    max="20"
-                    value={brushSize}
-                    onChange={(e) => setBrushSize(Number(e.target.value))}
-                    className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                  />
-                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="20"
+                  value={brushSize}
+                  onChange={(e) => setBrushSize(Number(e.target.value))}
+                  className="mac-slider-desktop"
+                />
+                <style jsx>{`
+                  .mac-slider-desktop {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 100%;
+                    height: 6px;
+                    background: linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%);
+                    border-radius: 3px;
+                    outline: none;
+                    border: 1px solid #777;
+                    box-shadow: inset 0 1px 2px rgba(0,0,0,0.3);
+                  }
+                  .mac-slider-desktop::-webkit-slider-thumb {
+                    -webkit-appearance: none;
+                    appearance: none;
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+                    border: 1px solid #0a4a7a;
+                    cursor: pointer;
+                  }
+                  .mac-slider-desktop::-moz-range-thumb {
+                    width: 16px;
+                    height: 16px;
+                    border-radius: 50%;
+                    background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.4), 0 1px 2px rgba(0,0,0,0.2);
+                    border: 1px solid #0a4a7a;
+                    cursor: pointer;
+                  }
+                `}</style>
              </div>
 
              {/* Current Pattern Preview */}
