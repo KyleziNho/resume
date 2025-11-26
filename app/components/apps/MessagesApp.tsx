@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Send, Eraser, Smile } from 'lucide-react';
 import { haptic } from 'ios-haptics';
+import { trackChatMessage } from '@/app/lib/analytics';
 
 // --- Types ---
 type Message = {
@@ -154,6 +155,9 @@ export default function MessagesApp() {
 
     // Haptic feedback when receiving response
     haptic();
+
+    // Analytics: Track chat message
+    trackChatMessage(userMsg.text, responseText);
 
     setMessages(prev => [...prev, botMsg]);
     setIsTyping(false);

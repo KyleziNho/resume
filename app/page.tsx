@@ -17,8 +17,15 @@ import KernelCrossing from './components/apps/CrossyRoad';
 import AppStore, { AppData } from './components/apps/AppStore';
 import AppDetail from './components/apps/AppDetail';
 import LetterGlitch from './components/ui/LetterGlitch';
+import RatingPopup from './components/ui/RatingPopup';
 import { projects } from './data/projects';
 import { haptic } from 'ios-haptics';
+import {
+  trackRating,
+  shouldShowRatingPopup,
+  markRatingCompleted,
+  markRatingDismissed,
+} from './lib/analytics';
 
 // Memoized background component to prevent restarts
 const TerminalBackground = React.memo(() => {
@@ -173,6 +180,7 @@ export default function MacOsPortfolio() {
   const [selectedApp, setSelectedApp] = useState<AppData | null>(null);
   const [installedAppPositions, setInstalledAppPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [safariUrl, setSafariUrl] = useState('https://www.kyro.onl');
+  const [showRatingPopup, setShowRatingPopup] = useState(false);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -223,6 +231,19 @@ export default function MacOsPortfolio() {
       clearInterval(pulseInterval);
     };
   }, []);
+
+  // Rating popup: Show after 25 seconds if user hasn't rated
+  useEffect(() => {
+    if (!booted) return;
+
+    const timer = setTimeout(() => {
+      if (shouldShowRatingPopup()) {
+        setShowRatingPopup(true);
+      }
+    }, 25000); // 25 seconds
+
+    return () => clearTimeout(timer);
+  }, [booted]);
 
   // Prevent pull-to-refresh on mobile (but allow scrolling inside app windows)
   useEffect(() => {
@@ -667,6 +688,21 @@ export default function MacOsPortfolio() {
 
     // Clear selected app
     setSelectedApp(null);
+  };
+
+  // Rating popup handlers
+  const handleRatingClose = () => {
+    setShowRatingPopup(false);
+    markRatingDismissed();
+  };
+
+  const handleRatingSubmit = (rating: number, review?: string) => {
+    trackRating(rating, review);
+    markRatingCompleted();
+    if (review) {
+      // If review is submitted, close immediately
+      setShowRatingPopup(false);
+    }
   };
 
   const minimizeWindow = (id: string) => {
@@ -1357,6 +1393,14 @@ export default function MacOsPortfolio() {
           </MacWindow>
         );
       })}
+
+      {/* Rating Popup */}
+      {showRatingPopup && (
+        <RatingPopup
+          onClose={handleRatingClose}
+          onSubmitRating={handleRatingSubmit}
+        />
+      )}
 
       {/* Global Styles */}
       <style jsx global>{`
