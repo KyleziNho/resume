@@ -3,7 +3,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import {
   Pencil, Brush, Eraser, Minus, Square, Circle,
-  Hand, PaintBucket,
+  PaintBucket,
   RotateCcw, Save, HelpCircle
 } from 'lucide-react';
 import { haptic } from 'ios-haptics';
@@ -21,7 +21,7 @@ const PATTERNS = [
   { id: 'bricks', style: { backgroundImage: 'linear-gradient(335deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(155deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(335deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px), linear-gradient(155deg, rgba(0,0,0,0) 23px,rgba(0,0,0,1) 23px, rgba(0,0,0,1) 24px, rgba(0,0,0,0) 24px)', backgroundSize: '10px 10px', backgroundColor: '#fff' } },
 ];
 
-type ToolType = 'pencil' | 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'lasso' | 'fill' | 'hireme';
+type ToolType = 'pencil' | 'brush' | 'eraser' | 'line' | 'rect' | 'circle' | 'fill' | 'hireme';
 
 interface MacPaintProps {
   imageSrc?: string;
@@ -41,9 +41,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
   const [history, setHistory] = useState<ImageData[]>([]);
   const [brushSize, setBrushSize] = useState(3);
-
-  // Lasso state
-  const [lassoPath, setLassoPath] = useState<{ x: number; y: number }[]>([]);
 
   // Hire Me tool state
   const [lastHireMePos, setLastHireMePos] = useState<{ x: number; y: number } | null>(null);
@@ -240,19 +237,38 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
     const data = imageData.data;
 
-    const startPos = (Math.floor(startY) * canvas.width + Math.floor(startX)) * 4;
+    const sx = Math.floor(startX);
+    const sy = Math.floor(startY);
+
+    // Bounds check
+    if (sx < 0 || sx >= canvas.width || sy < 0 || sy >= canvas.height) return;
+
+    const startPos = (sy * canvas.width + sx) * 4;
     const startR = data[startPos];
     const startG = data[startPos + 1];
     const startB = data[startPos + 2];
     const startA = data[startPos + 3];
 
-    // Fill color (black for now)
+    // Fill color (black)
     const fillR = 0, fillG = 0, fillB = 0, fillA = 255;
 
-    // Don't fill if clicking on same color
-    if (startR === fillR && startG === fillG && startB === fillB && startA === fillA) return;
+    // Tolerance for similar colors (helps with anti-aliased/dithered images)
+    const tolerance = 32;
 
-    const pixelStack: [number, number][] = [[Math.floor(startX), Math.floor(startY)]];
+    // Check if colors are similar within tolerance
+    const colorMatch = (r: number, g: number, b: number, a: number) => {
+      return Math.abs(r - startR) <= tolerance &&
+             Math.abs(g - startG) <= tolerance &&
+             Math.abs(b - startB) <= tolerance &&
+             Math.abs(a - startA) <= tolerance;
+    };
+
+    // Don't fill if clicking on same color as fill color
+    if (Math.abs(startR - fillR) <= tolerance &&
+        Math.abs(startG - fillG) <= tolerance &&
+        Math.abs(startB - fillB) <= tolerance) return;
+
+    const pixelStack: [number, number][] = [[sx, sy]];
     const visited = new Set<number>();
 
     while (pixelStack.length > 0) {
@@ -268,7 +284,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       const b = data[pos + 2];
       const a = data[pos + 3];
 
-      if (r === startR && g === startG && b === startB && a === startA) {
+      if (colorMatch(r, g, b, a)) {
         data[pos] = fillR;
         data[pos + 1] = fillG;
         data[pos + 2] = fillB;
@@ -317,12 +333,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     setIsDrawing(true);
     setStartPos({ x, y });
     setSnapshot(ctx.getImageData(0, 0, canvasRef.current.width, canvasRef.current.height));
-
-    // Lasso tool - start path
-    if (tool === 'lasso') {
-      setLassoPath([{ x, y }]);
-      return;
-    }
 
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -377,27 +387,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
     if (!snapshot) return;
 
-    // Lasso tool - add to path
-    if (tool === 'lasso') {
-      setLassoPath(prev => [...prev, { x, y }]);
-
-      // Draw lasso path preview
-      ctx.putImageData(snapshot, 0, 0);
-      ctx.save();
-      ctx.strokeStyle = '#0066ff';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([4, 4]);
-      ctx.beginPath();
-      lassoPath.forEach((point, i) => {
-        if (i === 0) ctx.moveTo(point.x, point.y);
-        else ctx.lineTo(point.x, point.y);
-      });
-      ctx.lineTo(x, y);
-      ctx.stroke();
-      ctx.restore();
-      return;
-    }
-
     // For Shapes, we clear and redraw from snapshot
     if (['line', 'rect', 'circle'].includes(tool)) {
       ctx.putImageData(snapshot, 0, 0);
@@ -437,12 +426,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
       setLastHireMePos(null);
       saveHistory(ctx);
       return;
-    }
-
-    // Finalize lasso
-    if (tool === 'lasso' && snapshot) {
-      ctx.putImageData(snapshot, 0, 0);
-      setLassoPath([]);
     }
 
     ctx.closePath();
@@ -498,7 +481,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
           <div className="w-[88px] bg-white border-r-2 border-black flex flex-col shrink-0">
             {/* Tools Grid - 2 columns like original MacPaint */}
             <div className="grid grid-cols-2 border-b-2 border-black">
-              <ToolBtn id="lasso" icon={Hand} compact />
               <ToolBtn id="fill" icon={PaintBucket} compact />
               <ToolBtn id="hireme" icon={HelpCircle} compact />
               <ToolBtn id="pencil" icon={Pencil} compact />
@@ -510,38 +492,41 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
             </div>
 
             {/* Brush Size Slider - Classic Mac OS Style */}
-            <div className="px-2 py-3 border-b-2 border-black bg-white">
-              {/* Grooved track container */}
-              <div
-                className="relative h-5 mx-1"
-                style={{
-                  background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
-                  borderRadius: '2px',
-                  boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.5)',
-                  border: '1px solid #666',
-                }}
-              >
-                {/* Glossy blue orb thumb */}
+            <div className="px-2 py-2 border-b-2 border-black bg-white">
+              {/* Larger touch area container */}
+              <div className="relative h-12 flex items-center">
+                {/* Grooved track - visually smaller but inside larger touch area */}
                 <div
-                  className="absolute top-1/2 -translate-y-1/2 w-5 h-5 rounded-full transition-all duration-75 pointer-events-none"
+                  className="relative w-full h-6 mx-1"
                   style={{
-                    left: `clamp(0px, calc(${((brushSize - 1) / 19) * 100}% - 10px), calc(100% - 20px))`,
-                    background: 'radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%)',
-                    boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.2)',
-                    border: '1px solid #0a4a7a',
+                    background: 'linear-gradient(180deg, #888 0%, #aaa 20%, #ccc 50%, #aaa 80%, #888 100%)',
+                    borderRadius: '3px',
+                    boxShadow: 'inset 0 1px 2px rgba(0,0,0,0.4), inset 0 -1px 1px rgba(255,255,255,0.5)',
+                    border: '1px solid #666',
                   }}
                 >
-                  {/* Highlight spot on the orb */}
+                  {/* Glossy blue orb thumb - bigger for easier touch */}
                   <div
-                    className="absolute w-2 h-1 rounded-full"
+                    className="absolute top-1/2 -translate-y-1/2 w-7 h-7 rounded-full transition-all duration-75 pointer-events-none"
                     style={{
-                      top: '3px',
-                      left: '4px',
-                      background: 'rgba(255,255,255,0.7)',
+                      left: `clamp(0px, calc(${((brushSize - 1) / 19) * 100}% - 14px), calc(100% - 28px))`,
+                      background: 'radial-gradient(ellipse 60% 40% at 40% 30%, #8ad4ff 0%, #4aa8e8 30%, #1a7ac2 60%, #0d5a9e 100%)',
+                      boxShadow: '0 2px 4px rgba(0,0,0,0.4), inset 0 2px 3px rgba(255,255,255,0.6), inset 0 -1px 2px rgba(0,0,0,0.2)',
+                      border: '1px solid #0a4a7a',
                     }}
-                  />
+                  >
+                    {/* Highlight spot on the orb */}
+                    <div
+                      className="absolute w-2.5 h-1.5 rounded-full"
+                      style={{
+                        top: '4px',
+                        left: '5px',
+                        background: 'rgba(255,255,255,0.7)',
+                      }}
+                    />
+                  </div>
                 </div>
-                {/* Invisible range input */}
+                {/* Invisible range input - covers entire touch area */}
                 <input
                   type="range"
                   min="1"
@@ -645,7 +630,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                className="grid grid-cols-2 gap-1 bg-white border-2 border-black p-1 shadow-[2px_2px_0_rgba(0,0,0,0.2)] relative z-10"
                style={{ pointerEvents: 'auto' }}
              >
-                <ToolBtn id="lasso" icon={Hand} />
                 <ToolBtn id="fill" icon={PaintBucket} />
                 <ToolBtn id="hireme" icon={HelpCircle} />
                 <ToolBtn id="pencil" icon={Pencil} />
