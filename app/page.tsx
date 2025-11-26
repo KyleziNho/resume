@@ -18,6 +18,7 @@ import AppStore, { AppData } from './components/apps/AppStore';
 import AppDetail from './components/apps/AppDetail';
 import LetterGlitch from './components/ui/LetterGlitch';
 import RatingPopup from './components/ui/RatingPopup';
+import ControlCenter, { ControlCenterButton, WallpaperType } from './components/ui/ControlCenter';
 import { projects } from './data/projects';
 import { haptic } from 'ios-haptics';
 import {
@@ -25,6 +26,15 @@ import {
   shouldShowRatingPopup,
   markRatingCompleted,
 } from './lib/analytics';
+
+// Wallpaper configuration
+const WALLPAPER_CONFIGS: Record<WallpaperType, { gradient: string; image?: string }> = {
+  'terminal': { gradient: '' },
+  'sequoia-light': { gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)', image: '/wallpapers/sequoia-light.jpg' },
+  'sequoia-dark': { gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #0d0a08 100%)', image: '/wallpapers/sequoia-dark.jpg' },
+  'sonoma': { gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f5d6ba 100%)', image: '/wallpapers/sonoma.jpg' },
+  'ventura': { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #4a7c9b 100%)', image: '/wallpapers/ventura.jpg' },
+};
 
 // Memoized background component to prevent restarts
 const TerminalBackground = React.memo(() => {
@@ -55,7 +65,7 @@ const TerminalBackground = React.memo(() => {
         curvature={0}
         tint="#cccccc"
         mouseReact={!isMobile}
-        mouseStrength={0.3}
+        mouseStrength={0.05}
         pageLoadAnimation={false}
         brightness={0.3}
       />
@@ -64,6 +74,31 @@ const TerminalBackground = React.memo(() => {
 });
 
 TerminalBackground.displayName = 'TerminalBackground';
+
+// Static wallpaper background component
+const WallpaperBackground = React.memo(({ wallpaper }: { wallpaper: WallpaperType }) => {
+  const config = WALLPAPER_CONFIGS[wallpaper];
+
+  return (
+    <div
+      className="fixed inset-0 z-0 transition-opacity duration-700"
+      style={{
+        background: config.gradient,
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+      }}
+    >
+      {config.image && (
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: `url(${config.image})` }}
+        />
+      )}
+    </div>
+  );
+});
+
+WallpaperBackground.displayName = 'WallpaperBackground';
 
 type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages' | 'game' | 'appstore';
 
@@ -85,6 +120,9 @@ export default function MacOsPortfolio() {
   const [zIndex, setZIndex] = useState(10);
   const [activeProject, setActiveProject] = useState<any>(null);
   const [showAppleMenu, setShowAppleMenu] = useState(false);
+  const [showControlCenter, setShowControlCenter] = useState(false);
+  const [currentWallpaper, setCurrentWallpaper] = useState<WallpaperType>('terminal');
+  const [wallpaperTransition, setWallpaperTransition] = useState(false);
   const appleMenuRef = useRef<HTMLDivElement>(null);
 
   // Project rename state - maps project IDs to custom names
@@ -712,6 +750,34 @@ export default function MacOsPortfolio() {
     }
   };
 
+  // Wallpaper change handler with smooth transition
+  const handleWallpaperChange = (wallpaper: WallpaperType) => {
+    if (wallpaper === currentWallpaper) return;
+
+    // Trigger transition
+    setWallpaperTransition(true);
+
+    // After fade out, change wallpaper
+    setTimeout(() => {
+      setCurrentWallpaper(wallpaper);
+      // Save to localStorage
+      localStorage.setItem('kyleos_wallpaper', wallpaper);
+    }, 300);
+
+    // End transition after fade in
+    setTimeout(() => {
+      setWallpaperTransition(false);
+    }, 600);
+  };
+
+  // Load saved wallpaper on mount
+  useEffect(() => {
+    const saved = localStorage.getItem('kyleos_wallpaper') as WallpaperType | null;
+    if (saved && WALLPAPER_CONFIGS[saved]) {
+      setCurrentWallpaper(saved);
+    }
+  }, []);
+
   const minimizeWindow = (id: string) => {
     const windowId = id as WindowId;
 
@@ -937,7 +1003,14 @@ export default function MacOsPortfolio() {
 
   return (
     <div className="fixed inset-0 overflow-hidden font-sans text-[#333] select-none">
-      <TerminalBackground />
+      {/* Background with transition */}
+      <div className={`transition-opacity duration-300 ${wallpaperTransition ? 'opacity-0' : 'opacity-100'}`}>
+        {currentWallpaper === 'terminal' ? (
+          <TerminalBackground />
+        ) : (
+          <WallpaperBackground wallpaper={currentWallpaper} />
+        )}
+      </div>
 
       {/* Menu Bar */}
       <div className="absolute top-0 w-full h-6 bg-gradient-to-b from-[#e6e6e6] to-[#a8a8a8] border-b border-[#444] shadow-md flex items-center justify-between px-4 z-50 text-xs font-bold text-[#222] drop-shadow-[0_1px_0_rgba(255,255,255,0.5)]">
@@ -988,9 +1061,18 @@ export default function MacOsPortfolio() {
          </div>
 
          <div className="flex gap-3 items-center">
+            <ControlCenterButton onClick={() => setShowControlCenter(true)} />
             <span className="">{time}</span>
          </div>
       </div>
+
+      {/* Control Center */}
+      <ControlCenter
+        isOpen={showControlCenter}
+        onClose={() => setShowControlCenter(false)}
+        currentWallpaper={currentWallpaper}
+        onWallpaperChange={handleWallpaperChange}
+      />
 
       {/* Desktop Icons */}
       <div className="absolute top-8 left-0 z-0 w-full h-full pointer-events-auto">
