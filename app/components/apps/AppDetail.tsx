@@ -286,7 +286,7 @@ export default function AppDetail({ app }: AppDetailProps) {
         {/* Video Section - Vimeo Embed */}
         {app.videoId && (
           <div
-            className="p-3 rounded-lg border border-[#aaa]"
+            className={`p-3 rounded-lg border border-[#aaa] ${app.videoAspectRatio === 'portrait' ? 'w-fit mx-auto' : ''}`}
             style={{
               background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
               boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
@@ -301,22 +301,20 @@ export default function AppDetail({ app }: AppDetailProps) {
             >
               Demo Video
             </h2>
-            <div className={`flex ${app.videoAspectRatio === 'portrait' ? 'justify-center' : ''}`}>
-              <div
-                className={`relative rounded-lg overflow-hidden ${app.videoAspectRatio === 'portrait' ? 'w-[45%] md:w-[35%]' : 'w-full'}`}
-                style={{
-                  paddingBottom: app.videoAspectRatio === 'portrait' ? '80%' : '56.25%', // 9:16 for portrait, 16:9 for landscape
-                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-                }}
-              >
-                <iframe
-                  src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
-                  className="absolute inset-0 w-full h-full"
-                  frameBorder="0"
-                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                  title={`${app.name} demo video`}
-                />
-              </div>
+            <div
+              className={`relative rounded-lg overflow-hidden ${app.videoAspectRatio === 'portrait' ? 'w-[120px] md:w-[140px]' : 'w-full'}`}
+              style={{
+                paddingBottom: app.videoAspectRatio === 'portrait' ? '216px' : '56.25%', // Fixed height for portrait
+                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+              }}
+            >
+              <iframe
+                src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+                className="absolute inset-0 w-full h-full"
+                frameBorder="0"
+                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                title={`${app.name} demo video`}
+              />
             </div>
           </div>
         )}
