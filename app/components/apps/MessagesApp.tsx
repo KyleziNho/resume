@@ -50,7 +50,7 @@ export default function MessagesApp() {
     {
       id: '1',
       sender: 'kyle',
-      text: "👋 hey! i'm kyle. ask me anything!",
+      text: "hey! i'm a bot trained on everything about kyle. ask me anything about him or his projects!",
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
     }
   ]);
