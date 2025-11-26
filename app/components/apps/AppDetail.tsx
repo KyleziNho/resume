@@ -261,62 +261,125 @@ export default function AppDetail({ app }: AppDetailProps) {
           </div>
         )}
 
-        {/* Description Section */}
-        <div
-          className="p-3 rounded-lg border border-[#aaa]"
-          style={{
-            background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
-            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-          }}
-        >
-          <h2
-            className="text-sm font-bold mb-2"
-            style={{
-              color: '#333',
-              textShadow: '0 1px 0 rgba(255,255,255,0.7)',
-            }}
-          >
-            About
-          </h2>
-          <p className="text-xs text-gray-700 leading-relaxed">
-            {app.description}
-          </p>
-        </div>
-
-        {/* Video Section - Vimeo Embed */}
-        {app.videoId && (
-          <div
-            className={`p-3 rounded-lg border border-[#aaa] ${app.videoAspectRatio === 'portrait' ? 'w-fit mx-auto' : ''}`}
-            style={{
-              background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
-              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
-            }}
-          >
-            <h2
-              className="text-sm font-bold mb-3"
-              style={{
-                color: '#333',
-                textShadow: '0 1px 0 rgba(255,255,255,0.7)',
-              }}
-            >
-              Demo Video
-            </h2>
+        {/* About & Video Section - Side by side on desktop for portrait videos */}
+        {app.videoId && app.videoAspectRatio === 'portrait' ? (
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* Video Section - Left on desktop, full width on mobile */}
             <div
-              className={`relative rounded-lg overflow-hidden ${app.videoAspectRatio === 'portrait' ? 'h-[220px] md:h-[380px]' : 'w-full'}`}
+              className="p-3 rounded-lg border border-[#aaa] md:shrink-0"
               style={{
-                aspectRatio: app.videoAspectRatio === 'portrait' ? '9/16' : '16/9',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
               }}
             >
-              <iframe
-                src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
-                className="absolute inset-0 w-full h-full"
-                frameBorder="0"
-                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                title={`${app.name} demo video`}
-              />
+              <h2
+                className="text-sm font-bold mb-3"
+                style={{
+                  color: '#333',
+                  textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                }}
+              >
+                Demo Video
+              </h2>
+              <div
+                className="relative rounded-lg overflow-hidden w-full md:w-auto h-[280px] md:h-[320px]"
+                style={{
+                  aspectRatio: '9/16',
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                }}
+              >
+                <iframe
+                  src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                  title={`${app.name} demo video`}
+                />
+              </div>
+            </div>
+
+            {/* About Section - Right on desktop */}
+            <div
+              className="p-3 rounded-lg border border-[#aaa] flex-1"
+              style={{
+                background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+              }}
+            >
+              <h2
+                className="text-sm font-bold mb-2"
+                style={{
+                  color: '#333',
+                  textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                }}
+              >
+                About
+              </h2>
+              <p className="text-xs text-gray-700 leading-relaxed">
+                {app.description}
+              </p>
             </div>
           </div>
+        ) : (
+          <>
+            {/* Description Section - Standard layout */}
+            <div
+              className="p-3 rounded-lg border border-[#aaa]"
+              style={{
+                background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+              }}
+            >
+              <h2
+                className="text-sm font-bold mb-2"
+                style={{
+                  color: '#333',
+                  textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                }}
+              >
+                About
+              </h2>
+              <p className="text-xs text-gray-700 leading-relaxed">
+                {app.description}
+              </p>
+            </div>
+
+            {/* Video Section - Landscape or no video */}
+            {app.videoId && (
+              <div
+                className="p-3 rounded-lg border border-[#aaa]"
+                style={{
+                  background: 'linear-gradient(180deg, #fafafa 0%, #e8e8e8 100%)',
+                  boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.8), 0 1px 3px rgba(0,0,0,0.1)',
+                }}
+              >
+                <h2
+                  className="text-sm font-bold mb-3"
+                  style={{
+                    color: '#333',
+                    textShadow: '0 1px 0 rgba(255,255,255,0.7)',
+                  }}
+                >
+                  Demo Video
+                </h2>
+                <div
+                  className="relative rounded-lg overflow-hidden w-full"
+                  style={{
+                    aspectRatio: '16/9',
+                    boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                  }}
+                >
+                  <iframe
+                    src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+                    className="absolute inset-0 w-full h-full"
+                    frameBorder="0"
+                    allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                    title={`${app.name} demo video`}
+                  />
+                </div>
+              </div>
+            )}
+          </>
         )}
 
         {/* Progress Section */}
