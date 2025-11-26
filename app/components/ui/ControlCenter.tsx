@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { haptic } from 'ios-haptics';
 
-export type WallpaperType = 'terminal' | 'ripple' | 'sequoia-light' | 'sequoia-dark' | 'sonoma' | 'ventura';
+export type WallpaperType = 'terminal' | 'ripple' | 'iridescence' | 'sequoia-light' | 'sequoia-dark' | 'sonoma' | 'ventura';
 
 interface ControlCenterProps {
   isOpen: boolean;
@@ -15,6 +15,7 @@ interface ControlCenterProps {
 const WALLPAPERS: { id: WallpaperType; name: string; gradient: string }[] = [
   { id: 'terminal', name: 'Terminal', gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)' },
   { id: 'ripple', name: 'Ripple', gradient: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 50%, #0a0a0a 100%)' },
+  { id: 'iridescence', name: 'Iridescence', gradient: 'linear-gradient(135deg, #ff9a9e 0%, #fecfef 25%, #a18cd1 50%, #fbc2eb 75%, #a6c1ee 100%)' },
   { id: 'sequoia-light', name: 'Sequoia', gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)' },
   { id: 'sequoia-dark', name: 'Sequoia Dark', gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #3d2a1f 100%)' },
   { id: 'sonoma', name: 'Sonoma', gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f093fb 100%)' },

@@ -20,6 +20,7 @@ import LetterGlitch from './components/ui/LetterGlitch';
 import RatingPopup from './components/ui/RatingPopup';
 import ControlCenter, { ControlCenterButton, WallpaperType } from './components/ui/ControlCenter';
 import RippleGrid from './components/ui/RippleGrid';
+import Iridescence from './components/ui/Iridescence';
 import { projects } from './data/projects';
 import { haptic } from 'ios-haptics';
 import {
@@ -32,6 +33,7 @@ import {
 const WALLPAPER_CONFIGS: Record<WallpaperType, { gradient: string }> = {
   'terminal': { gradient: '' },
   'ripple': { gradient: '' },
+  'iridescence': { gradient: '' },
   'sequoia-light': { gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)' },
   'sequoia-dark': { gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #0d0a08 100%)' },
   'sonoma': { gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f093fb 100%)' },
@@ -105,6 +107,22 @@ const RippleGridBackground = React.memo(() => {
 });
 
 RippleGridBackground.displayName = 'RippleGridBackground';
+
+// Iridescence background component
+const IridescenceBackground = React.memo(() => {
+  return (
+    <div className="fixed inset-0 z-0">
+      <Iridescence
+        color={[1, 1, 1]}
+        mouseReact={false}
+        amplitude={0.1}
+        speed={1.0}
+      />
+    </div>
+  );
+});
+
+IridescenceBackground.displayName = 'IridescenceBackground';
 
 // Static wallpaper background component
 const WallpaperBackground = React.memo(({ wallpaper }: { wallpaper: WallpaperType }) => {
@@ -1034,6 +1052,8 @@ export default function MacOsPortfolio() {
           <TerminalBackground />
         ) : currentWallpaper === 'ripple' ? (
           <RippleGridBackground />
+        ) : currentWallpaper === 'iridescence' ? (
+          <IridescenceBackground />
         ) : (
           <WallpaperBackground wallpaper={currentWallpaper} />
         )}
