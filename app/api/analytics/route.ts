@@ -1,98 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
-import path from 'path';
-
-// Data directory for analytics (in production, use a database)
-const DATA_DIR = path.join(process.cwd(), 'analytics-data');
-
-// Ensure data directory exists
-async function ensureDataDir() {
-  try {
-    await fs.access(DATA_DIR);
-  } catch {
-    await fs.mkdir(DATA_DIR, { recursive: true });
-  }
-}
-
-// Get today's date string for file naming
-function getTodayString() {
-  return new Date().toISOString().split('T')[0];
-}
-
-// Append event to daily log file
-async function logEvent(event: Record<string, unknown>) {
-  await ensureDataDir();
-
-  const filename = `${getTodayString()}.json`;
-  const filepath = path.join(DATA_DIR, filename);
-
-  let events: Record<string, unknown>[] = [];
-
-  try {
-    const existing = await fs.readFile(filepath, 'utf-8');
-    events = JSON.parse(existing);
-  } catch {
-    // File doesn't exist yet, start fresh
-  }
-
-  events.push({
-    ...event,
-    serverTimestamp: Date.now(),
-  });
-
-  await fs.writeFile(filepath, JSON.stringify(events, null, 2));
-}
-
-// Store chat messages separately for easy access
-async function logChatMessage(event: Record<string, unknown>) {
-  await ensureDataDir();
-
-  const filepath = path.join(DATA_DIR, 'chat-messages.json');
-
-  let messages: Record<string, unknown>[] = [];
-
-  try {
-    const existing = await fs.readFile(filepath, 'utf-8');
-    messages = JSON.parse(existing);
-  } catch {
-    // File doesn't exist yet
-  }
-
-  messages.push({
-    ...event,
-    serverTimestamp: Date.now(),
-  });
-
-  // Keep only last 1000 messages
-  if (messages.length > 1000) {
-    messages = messages.slice(-1000);
-  }
-
-  await fs.writeFile(filepath, JSON.stringify(messages, null, 2));
-}
-
-// Store ratings separately
-async function logRating(event: Record<string, unknown>) {
-  await ensureDataDir();
-
-  const filepath = path.join(DATA_DIR, 'ratings.json');
-
-  let ratings: Record<string, unknown>[] = [];
-
-  try {
-    const existing = await fs.readFile(filepath, 'utf-8');
-    ratings = JSON.parse(existing);
-  } catch {
-    // File doesn't exist yet
-  }
-
-  ratings.push({
-    ...event,
-    serverTimestamp: Date.now(),
-  });
-
-  await fs.writeFile(filepath, JSON.stringify(ratings, null, 2));
-}
+import { db } from '@/app/lib/firebase-admin';
 
 // Extract IP address from request headers
 function getClientIP(request: NextRequest): string {
@@ -105,7 +12,6 @@ function getClientIP(request: NextRequest): string {
   // Standard proxy headers
   const forwardedFor = request.headers.get('x-forwarded-for');
   if (forwardedFor) {
-    // x-forwarded-for can contain multiple IPs, take the first one
     return forwardedFor.split(',')[0].trim();
   }
 
@@ -129,7 +35,7 @@ function getClientIP(request: NextRequest): string {
   return 'unknown';
 }
 
-// Get geo info from Vercel headers (available on Vercel deployments)
+// Get geo info from Vercel headers
 function getGeoInfo(request: NextRequest) {
   const city = request.headers.get('x-vercel-ip-city');
 
@@ -149,24 +55,30 @@ export async function POST(request: NextRequest) {
     // Add server-side info
     const ip = getClientIP(request);
     const geo = getGeoInfo(request);
+    const serverTimestamp = Date.now();
 
     const enrichedEvent = {
       ...event,
       ip,
       ...geo,
+      serverTimestamp,
     };
 
-    // Log all events to daily file
-    await logEvent(enrichedEvent);
+    // If Firebase is not configured, just return success (dev mode)
+    if (!db) {
+      console.log('Analytics event (Firebase not configured):', enrichedEvent);
+      return NextResponse.json({ success: true, warning: 'Firebase not configured' });
+    }
 
-    // Special handling for specific event types
+    // Store in Firestore
     if (event.type === 'chat_message') {
-      await logChatMessage(enrichedEvent);
+      await db.collection('chat_messages').add(enrichedEvent);
+    } else if (event.type === 'rating') {
+      await db.collection('ratings').add(enrichedEvent);
     }
 
-    if (event.type === 'rating') {
-      await logRating(enrichedEvent);
-    }
+    // Also store all events in a general collection
+    await db.collection('events').add(enrichedEvent);
 
     return NextResponse.json({ success: true });
   } catch (error) {
@@ -175,47 +87,48 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to retrieve analytics (protected - add auth in production)
 export async function GET(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const type = searchParams.get('type');
 
-    await ensureDataDir();
+    // If Firebase is not configured, return empty arrays
+    if (!db) {
+      return NextResponse.json([]);
+    }
 
     if (type === 'chat') {
-      const filepath = path.join(DATA_DIR, 'chat-messages.json');
-      try {
-        const data = await fs.readFile(filepath, 'utf-8');
-        return NextResponse.json(JSON.parse(data));
-      } catch {
-        return NextResponse.json([]);
-      }
+      const snapshot = await db.collection('chat_messages')
+        .orderBy('serverTimestamp', 'desc')
+        .limit(1000)
+        .get();
+
+      const messages = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      return NextResponse.json(messages);
     }
 
     if (type === 'ratings') {
-      const filepath = path.join(DATA_DIR, 'ratings.json');
-      try {
-        const data = await fs.readFile(filepath, 'utf-8');
-        return NextResponse.json(JSON.parse(data));
-      } catch {
-        return NextResponse.json([]);
-      }
+      const snapshot = await db.collection('ratings')
+        .orderBy('serverTimestamp', 'desc')
+        .limit(500)
+        .get();
+
+      const ratings = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+
+      return NextResponse.json(ratings);
     }
 
-    if (type === 'today') {
-      const filepath = path.join(DATA_DIR, `${getTodayString()}.json`);
-      try {
-        const data = await fs.readFile(filepath, 'utf-8');
-        return NextResponse.json(JSON.parse(data));
-      } catch {
-        return NextResponse.json([]);
-      }
-    }
-
-    // Return list of available data files
-    const files = await fs.readdir(DATA_DIR);
-    return NextResponse.json({ files });
+    // Return summary of collections
+    return NextResponse.json({
+      collections: ['chat_messages', 'ratings', 'events'],
+    });
   } catch (error) {
     console.error('Analytics GET error:', error);
     return NextResponse.json({ error: 'Failed to retrieve analytics' }, { status: 500 });
