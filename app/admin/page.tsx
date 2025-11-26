@@ -70,8 +70,9 @@ export default function AdminPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'visitors' | 'chat' | 'ratings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'map' | 'visitors' | 'chat' | 'ratings'>('overview');
   const [selectedVisitor, setSelectedVisitor] = useState<string | null>(null);
+  const [selectedCountry, setSelectedCountry] = useState<string | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -233,6 +234,64 @@ export default function AdminPage() {
     return parts.join(' • ') || 'Unknown Device';
   };
 
+  // Group visitors by country
+  const countryStats = useMemo(() => {
+    const stats = new Map<string, { count: number; visitors: Visitor[]; cities: Map<string, number> }>();
+
+    visitors.forEach(visitor => {
+      const country = visitor.country || 'Unknown';
+      const existing = stats.get(country);
+
+      if (existing) {
+        existing.count++;
+        existing.visitors.push(visitor);
+        if (visitor.city) {
+          existing.cities.set(visitor.city, (existing.cities.get(visitor.city) || 0) + 1);
+        }
+      } else {
+        const cities = new Map<string, number>();
+        if (visitor.city) {
+          cities.set(visitor.city, 1);
+        }
+        stats.set(country, { count: 1, visitors: [visitor], cities });
+      }
+    });
+
+    return Array.from(stats.entries())
+      .map(([country, data]) => ({
+        country,
+        count: data.count,
+        visitors: data.visitors,
+        cities: Array.from(data.cities.entries()).sort((a, b) => b[1] - a[1]),
+      }))
+      .sort((a, b) => b.count - a.count);
+  }, [visitors]);
+
+  // Country code to name mapping
+  const countryNames: Record<string, string> = {
+    'US': 'United States', 'GB': 'United Kingdom', 'CA': 'Canada', 'AU': 'Australia',
+    'DE': 'Germany', 'FR': 'France', 'ES': 'Spain', 'IT': 'Italy', 'NL': 'Netherlands',
+    'BE': 'Belgium', 'CH': 'Switzerland', 'AT': 'Austria', 'SE': 'Sweden', 'NO': 'Norway',
+    'DK': 'Denmark', 'FI': 'Finland', 'IE': 'Ireland', 'PT': 'Portugal', 'PL': 'Poland',
+    'CZ': 'Czech Republic', 'RO': 'Romania', 'HU': 'Hungary', 'GR': 'Greece', 'RU': 'Russia',
+    'UA': 'Ukraine', 'TR': 'Turkey', 'IL': 'Israel', 'AE': 'UAE', 'SA': 'Saudi Arabia',
+    'IN': 'India', 'CN': 'China', 'JP': 'Japan', 'KR': 'South Korea', 'SG': 'Singapore',
+    'MY': 'Malaysia', 'TH': 'Thailand', 'ID': 'Indonesia', 'PH': 'Philippines', 'VN': 'Vietnam',
+    'BR': 'Brazil', 'MX': 'Mexico', 'AR': 'Argentina', 'CO': 'Colombia', 'CL': 'Chile',
+    'ZA': 'South Africa', 'NG': 'Nigeria', 'EG': 'Egypt', 'KE': 'Kenya', 'NZ': 'New Zealand',
+  };
+
+  const getCountryName = (code: string) => countryNames[code] || code;
+
+  const getCountryFlag = (code: string) => {
+    if (!code || code === 'Unknown' || code.length !== 2) return '🌍';
+    const codePoints = code
+      .toUpperCase()
+      .split('')
+      .map(char => 127397 + char.charCodeAt(0));
+    return String.fromCodePoint(...codePoints);
+  };
+
   // Login screen - Classic Mac dialog style
   if (!isAuthenticated) {
     return (
@@ -309,17 +368,17 @@ export default function AdminPage() {
 
           {/* Tab Bar */}
           <div className="flex border-b-2 border-black bg-gray-100 overflow-x-auto">
-            {(['overview', 'visitors', 'chat', 'ratings'] as const).map((tab) => (
+            {(['overview', 'map', 'visitors', 'chat', 'ratings'] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => { setActiveTab(tab); setSelectedVisitor(null); }}
+                onClick={() => { setActiveTab(tab); setSelectedVisitor(null); setSelectedCountry(null); }}
                 className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider border-r border-black whitespace-nowrap ${
                   activeTab === tab
                     ? 'bg-white'
                     : 'bg-gray-200 hover:bg-gray-100'
                 }`}
               >
-                {tab}
+                {tab === 'map' ? '🗺️ Map' : tab}
                 {tab === 'visitors' && ` (${visitors.length})`}
               </button>
             ))}
@@ -425,6 +484,180 @@ export default function AdminPage() {
                           <p className="p-4 text-center text-xs text-gray-500">No visitors yet</p>
                         )}
                       </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Map Tab */}
+                {activeTab === 'map' && (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* World Map Visualization */}
+                    <div className="md:col-span-2 border-2 border-black bg-white">
+                      <div className="text-[10px] uppercase tracking-wider p-2 border-b-2 border-black bg-gray-100">
+                        Visitor Locations
+                      </div>
+                      <div className="p-4">
+                        {/* Simple grid-based world map */}
+                        <div className="relative bg-gray-100 border border-black aspect-[2/1] overflow-hidden">
+                          {/* Grid background */}
+                          <div
+                            className="absolute inset-0"
+                            style={{
+                              backgroundImage: 'linear-gradient(#ddd 1px, transparent 1px), linear-gradient(90deg, #ddd 1px, transparent 1px)',
+                              backgroundSize: '20px 20px',
+                            }}
+                          />
+
+                          {/* Continent shapes - simplified ASCII art style */}
+                          <svg viewBox="0 0 100 50" className="absolute inset-0 w-full h-full">
+                            {/* North America */}
+                            <path d="M10,8 L25,8 L28,15 L25,22 L18,25 L12,22 L8,15 Z" fill="#ccc" stroke="#999" strokeWidth="0.3"/>
+                            {/* South America */}
+                            <path d="M20,28 L28,28 L30,35 L28,45 L22,48 L18,42 L17,32 Z" fill="#ccc" stroke="#999" strokeWidth="0.3"/>
+                            {/* Europe */}
+                            <path d="M45,8 L55,6 L58,12 L55,18 L48,18 L44,14 Z" fill="#ccc" stroke="#999" strokeWidth="0.3"/>
+                            {/* Africa */}
+                            <path d="M45,20 L55,18 L60,25 L58,38 L50,42 L42,38 L40,28 Z" fill="#ccc" stroke="#999" strokeWidth="0.3"/>
+                            {/* Asia */}
+                            <path d="M58,5 L85,5 L92,15 L88,25 L75,28 L65,25 L58,18 L56,10 Z" fill="#ccc" stroke="#999" strokeWidth="0.3"/>
+                            {/* Australia */}
+                            <path d="M78,32 L90,32 L92,40 L85,45 L78,42 Z" fill="#ccc" stroke="#999" strokeWidth="0.3"/>
+                          </svg>
+
+                          {/* Country markers */}
+                          {countryStats.map((stat, i) => {
+                            // Approximate positions for countries
+                            const positions: Record<string, { x: number; y: number }> = {
+                              'US': { x: 18, y: 30 }, 'CA': { x: 18, y: 20 }, 'MX': { x: 15, y: 40 },
+                              'BR': { x: 28, y: 65 }, 'AR': { x: 25, y: 80 }, 'CO': { x: 22, y: 50 },
+                              'GB': { x: 48, y: 22 }, 'IE': { x: 45, y: 20 }, 'FR': { x: 50, y: 28 },
+                              'DE': { x: 52, y: 25 }, 'ES': { x: 47, y: 32 }, 'IT': { x: 53, y: 30 },
+                              'NL': { x: 51, y: 23 }, 'BE': { x: 50, y: 24 }, 'CH': { x: 52, y: 28 },
+                              'AT': { x: 54, y: 27 }, 'PL': { x: 56, y: 24 }, 'SE': { x: 55, y: 15 },
+                              'NO': { x: 52, y: 12 }, 'DK': { x: 52, y: 18 }, 'FI': { x: 58, y: 12 },
+                              'RU': { x: 70, y: 18 }, 'UA': { x: 60, y: 26 }, 'TR': { x: 60, y: 32 },
+                              'IN': { x: 72, y: 42 }, 'CN': { x: 78, y: 32 }, 'JP': { x: 88, y: 30 },
+                              'KR': { x: 85, y: 32 }, 'SG': { x: 78, y: 52 }, 'AU': { x: 85, y: 75 },
+                              'NZ': { x: 92, y: 80 }, 'ZA': { x: 55, y: 72 }, 'NG': { x: 52, y: 52 },
+                              'EG': { x: 58, y: 42 }, 'AE': { x: 65, y: 42 }, 'SA': { x: 62, y: 42 },
+                              'IL': { x: 60, y: 38 }, 'PH': { x: 82, y: 48 }, 'TH': { x: 76, y: 48 },
+                              'ID': { x: 80, y: 55 }, 'MY': { x: 78, y: 52 }, 'VN': { x: 78, y: 45 },
+                            };
+                            const pos = positions[stat.country] || { x: 50, y: 50 };
+                            const size = Math.min(8, 3 + stat.count * 1.5);
+
+                            return (
+                              <div
+                                key={i}
+                                className={`absolute cursor-pointer transition-transform hover:scale-150 ${selectedCountry === stat.country ? 'z-10' : ''}`}
+                                style={{
+                                  left: `${pos.x}%`,
+                                  top: `${pos.y}%`,
+                                  transform: 'translate(-50%, -50%)',
+                                }}
+                                onClick={() => setSelectedCountry(selectedCountry === stat.country ? null : stat.country)}
+                              >
+                                <div
+                                  className={`rounded-full border-2 ${selectedCountry === stat.country ? 'border-red-500 bg-red-500' : 'border-black bg-black'} flex items-center justify-center text-white font-mono`}
+                                  style={{
+                                    width: `${size * 4}px`,
+                                    height: `${size * 4}px`,
+                                    fontSize: `${Math.max(8, size * 1.5)}px`,
+                                  }}
+                                >
+                                  {stat.count}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Legend */}
+                        <div className="mt-3 flex items-center justify-center gap-4 text-[10px]">
+                          <div className="flex items-center gap-1">
+                            <div className="w-3 h-3 rounded-full bg-black border border-black"></div>
+                            <span>= 1 visitor</span>
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <div className="w-5 h-5 rounded-full bg-black border border-black"></div>
+                            <span>= more visitors</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Country List */}
+                    <div className="border-2 border-black bg-white">
+                      <div className="text-[10px] uppercase tracking-wider p-2 border-b-2 border-black bg-gray-100">
+                        Countries ({countryStats.length})
+                      </div>
+                      <div className="max-h-[50vh] overflow-y-auto divide-y divide-gray-300">
+                        {countryStats.map((stat, i) => (
+                          <div
+                            key={i}
+                            className={`p-2 cursor-pointer ${selectedCountry === stat.country ? 'bg-black text-white' : 'hover:bg-gray-50'}`}
+                            onClick={() => setSelectedCountry(selectedCountry === stat.country ? null : stat.country)}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-xl">{getCountryFlag(stat.country)}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-xs">{getCountryName(stat.country)}</p>
+                                <p className={`text-[10px] ${selectedCountry === stat.country ? 'text-gray-300' : 'text-gray-500'}`}>
+                                  {stat.count} visitor{stat.count !== 1 ? 's' : ''}
+                                </p>
+                              </div>
+                              <span className="font-mono font-bold text-lg">{stat.count}</span>
+                            </div>
+                          </div>
+                        ))}
+                        {countryStats.length === 0 && (
+                          <div className="p-4 text-center text-xs text-gray-500">No location data yet</div>
+                        )}
+                      </div>
+
+                      {/* Selected country details */}
+                      {selectedCountry && (
+                        <div className="border-t-2 border-black p-2 bg-gray-50">
+                          <div className="text-[10px] uppercase tracking-wider mb-2 font-bold">
+                            {getCountryFlag(selectedCountry)} {getCountryName(selectedCountry)}
+                          </div>
+                          {(() => {
+                            const stat = countryStats.find(s => s.country === selectedCountry);
+                            if (!stat) return null;
+                            return (
+                              <div className="space-y-2">
+                                {/* Cities */}
+                                {stat.cities.length > 0 && (
+                                  <div>
+                                    <p className="text-[10px] text-gray-500 mb-1">Cities:</p>
+                                    <div className="flex flex-wrap gap-1">
+                                      {stat.cities.slice(0, 5).map(([city, count], i) => (
+                                        <span key={i} className="text-[10px] bg-white border border-black px-1">
+                                          {city} ({count})
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Visitors list */}
+                                <div>
+                                  <p className="text-[10px] text-gray-500 mb-1">Visitors:</p>
+                                  <div className="max-h-[100px] overflow-y-auto space-y-1">
+                                    {stat.visitors.map((v, i) => (
+                                      <div key={i} className="text-[10px] flex items-center gap-1">
+                                        <span>{getDeviceIcon(v.deviceType)}</span>
+                                        <span className="truncate">{v.city || 'Unknown city'}</span>
+                                        <span className="text-gray-400">•</span>
+                                        <span className="text-gray-500">{v.os}</span>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
