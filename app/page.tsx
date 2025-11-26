@@ -222,7 +222,7 @@ export default function MacOsPortfolio() {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
       title: 'Paint',
       iconType: 'paint' as const,
-      pos: { x: 180, y: 90 }, size: { width: 900, height: 650 }
+      pos: { x: 180, y: 90 }, size: { width: 580, height: 650 }
     },
     messages: {
       isOpen: true, isMinimized: false, isMaximized: false, zIndex: 10,
