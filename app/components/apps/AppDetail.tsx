@@ -301,20 +301,22 @@ export default function AppDetail({ app }: AppDetailProps) {
             >
               Demo Video
             </h2>
-            <div
-              className="relative rounded-lg overflow-hidden"
-              style={{
-                paddingBottom: '56.25%', // 16:9 aspect ratio
-                boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
-              }}
-            >
-              <iframe
-                src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
-                className="absolute inset-0 w-full h-full"
-                frameBorder="0"
-                allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
-                title={`${app.name} demo video`}
-              />
+            <div className={`flex ${app.videoAspectRatio === 'portrait' ? 'justify-center' : ''}`}>
+              <div
+                className={`relative rounded-lg overflow-hidden ${app.videoAspectRatio === 'portrait' ? 'w-[45%] md:w-[35%]' : 'w-full'}`}
+                style={{
+                  paddingBottom: app.videoAspectRatio === 'portrait' ? '80%' : '56.25%', // 9:16 for portrait, 16:9 for landscape
+                  boxShadow: '0 4px 12px rgba(0,0,0,0.2)',
+                }}
+              >
+                <iframe
+                  src={`https://player.vimeo.com/video/${app.videoId}?badge=0&autopause=0&player_id=0&app_id=58479`}
+                  className="absolute inset-0 w-full h-full"
+                  frameBorder="0"
+                  allow="autoplay; fullscreen; picture-in-picture; clipboard-write; encrypted-media"
+                  title={`${app.name} demo video`}
+                />
+              </div>
             </div>
           </div>
         )}

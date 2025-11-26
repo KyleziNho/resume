@@ -14,6 +14,7 @@ export interface AppData {
   description: string;
   progressNotes?: string; // Optional detailed progress notes
   videoId?: string; // Optional Vimeo video ID
+  videoAspectRatio?: 'landscape' | 'portrait'; // Video aspect ratio (default: landscape 16:9)
   images: string[];
   progress: number; // 0-100
   stage: string;
@@ -29,6 +30,7 @@ export const apps: AppData[] = [
     link: 'https://apps.apple.com/app/onlybills',
     description: 'The easiest way to split receipts. Snap a photo and AI extracts items, prices, tax and tips. Assign items to friends and see exactly who owes what.',
     videoId: '1140723788',
+    videoAspectRatio: 'portrait',
     images: ['/app-onlybills.png'],
     progress: 90,
     stage: 'In Development',
