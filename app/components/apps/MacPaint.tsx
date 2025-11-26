@@ -6,7 +6,6 @@ import {
   PaintBucket,
   RotateCcw, Save, HelpCircle
 } from 'lucide-react';
-import { haptic } from 'ios-haptics';
 
 // --- CSS PATTERNS FOR RETRO VIBE (expanded for 2 rows) ---
 const PATTERNS = [
@@ -416,22 +415,15 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
     saveHistory(ctx);
   };
 
-  // Tool Button Component
+  // Tool Button Component - simplified for better mobile performance
   const ToolBtn = ({ id, icon: Icon, compact = false }: any) => (
     <button
       type="button"
-      onClick={(e) => {
-        e.preventDefault();
-        e.stopPropagation();
-        haptic();
-        setTool(id);
-      }}
-      onMouseDown={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
-      className={`${compact ? 'w-10 h-10' : 'w-8 h-8'} flex items-center justify-center border border-black transition-all active:scale-95 cursor-pointer ${
+      onClick={() => setTool(id)}
+      className={`${compact ? 'w-10 h-10' : 'w-8 h-8'} flex items-center justify-center border border-black cursor-pointer ${
         tool === id
           ? 'bg-black text-white'
-          : 'bg-white text-black hover:bg-gray-100'
+          : 'bg-white text-black'
       }`}
     >
       <Icon size={compact ? 20 : 16} strokeWidth={1.5} />
@@ -481,62 +473,27 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
             <ToolBtn id="circle" icon={Circle} compact />
           </div>
 
-          {/* Brush Size Slider */}
+          {/* Brush Size Slider - simplified for performance */}
           <div className="border-b-2 border-black bg-white px-1 py-3">
             <input
               type="range"
               min="1"
               max="20"
               value={brushSize}
-              onChange={(e) => {
-                const newValue = Number(e.target.value);
-                if (newValue !== brushSize) {
-                  haptic();
-                  setBrushSize(newValue);
-                }
+              onChange={(e) => setBrushSize(Number(e.target.value))}
+              className="w-full h-2 bg-gray-300 rounded appearance-none cursor-pointer"
+              style={{
+                background: 'linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%)',
               }}
-              className="mac-slider"
             />
-            <style jsx>{`
-              .mac-slider {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 100%;
-                height: 6px;
-                background: linear-gradient(180deg, #999 0%, #ccc 50%, #999 100%);
-                border-radius: 3px;
-                outline: none;
-                border: 1px solid #777;
-              }
-              .mac-slider::-webkit-slider-thumb {
-                -webkit-appearance: none;
-                appearance: none;
-                width: 18px;
-                height: 18px;
-                border-radius: 50%;
-                background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
-                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-                border: 1px solid #0a4a7a;
-                cursor: pointer;
-              }
-              .mac-slider::-moz-range-thumb {
-                width: 18px;
-                height: 18px;
-                border-radius: 50%;
-                background: radial-gradient(ellipse 70% 50% at 35% 25%, #b8e4ff 0%, #5cb8ff 25%, #2196f3 50%, #1976d2 75%, #0d5a9e 100%);
-                box-shadow: 0 2px 4px rgba(0,0,0,0.4);
-                border: 1px solid #0a4a7a;
-                cursor: pointer;
-              }
-            `}</style>
           </div>
 
           {/* Undo Button */}
           <button
-            onClick={() => { haptic(); undo(); }}
-            className="p-2 bg-white border-b-2 border-black flex items-center justify-center active:bg-gray-200"
+            onClick={undo}
+            className="p-3 bg-white border-b-2 border-black flex items-center justify-center"
           >
-            <RotateCcw size={18} />
+            <RotateCcw size={20} />
           </button>
 
           {/* Spacer */}
@@ -580,17 +537,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
                   <button
                     key={p.id}
                     type="button"
-                    onTouchEnd={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      haptic();
-                      setActivePattern(p);
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      haptic();
-                      setActivePattern(p);
-                    }}
+                    onClick={() => setActivePattern(p)}
                     className={`w-5 h-5 border border-black ${
                       activePattern.id === p.id ? 'ring-2 ring-blue-500 ring-inset' : ''
                     }`}
