@@ -28,12 +28,12 @@ import {
 } from './lib/analytics';
 
 // Wallpaper configuration
-const WALLPAPER_CONFIGS: Record<WallpaperType, { gradient: string; image?: string }> = {
+const WALLPAPER_CONFIGS: Record<WallpaperType, { gradient: string }> = {
   'terminal': { gradient: '' },
-  'sequoia-light': { gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)', image: '/wallpapers/sequoia-light.jpg' },
-  'sequoia-dark': { gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #0d0a08 100%)', image: '/wallpapers/sequoia-dark.jpg' },
-  'sonoma': { gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f5d6ba 100%)', image: '/wallpapers/sonoma.jpg' },
-  'ventura': { gradient: 'linear-gradient(135deg, #667eea 0%, #764ba2 50%, #4a7c9b 100%)', image: '/wallpapers/ventura.jpg' },
+  'sequoia-light': { gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)' },
+  'sequoia-dark': { gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #0d0a08 100%)' },
+  'sonoma': { gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f093fb 100%)' },
+  'ventura': { gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%)' },
 };
 
 // Memoized background component to prevent restarts
@@ -83,18 +83,12 @@ const WallpaperBackground = React.memo(({ wallpaper }: { wallpaper: WallpaperTyp
     <div
       className="fixed inset-0 z-0 transition-opacity duration-700"
       style={{
-        background: config.gradient,
+        backgroundImage: config.gradient,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat',
       }}
-    >
-      {config.image && (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${config.image})` }}
-        />
-      )}
-    </div>
+    />
   );
 });
 
