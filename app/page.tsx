@@ -1118,7 +1118,16 @@ export default function MacOsPortfolio() {
 
          <div className="flex gap-3 items-center">
             <ControlCenterButton onClick={() => setShowControlCenter(true)} />
-            <span className="">{time}</span>
+            <button
+              type="button"
+              onClick={() => {
+                haptic();
+                setShowControlCenter(true);
+              }}
+              className="md:cursor-default hover:bg-black/10 active:bg-black/20 md:hover:bg-transparent md:active:bg-transparent px-1 py-0.5 rounded transition-colors"
+            >
+              {time}
+            </button>
          </div>
       </div>
 

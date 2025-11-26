@@ -169,3 +169,16 @@
     box-shadow: 0 0 8px 2px rgba(255,95,87,0.6), inset 0 1px 2px rgba(0,0,0,0.2);
   }
 }
+
+/* Tilt animation for control center button */
+@keyframes tilt {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-12deg);
+  }
+  75% {
+    transform: rotate(12deg);
+  }
+}

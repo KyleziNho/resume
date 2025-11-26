@@ -166,15 +166,53 @@ export default function ControlCenter({ isOpen, onClose, currentWallpaper, onWal
 
 // Control Center Toggle Button (for menu bar)
 export function ControlCenterButton({ onClick }: { onClick: () => void }) {
+  const [hasBeenTapped, setHasBeenTapped] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('control_center_tapped') === 'true';
+  });
+  const [shouldAnimate, setShouldAnimate] = useState(false);
+
+  useEffect(() => {
+    if (hasBeenTapped) return;
+
+    // Start animation after 5 seconds, then every 15 seconds
+    const initialTimeout = setTimeout(() => {
+      setShouldAnimate(true);
+      // Stop animation after 2 seconds
+      setTimeout(() => setShouldAnimate(false), 2000);
+    }, 5000);
+
+    const interval = setInterval(() => {
+      setShouldAnimate(true);
+      setTimeout(() => setShouldAnimate(false), 2000);
+    }, 15000);
+
+    return () => {
+      clearTimeout(initialTimeout);
+      clearInterval(interval);
+    };
+  }, [hasBeenTapped]);
+
+  const handleClick = () => {
+    haptic();
+    if (!hasBeenTapped) {
+      setHasBeenTapped(true);
+      localStorage.setItem('control_center_tapped', 'true');
+    }
+    onClick();
+  };
+
   return (
     <button
       type="button"
-      onClick={() => {
-        haptic();
-        onClick();
-      }}
-      className="flex items-center justify-center w-6 h-4 rounded hover:bg-black/10 active:bg-black/20 transition-colors"
+      onClick={handleClick}
+      className={`flex items-center justify-center w-6 h-4 rounded hover:bg-black/10 active:bg-black/20 transition-colors ${
+        shouldAnimate ? 'animate-tilt' : ''
+      }`}
       aria-label="Control Center"
+      style={{
+        animation: shouldAnimate ? 'tilt 0.5s ease-in-out infinite' : 'none',
+      }}
     >
       {/* macOS Control Center icon - two pill shapes */}
       <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
