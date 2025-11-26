@@ -57,8 +57,9 @@ export const apps: AppData[] = [
     tagline: 'M&A Deal Modeling',
     icon: '/app-arcadeus.png',
     link: 'https://arcadeus.com',
+    website: 'https://www.arcadeus.ai',
     description: 'Professional Excel add-in for M&A and PE deal modeling. AI-powered data extraction from financial documents with automated model generation.',
-    images: ['/app-arcadeus.png'],
+    images: [],
     progress: 85,
     stage: 'In Development',
     technologies: ['Node.js', 'Python', 'OpenAI', 'Excel API']

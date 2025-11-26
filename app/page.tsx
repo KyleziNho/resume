@@ -172,6 +172,7 @@ export default function MacOsPortfolio() {
   const [installedApps, setInstalledApps] = useState<AppData[]>([]);
   const [selectedApp, setSelectedApp] = useState<AppData | null>(null);
   const [installedAppPositions, setInstalledAppPositions] = useState<Record<string, { x: number; y: number }>>({});
+  const [safariUrl, setSafariUrl] = useState('https://www.kyro.onl');
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -625,6 +626,13 @@ export default function MacOsPortfolio() {
   };
 
   const handleAppInstalled = (app: AppData) => {
+    // Special case for Arcadeus - open Safari with the website instead
+    if (app.id === 'arcadeus' && app.website) {
+      setSafariUrl(app.website);
+      openWindow('safari');
+      return;
+    }
+
     // Add app to installed apps if not already there
     setInstalledApps(prev => {
       if (prev.find(a => a.id === app.id)) {
@@ -1239,7 +1247,7 @@ export default function MacOsPortfolio() {
         onMaximize={maximizeWindow}
         onFocus={focusWindow}
       >
-         <Safari initialUrl="https://www.kyro.onl" />
+         <Safari initialUrl={safariUrl} key={safariUrl} />
       </MacWindow>
 
       {/* PAINT WINDOW */}
