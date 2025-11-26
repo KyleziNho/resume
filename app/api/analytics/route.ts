@@ -94,20 +94,62 @@ async function logRating(event: Record<string, unknown>) {
   await fs.writeFile(filepath, JSON.stringify(ratings, null, 2));
 }
 
+// Extract IP address from request headers
+function getClientIP(request: NextRequest): string {
+  // Check various headers that might contain the real IP
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  if (forwardedFor) {
+    // x-forwarded-for can contain multiple IPs, take the first one
+    return forwardedFor.split(',')[0].trim();
+  }
+
+  const realIP = request.headers.get('x-real-ip');
+  if (realIP) {
+    return realIP;
+  }
+
+  // Vercel-specific header
+  const vercelForwardedFor = request.headers.get('x-vercel-forwarded-for');
+  if (vercelForwardedFor) {
+    return vercelForwardedFor.split(',')[0].trim();
+  }
+
+  return 'unknown';
+}
+
+// Get geo info from Vercel headers (available on Vercel deployments)
+function getGeoInfo(request: NextRequest) {
+  return {
+    country: request.headers.get('x-vercel-ip-country') || undefined,
+    region: request.headers.get('x-vercel-ip-country-region') || undefined,
+    city: request.headers.get('x-vercel-ip-city') || undefined,
+  };
+}
+
 export async function POST(request: NextRequest) {
   try {
     const event = await request.json();
 
+    // Add server-side info
+    const ip = getClientIP(request);
+    const geo = getGeoInfo(request);
+
+    const enrichedEvent = {
+      ...event,
+      ip,
+      ...geo,
+    };
+
     // Log all events to daily file
-    await logEvent(event);
+    await logEvent(enrichedEvent);
 
     // Special handling for specific event types
     if (event.type === 'chat_message') {
-      await logChatMessage(event);
+      await logChatMessage(enrichedEvent);
     }
 
     if (event.type === 'rating') {
-      await logRating(event);
+      await logRating(enrichedEvent);
     }
 
     return NextResponse.json({ success: true });

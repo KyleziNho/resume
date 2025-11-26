@@ -1,8 +1,25 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 
-interface ChatMessage {
+interface DeviceInfo {
+  visitorId?: string;
+  ip?: string;
+  userAgent?: string;
+  os?: string;
+  browser?: string;
+  deviceType?: string;
+  deviceModel?: string;
+  screenWidth?: number;
+  screenHeight?: number;
+  language?: string;
+  timezone?: string;
+  country?: string;
+  city?: string;
+  region?: string;
+}
+
+interface ChatMessage extends DeviceInfo {
   type: 'chat_message';
   message: string;
   response: string;
@@ -10,12 +27,27 @@ interface ChatMessage {
   serverTimestamp: number;
 }
 
-interface Rating {
+interface Rating extends DeviceInfo {
   type: 'rating';
   rating: number;
   review?: string;
   timestamp: number;
   serverTimestamp: number;
+}
+
+interface Visitor {
+  visitorId: string;
+  ip?: string;
+  os?: string;
+  browser?: string;
+  deviceType?: string;
+  deviceModel?: string;
+  country?: string;
+  city?: string;
+  chatCount: number;
+  ratings: Rating[];
+  lastSeen: number;
+  firstSeen: number;
 }
 
 // Checkerboard pattern for classic Mac background
@@ -38,7 +70,8 @@ export default function AdminPage() {
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [ratings, setRatings] = useState<Rating[]>([]);
   const [loading, setLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<'overview' | 'chat' | 'ratings'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'visitors' | 'chat' | 'ratings'>('overview');
+  const [selectedVisitor, setSelectedVisitor] = useState<string | null>(null);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -83,11 +116,87 @@ export default function AdminPage() {
     fetchData();
   }, [isAuthenticated]);
 
+  // Group data by visitor
+  const visitors = useMemo(() => {
+    const visitorMap = new Map<string, Visitor>();
+
+    // Process chat messages
+    chatMessages.forEach((msg) => {
+      const id = msg.visitorId || msg.ip || 'unknown';
+      const existing = visitorMap.get(id);
+
+      if (existing) {
+        existing.chatCount++;
+        existing.lastSeen = Math.max(existing.lastSeen, msg.serverTimestamp);
+        existing.firstSeen = Math.min(existing.firstSeen, msg.serverTimestamp);
+      } else {
+        visitorMap.set(id, {
+          visitorId: id,
+          ip: msg.ip,
+          os: msg.os,
+          browser: msg.browser,
+          deviceType: msg.deviceType,
+          deviceModel: msg.deviceModel,
+          country: msg.country,
+          city: msg.city,
+          chatCount: 1,
+          ratings: [],
+          lastSeen: msg.serverTimestamp,
+          firstSeen: msg.serverTimestamp,
+        });
+      }
+    });
+
+    // Process ratings
+    ratings.forEach((rating) => {
+      const id = rating.visitorId || rating.ip || 'unknown';
+      const existing = visitorMap.get(id);
+
+      if (existing) {
+        existing.ratings.push(rating);
+        existing.lastSeen = Math.max(existing.lastSeen, rating.serverTimestamp);
+        existing.firstSeen = Math.min(existing.firstSeen, rating.serverTimestamp);
+        // Update device info if missing
+        if (!existing.os && rating.os) existing.os = rating.os;
+        if (!existing.browser && rating.browser) existing.browser = rating.browser;
+        if (!existing.deviceType && rating.deviceType) existing.deviceType = rating.deviceType;
+        if (!existing.country && rating.country) existing.country = rating.country;
+        if (!existing.city && rating.city) existing.city = rating.city;
+      } else {
+        visitorMap.set(id, {
+          visitorId: id,
+          ip: rating.ip,
+          os: rating.os,
+          browser: rating.browser,
+          deviceType: rating.deviceType,
+          deviceModel: rating.deviceModel,
+          country: rating.country,
+          city: rating.city,
+          chatCount: 0,
+          ratings: [rating],
+          lastSeen: rating.serverTimestamp,
+          firstSeen: rating.serverTimestamp,
+        });
+      }
+    });
+
+    return Array.from(visitorMap.values()).sort((a, b) => b.lastSeen - a.lastSeen);
+  }, [chatMessages, ratings]);
+
   const formatDate = (timestamp: number) => {
     return new Date(timestamp).toLocaleString('en-GB', {
       day: '2-digit',
       month: 'short',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const formatShortDate = (timestamp: number) => {
+    return new Date(timestamp).toLocaleString('en-GB', {
+      day: '2-digit',
+      month: 'short',
       hour: '2-digit',
       minute: '2-digit',
     });
@@ -107,6 +216,21 @@ export default function AdminPage() {
       }
     });
     return dist;
+  };
+
+  const getDeviceIcon = (deviceType?: string) => {
+    if (deviceType === 'Mobile') return '📱';
+    if (deviceType === 'Tablet') return '📱';
+    return '💻';
+  };
+
+  const getVisitorLabel = (visitor: Visitor) => {
+    const parts = [];
+    if (visitor.deviceModel) parts.push(visitor.deviceModel);
+    else if (visitor.os) parts.push(visitor.os);
+    if (visitor.city && visitor.country) parts.push(`${visitor.city}, ${visitor.country}`);
+    else if (visitor.country) parts.push(visitor.country);
+    return parts.join(' • ') || 'Unknown Device';
   };
 
   // Login screen - Classic Mac dialog style
@@ -184,18 +308,19 @@ export default function AdminPage() {
           </div>
 
           {/* Tab Bar */}
-          <div className="flex border-b-2 border-black bg-gray-100">
-            {(['overview', 'chat', 'ratings'] as const).map((tab) => (
+          <div className="flex border-b-2 border-black bg-gray-100 overflow-x-auto">
+            {(['overview', 'visitors', 'chat', 'ratings'] as const).map((tab) => (
               <button
                 key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider border-r border-black ${
+                onClick={() => { setActiveTab(tab); setSelectedVisitor(null); }}
+                className={`px-4 py-2 text-[10px] font-bold uppercase tracking-wider border-r border-black whitespace-nowrap ${
                   activeTab === tab
                     ? 'bg-white'
                     : 'bg-gray-200 hover:bg-gray-100'
                 }`}
               >
                 {tab}
+                {tab === 'visitors' && ` (${visitors.length})`}
               </button>
             ))}
           </div>
@@ -212,8 +337,14 @@ export default function AdminPage() {
                 {activeTab === 'overview' && (
                   <div className="space-y-4">
                     {/* Stats Row */}
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                      {/* Total Messages */}
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                      <div className="border-2 border-black p-3 bg-white">
+                        <div className="text-[10px] uppercase tracking-wider mb-2 border-b border-black pb-1">
+                          👥 Unique Visitors
+                        </div>
+                        <p className="text-3xl font-bold font-mono">{visitors.length}</p>
+                      </div>
+
                       <div className="border-2 border-black p-3 bg-white">
                         <div className="text-[10px] uppercase tracking-wider mb-2 border-b border-black pb-1">
                           💬 Chat Messages
@@ -221,7 +352,6 @@ export default function AdminPage() {
                         <p className="text-3xl font-bold font-mono">{chatMessages.length}</p>
                       </div>
 
-                      {/* Total Ratings */}
                       <div className="border-2 border-black p-3 bg-white">
                         <div className="text-[10px] uppercase tracking-wider mb-2 border-b border-black pb-1">
                           ⭐ Total Ratings
@@ -229,7 +359,6 @@ export default function AdminPage() {
                         <p className="text-3xl font-bold font-mono">{ratings.length}</p>
                       </div>
 
-                      {/* Average Rating */}
                       <div className="border-2 border-black p-3 bg-white">
                         <div className="text-[10px] uppercase tracking-wider mb-2 border-b border-black pb-1">
                           📈 Average Rating
@@ -264,41 +393,176 @@ export default function AdminPage() {
                       </div>
                     </div>
 
-                    {/* Recent Activity */}
+                    {/* Recent Visitors */}
                     <div className="border-2 border-black bg-white">
                       <div className="text-[10px] uppercase tracking-wider p-2 border-b-2 border-black bg-gray-100">
-                        Recent Activity
+                        Recent Visitors
                       </div>
                       <div className="max-h-[300px] overflow-y-auto">
-                        {[...chatMessages, ...ratings]
-                          .sort((a, b) => b.serverTimestamp - a.serverTimestamp)
-                          .slice(0, 10)
-                          .map((item, i) => (
-                            <div key={i} className="p-2 border-b border-gray-300 hover:bg-gray-50 text-xs">
-                              <div className="flex items-start gap-2">
-                                <span className="shrink-0">
-                                  {item.type === 'chat_message' ? '💬' : '⭐'}
+                        {visitors.slice(0, 10).map((visitor, i) => (
+                          <div
+                            key={i}
+                            className="p-2 border-b border-gray-300 hover:bg-gray-50 text-xs cursor-pointer"
+                            onClick={() => { setActiveTab('visitors'); setSelectedVisitor(visitor.visitorId); }}
+                          >
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{getDeviceIcon(visitor.deviceType)}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium truncate">{getVisitorLabel(visitor)}</p>
+                                <p className="text-[10px] text-gray-500">
+                                  {visitor.chatCount} msgs • {visitor.ratings.length} ratings • {formatShortDate(visitor.lastSeen)}
+                                </p>
+                              </div>
+                              {visitor.ratings.length > 0 && (
+                                <span className="font-mono">
+                                  {visitor.ratings[visitor.ratings.length - 1].rating}★
                                 </span>
-                                <div className="flex-1 min-w-0">
-                                  {item.type === 'chat_message' ? (
-                                    <p className="truncate">{(item as ChatMessage).message}</p>
-                                  ) : (
-                                    <div className="flex items-center gap-1">
-                                      <span className="font-mono">{(item as Rating).rating}/5</span>
-                                      {(item as Rating).review && (
-                                        <span className="truncate text-gray-600">- {(item as Rating).review}</span>
-                                      )}
-                                    </div>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                        {visitors.length === 0 && (
+                          <p className="p-4 text-center text-xs text-gray-500">No visitors yet</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Visitors Tab */}
+                {activeTab === 'visitors' && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Visitor List */}
+                    <div className="border-2 border-black bg-white">
+                      <div className="text-[10px] uppercase tracking-wider p-2 border-b-2 border-black bg-gray-100">
+                        All Visitors ({visitors.length})
+                      </div>
+                      <div className="max-h-[60vh] overflow-y-auto divide-y divide-gray-300">
+                        {visitors.map((visitor, i) => (
+                          <div
+                            key={i}
+                            className={`p-3 cursor-pointer ${selectedVisitor === visitor.visitorId ? 'bg-black text-white' : 'hover:bg-gray-50'}`}
+                            onClick={() => setSelectedVisitor(visitor.visitorId)}
+                          >
+                            <div className="flex items-start gap-2">
+                              <span className="text-xl">{getDeviceIcon(visitor.deviceType)}</span>
+                              <div className="flex-1 min-w-0">
+                                <p className="font-medium text-xs truncate">{getVisitorLabel(visitor)}</p>
+                                <p className={`text-[10px] mt-0.5 ${selectedVisitor === visitor.visitorId ? 'text-gray-300' : 'text-gray-500'}`}>
+                                  {visitor.browser} • {visitor.os}
+                                </p>
+                                <p className={`text-[10px] ${selectedVisitor === visitor.visitorId ? 'text-gray-300' : 'text-gray-500'}`}>
+                                  IP: {visitor.ip || 'unknown'}
+                                </p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <span className={`text-[10px] ${selectedVisitor === visitor.visitorId ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    💬 {visitor.chatCount}
+                                  </span>
+                                  <span className={`text-[10px] ${selectedVisitor === visitor.visitorId ? 'text-gray-300' : 'text-gray-600'}`}>
+                                    ⭐ {visitor.ratings.length}
+                                  </span>
+                                  {visitor.ratings.length > 0 && (
+                                    <span className="font-mono text-[10px]">
+                                      ({visitor.ratings.map(r => r.rating).join(', ')}★)
+                                    </span>
                                   )}
-                                  <p className="text-[10px] text-gray-500 mt-0.5">{formatDate(item.serverTimestamp)}</p>
                                 </div>
                               </div>
                             </div>
-                          ))}
-                        {chatMessages.length === 0 && ratings.length === 0 && (
-                          <p className="p-4 text-center text-xs text-gray-500">No activity yet</p>
+                          </div>
+                        ))}
+                        {visitors.length === 0 && (
+                          <div className="p-8 text-center text-xs text-gray-500">No visitors yet</div>
                         )}
                       </div>
+                    </div>
+
+                    {/* Visitor Detail */}
+                    <div className="border-2 border-black bg-white">
+                      <div className="text-[10px] uppercase tracking-wider p-2 border-b-2 border-black bg-gray-100">
+                        Visitor Details
+                      </div>
+                      {selectedVisitor ? (
+                        (() => {
+                          const visitor = visitors.find(v => v.visitorId === selectedVisitor);
+                          if (!visitor) return <div className="p-4 text-xs text-gray-500">Visitor not found</div>;
+
+                          const visitorChats = chatMessages.filter(
+                            m => (m.visitorId || m.ip) === selectedVisitor
+                          ).sort((a, b) => b.serverTimestamp - a.serverTimestamp);
+
+                          return (
+                            <div className="p-3 space-y-3 max-h-[60vh] overflow-y-auto">
+                              {/* Device Info */}
+                              <div className="border border-black p-2">
+                                <div className="text-[10px] uppercase tracking-wider mb-2 font-bold">Device Info</div>
+                                <div className="grid grid-cols-2 gap-1 text-[10px]">
+                                  <span className="text-gray-500">OS:</span>
+                                  <span>{visitor.os || 'Unknown'}</span>
+                                  <span className="text-gray-500">Browser:</span>
+                                  <span>{visitor.browser || 'Unknown'}</span>
+                                  <span className="text-gray-500">Type:</span>
+                                  <span>{visitor.deviceType || 'Unknown'}</span>
+                                  <span className="text-gray-500">Model:</span>
+                                  <span>{visitor.deviceModel || 'Unknown'}</span>
+                                  <span className="text-gray-500">IP:</span>
+                                  <span className="font-mono">{visitor.ip || 'Unknown'}</span>
+                                  <span className="text-gray-500">Location:</span>
+                                  <span>{visitor.city && visitor.country ? `${visitor.city}, ${visitor.country}` : 'Unknown'}</span>
+                                  <span className="text-gray-500">First Seen:</span>
+                                  <span>{formatShortDate(visitor.firstSeen)}</span>
+                                  <span className="text-gray-500">Last Seen:</span>
+                                  <span>{formatShortDate(visitor.lastSeen)}</span>
+                                </div>
+                              </div>
+
+                              {/* Ratings from this visitor */}
+                              {visitor.ratings.length > 0 && (
+                                <div className="border border-black p-2">
+                                  <div className="text-[10px] uppercase tracking-wider mb-2 font-bold">
+                                    Ratings ({visitor.ratings.length})
+                                  </div>
+                                  {visitor.ratings.map((r, i) => (
+                                    <div key={i} className="mb-2 pb-2 border-b border-gray-200 last:border-0">
+                                      <div className="flex items-center gap-1">
+                                        {[1, 2, 3, 4, 5].map((s) => (
+                                          <span key={s} className="text-xs">
+                                            {s <= r.rating ? '★' : '☆'}
+                                          </span>
+                                        ))}
+                                        <span className="text-[10px] text-gray-500 ml-2">{formatShortDate(r.serverTimestamp)}</span>
+                                      </div>
+                                      {r.review && <p className="text-xs mt-1">{r.review}</p>}
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+
+                              {/* Chat messages from this visitor */}
+                              {visitorChats.length > 0 && (
+                                <div className="border border-black p-2">
+                                  <div className="text-[10px] uppercase tracking-wider mb-2 font-bold">
+                                    Chat History ({visitorChats.length})
+                                  </div>
+                                  <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                                    {visitorChats.map((msg, i) => (
+                                      <div key={i} className="text-[10px] pb-2 border-b border-gray-200 last:border-0">
+                                        <p className="font-medium">👤 {msg.message}</p>
+                                        <p className="text-gray-600 mt-0.5">🤖 {msg.response}</p>
+                                        <p className="text-gray-400 mt-0.5">{formatShortDate(msg.serverTimestamp)}</p>
+                                      </div>
+                                    ))}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })()
+                      ) : (
+                        <div className="p-8 text-center text-xs text-gray-500">
+                          Select a visitor to see details
+                        </div>
+                      )}
                     </div>
                   </div>
                 )}
@@ -315,6 +579,13 @@ export default function AdminPage() {
                         .sort((a, b) => b.serverTimestamp - a.serverTimestamp)
                         .map((msg, i) => (
                           <div key={i} className="p-3 hover:bg-gray-50">
+                            {/* Visitor Info */}
+                            <div className="flex items-center gap-2 mb-2 text-[10px] text-gray-500">
+                              <span>{getDeviceIcon(msg.deviceType)}</span>
+                              <span>{msg.os} • {msg.browser}</span>
+                              {msg.city && msg.country && <span>• {msg.city}, {msg.country}</span>}
+                              <span className="font-mono">• {msg.ip}</span>
+                            </div>
                             {/* User Message */}
                             <div className="flex items-start gap-2 mb-2">
                               <div className="w-6 h-6 border border-black flex items-center justify-center shrink-0 text-xs bg-gray-100">
@@ -355,6 +626,13 @@ export default function AdminPage() {
                         .sort((a, b) => b.serverTimestamp - a.serverTimestamp)
                         .map((rating, i) => (
                           <div key={i} className="p-3 hover:bg-gray-50">
+                            {/* Visitor Info */}
+                            <div className="flex items-center gap-2 mb-2 text-[10px] text-gray-500">
+                              <span>{getDeviceIcon(rating.deviceType)}</span>
+                              <span>{rating.os} • {rating.browser}</span>
+                              {rating.city && rating.country && <span>• {rating.city}, {rating.country}</span>}
+                              <span className="font-mono">• {rating.ip}</span>
+                            </div>
                             <div className="flex items-start gap-3">
                               <div className="w-10 h-10 border-2 border-black flex items-center justify-center shrink-0 font-bold font-mono text-lg bg-white">
                                 {rating.rating}
@@ -389,7 +667,7 @@ export default function AdminPage() {
           <div className="h-5 bg-gray-100 border-t-2 border-black flex items-center px-2 text-[10px]">
             <span>Last updated: {new Date().toLocaleTimeString()}</span>
             <div className="flex-1"></div>
-            <span className="font-mono">{chatMessages.length + ratings.length} events</span>
+            <span className="font-mono">{visitors.length} visitors • {chatMessages.length + ratings.length} events</span>
           </div>
         </div>
       </div>
