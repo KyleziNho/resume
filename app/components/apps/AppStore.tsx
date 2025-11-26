@@ -68,6 +68,7 @@ export const apps: AppData[] = [
     icon: '/app-kyro.png',
     link: 'https://kyro.onl',
     description: 'Real-time multiplayer card game where you compete for the lowest score. Use power cards strategically, match cards to eliminate them, and call Kyro to win.',
+    videoId: '1140726803',
     images: ['/app-kyro.png'],
     progress: 100,
     stage: 'Live',
