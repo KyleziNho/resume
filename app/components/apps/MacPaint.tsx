@@ -34,7 +34,7 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
   const [ctx, setCtx] = useState<CanvasRenderingContext2D | null>(null);
 
   // State
-  const [tool, setTool] = useState<ToolType>('brush');
+  const [tool, setTool] = useState<ToolType>('hireme');
   const [isDrawing, setIsDrawing] = useState(false);
   const [activePattern, setActivePattern] = useState(PATTERNS[0]);
   const [snapshot, setSnapshot] = useState<ImageData | null>(null);
