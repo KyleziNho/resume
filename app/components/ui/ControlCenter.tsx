@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import Image from 'next/image';
 import { haptic } from 'ios-haptics';
 
 export type WallpaperType = 'terminal' | 'sequoia-light' | 'sequoia-dark' | 'sonoma' | 'ventura';
@@ -13,12 +12,12 @@ interface ControlCenterProps {
   onWallpaperChange: (wallpaper: WallpaperType) => void;
 }
 
-const WALLPAPERS: { id: WallpaperType; name: string; preview: string; color?: string }[] = [
-  { id: 'terminal', name: 'Terminal', preview: '', color: '#1a1a1a' },
-  { id: 'sequoia-light', name: 'Sequoia Light', preview: '/wallpapers/sequoia-light.jpg', color: '#d4a574' },
-  { id: 'sequoia-dark', name: 'Sequoia Dark', preview: '/wallpapers/sequoia-dark.jpg', color: '#2d1f1a' },
-  { id: 'sonoma', name: 'Sonoma', preview: '/wallpapers/sonoma.jpg', color: '#f5d6ba' },
-  { id: 'ventura', name: 'Ventura', preview: '/wallpapers/ventura.jpg', color: '#4a7c9b' },
+const WALLPAPERS: { id: WallpaperType; name: string; gradient: string }[] = [
+  { id: 'terminal', name: 'Terminal', gradient: 'linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 50%, #1a1a1a 100%)' },
+  { id: 'sequoia-light', name: 'Sequoia', gradient: 'linear-gradient(135deg, #e8d5c4 0%, #d4a574 50%, #c49a6c 100%)' },
+  { id: 'sequoia-dark', name: 'Sequoia Dark', gradient: 'linear-gradient(135deg, #2d1f1a 0%, #1a1210 50%, #3d2a1f 100%)' },
+  { id: 'sonoma', name: 'Sonoma', gradient: 'linear-gradient(135deg, #ffecd2 0%, #fcb69f 50%, #f093fb 100%)' },
+  { id: 'ventura', name: 'Ventura', gradient: 'linear-gradient(135deg, #4facfe 0%, #00f2fe 50%, #43e97b 100%)' },
 ];
 
 export default function ControlCenter({ isOpen, onClose, currentWallpaper, onWallpaperChange }: ControlCenterProps) {
@@ -103,32 +102,24 @@ export default function ControlCenter({ isOpen, onClose, currentWallpaper, onWal
                     : 'hover:scale-[1.05] active:scale-95'
                 }`}
               >
-                {wallpaper.preview ? (
-                  <Image
-                    src={wallpaper.preview}
-                    alt={wallpaper.name}
-                    fill
-                    className="object-cover"
-                    sizes="100px"
-                  />
-                ) : (
-                  <div
-                    className="w-full h-full flex items-center justify-center"
-                    style={{ backgroundColor: wallpaper.color }}
-                  >
-                    {/* Terminal pattern preview */}
-                    <div className="w-full h-full opacity-60 overflow-hidden">
-                      <div className="w-full h-full" style={{
-                        backgroundImage: `
-                          radial-gradient(circle at 20% 30%, rgba(255,255,255,0.1) 1px, transparent 1px),
-                          radial-gradient(circle at 60% 70%, rgba(255,255,255,0.1) 1px, transparent 1px),
-                          radial-gradient(circle at 80% 20%, rgba(255,255,255,0.1) 1px, transparent 1px)
-                        `,
-                        backgroundSize: '8px 8px',
-                      }} />
-                    </div>
-                  </div>
-                )}
+                {/* Gradient preview */}
+                <div
+                  className="w-full h-full"
+                  style={{ background: wallpaper.gradient }}
+                >
+                  {/* Terminal pattern overlay for terminal wallpaper */}
+                  {wallpaper.id === 'terminal' && (
+                    <div className="w-full h-full opacity-50" style={{
+                      backgroundImage: `
+                        radial-gradient(circle at 20% 30%, rgba(200,200,200,0.3) 1px, transparent 1px),
+                        radial-gradient(circle at 60% 70%, rgba(200,200,200,0.3) 1px, transparent 1px),
+                        radial-gradient(circle at 40% 50%, rgba(200,200,200,0.3) 1px, transparent 1px),
+                        radial-gradient(circle at 80% 20%, rgba(200,200,200,0.3) 1px, transparent 1px)
+                      `,
+                      backgroundSize: '6px 6px',
+                    }} />
+                  )}
+                </div>
 
                 {/* Selected checkmark */}
                 {currentWallpaper === wallpaper.id && (
