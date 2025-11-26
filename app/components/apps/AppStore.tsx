@@ -23,10 +23,10 @@ export interface AppData {
 export const apps: AppData[] = [
   {
     id: 'onlybills',
-    name: 'SplitSwift',
+    name: 'OnlyBills',
     tagline: 'Split bills, not friendships',
     icon: '/app-onlybills.png',
-    link: 'https://apps.apple.com/app/splitswift',
+    link: 'https://apps.apple.com/app/onlybills',
     description: 'The easiest way to split receipts. Snap a photo and AI extracts items, prices, tax and tips. Assign items to friends and see exactly who owes what.',
     videoId: '1140723788',
     images: ['/app-onlybills.png'],
