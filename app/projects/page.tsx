@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
@@ -218,6 +218,24 @@ export default function ProjectsPage() {
   const [filterTech, setFilterTech] = useState<string>('all');
   const [selectedScreenshot, setSelectedScreenshot] = useState<{projectId: string, index: number} | null>(null);
 
+  // Preconnect to Vimeo for faster video loading
+  useEffect(() => {
+    const preconnectLink = document.createElement('link');
+    preconnectLink.rel = 'preconnect';
+    preconnectLink.href = 'https://player.vimeo.com';
+    document.head.appendChild(preconnectLink);
+
+    const dnsPrefetchLink = document.createElement('link');
+    dnsPrefetchLink.rel = 'dns-prefetch';
+    dnsPrefetchLink.href = 'https://player.vimeo.com';
+    document.head.appendChild(dnsPrefetchLink);
+
+    return () => {
+      document.head.removeChild(preconnectLink);
+      document.head.removeChild(dnsPrefetchLink);
+    };
+  }, []);
+
   // Get all unique technologies
   const allTechnologies = Array.from(
     new Set(projects.flatMap(p => p.technologies))
@@ -318,7 +336,10 @@ export default function ProjectsPage() {
                               width={64}
                               height={64}
                               className="w-full h-full object-cover border-2 border-black"
-                              unoptimized
+                              priority={filteredProjects.indexOf(project) === 0}
+                              loading={filteredProjects.indexOf(project) === 0 ? undefined : "lazy"}
+                              sizes="64px"
+                              quality={75}
                             />
                           </div>
 
@@ -399,6 +420,7 @@ export default function ProjectsPage() {
                                 frameBorder="0"
                                 allow="autoplay; fullscreen; picture-in-picture"
                                 allowFullScreen
+                                loading="lazy"
                               />
                             </button>
                           )}
@@ -413,10 +435,13 @@ export default function ProjectsPage() {
                               <Image
                                 src={screenshot}
                                 alt={`${project.name} screenshot ${i + 1}`}
-                                width={120}
-                                height={260}
+                                width={72}
+                                height={156}
                                 className="h-full w-auto object-contain"
-                                unoptimized
+                                loading={filteredProjects.indexOf(project) === 0 && i < 3 ? undefined : "lazy"}
+                                priority={filteredProjects.indexOf(project) === 0 && i === 0}
+                                sizes="(max-width: 640px) 72px, 72px"
+                                quality={60}
                               />
                             </button>
                           ))}
@@ -557,15 +582,18 @@ export default function ProjectsPage() {
                   frameBorder="0"
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
+                  loading="lazy"
                 />
               ) : (
                 <Image
                   src={currentProject?.screenshots[currentIndex] || ''}
                   alt="Screenshot"
-                  width={1200}
-                  height={2400}
+                  width={800}
+                  height={1600}
                   className="max-h-[90vh] w-auto object-contain"
-                  unoptimized
+                  priority
+                  sizes="(max-width: 640px) 90vw, 800px"
+                  quality={85}
                 />
               )}
             </div>
