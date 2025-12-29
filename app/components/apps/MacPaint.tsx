@@ -499,12 +499,6 @@ export default function MacPaint({ imageSrc, fileName = "untitled.paint" }: MacP
 
       {/* Menu Bar */}
       <div className="h-6 bg-white border-b-2 border-black flex items-center px-2 text-[10px] uppercase tracking-wider select-none">
-        <span className="mr-4 font-bold">File</span>
-        <span className="mr-4">Edit</span>
-        <span className="mr-4 hidden md:inline">Goodies</span>
-        <span className="mr-4 hidden md:inline">Font</span>
-        <span className="mr-4 hidden md:inline">FontSize</span>
-        <span className="mr-4 hidden md:inline">Style</span>
         <div className="flex-1 text-center font-bold italic truncate">{fileName}</div>
       </div>
 

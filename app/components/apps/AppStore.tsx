@@ -27,13 +27,13 @@ export const apps: AppData[] = [
     name: 'OnlyBills',
     tagline: 'Split bills, not friendships',
     icon: '/app-onlybills.png',
-    link: 'https://apps.apple.com/app/onlybills',
+    link: 'https://apps.apple.com/gb/app/onlybills/id6754412082',
     description: 'The easiest way to split receipts. Snap a photo and AI extracts items, prices, tax and tips. Assign items to friends and see exactly who owes what.',
     videoId: '1140723788',
     videoAspectRatio: 'portrait',
-    images: [],
-    progress: 90,
-    stage: 'In Development',
+    images: ['/onlybills-screenshot-1.png', '/onlybills-screenshot-2.png', '/onlybills-screenshot-3.png', '/onlybills-screenshot-4.png'],
+    progress: 100,
+    stage: 'Live on App Store',
     technologies: ['SwiftUI', 'SwiftData', 'Google Gemini', 'Vision']
   },
   {
@@ -50,6 +50,20 @@ export const apps: AppData[] = [
     progress: 100,
     stage: 'Live on App Store',
     technologies: ['Flutter', 'Firebase', 'Firestore', 'Cloud Functions']
+  },
+  {
+    id: 'wearehere',
+    name: 'We Are Here',
+    tagline: 'Resources for vulnerable people',
+    icon: '/app-wearehere.png',
+    link: '',
+    description: 'A comprehensive map app that lists all resources available to vulnerable people within an area - food shelters, healthcare, day care centres, and support services. Leading the tech development for this non-profit with a team of 12 people.',
+    videoId: '1141169621',
+    videoAspectRatio: 'portrait',
+    images: ['/wearehere-screenshot-1.png', '/wearehere-screenshot-2.png', '/wearehere-screenshot-3.png', '/wearehere-screenshot-4.png'],
+    progress: 75,
+    stage: 'In Development',
+    technologies: ['Flutter', 'Firebase', 'MapBox']
   },
   {
     id: 'arcadeus',
@@ -83,9 +97,10 @@ interface AppStoreProps {
   onAppInstalled?: (app: AppData) => void;
   onUninstallAll?: () => void;
   initialInstalledApps?: AppData[];
+  onOpenSafari?: (url: string) => void;
 }
 
-export default function AppStore({ onAppInstalled, onUninstallAll, initialInstalledApps = [] }: AppStoreProps) {
+export default function AppStore({ onAppInstalled, onUninstallAll, initialInstalledApps = [], onOpenSafari }: AppStoreProps) {
   const [installedApps, setInstalledApps] = useState<Set<string>>(
     new Set(initialInstalledApps.map(app => app.id))
   );
@@ -415,19 +430,52 @@ export default function AppStore({ onAppInstalled, onUninstallAll, initialInstal
               </button>
             )}
           </div>
+
+          {/* View All Projects Button */}
+          <button
+            onClick={() => onOpenSafari?.('/projects')}
+            className="w-full mt-3 rounded-lg border border-[#aaa] relative overflow-hidden transition-all duration-150 active:scale-[0.98] cursor-pointer"
+            style={{
+              background: 'linear-gradient(135deg, #4a90d9 0%, #357abd 50%, #2a5f8f 100%)',
+              boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.3), 0 2px 6px rgba(0,0,0,0.3)',
+            }}
+          >
+            {/* Glossy overlay */}
+            <div
+              className="absolute inset-x-0 top-0 h-1/2 pointer-events-none"
+              style={{
+                background: 'linear-gradient(180deg, rgba(255,255,255,0.25) 0%, rgba(255,255,255,0.05) 100%)',
+              }}
+            />
+            <div className="flex items-center justify-center gap-2 py-2 relative z-10">
+              <Image
+                src="/favicon.png"
+                alt="Projects"
+                width={16}
+                height={16}
+                className="rounded"
+              />
+              <p className="text-white text-xs font-semibold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.3)' }}>
+                View All Projects
+              </p>
+            </div>
+          </button>
         </div>
       </div>
 
       {/* Footer - Subtle branding */}
       <div
-        className="h-8 flex items-center justify-center border-t border-[#bbb] shrink-0"
+        className="h-12 flex items-center justify-between px-3 border-t border-[#bbb] shrink-0"
         style={{
           background: 'linear-gradient(180deg, #d8d8d8 0%, #c0c0c0 100%)',
         }}
       >
-        <p className="text-[10px] text-gray-500" style={{ textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>
-          Founded and developed by me
+        <p className="text-[11px] text-gray-500" style={{ textShadow: '0 1px 0 rgba(255,255,255,0.5)' }}>
+          Just for fun — adds to desktop only
         </p>
+        <span className="hidden sm:inline-block text-[9px] font-mono text-gray-400 border border-gray-300 px-1.5 py-0.5 bg-white/50 rounded">
+          &lt;/&gt; made by kyle
+        </span>
       </div>
 
       {/* Keyframe animation for loading bar */}

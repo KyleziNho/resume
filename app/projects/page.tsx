@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+// --- INTERFACES & DATA (Unchanged) ---
 interface Project {
   id: string;
   name: string;
@@ -213,7 +214,11 @@ const checkerboardStyle = {
 };
 
 export default function ProjectsPage() {
-  const [selectedProject, setSelectedProject] = useState<string | null>(null);
+  // New state for Master-Detail view
+  const [selectedProjectId, setSelectedProjectId] = useState<string | null>(null);
+  // Used to toggle between list and detail view on mobile
+  const [showMobileDetail, setShowMobileDetail] = useState(false);
+
   const [filterStatus, setFilterStatus] = useState<string>('all');
   const [filterTech, setFilterTech] = useState<string>('all');
   const [selectedScreenshot, setSelectedScreenshot] = useState<{projectId: string, index: number} | null>(null);
@@ -242,42 +247,61 @@ export default function ProjectsPage() {
   ).sort();
 
   // Filter projects
-  const filteredProjects = projects.filter(project => {
+  const filteredProjects = useMemo(() => projects.filter(project => {
     if (filterStatus !== 'all' && project.status !== filterStatus) return false;
     if (filterTech !== 'all' && !project.technologies.includes(filterTech)) return false;
     return true;
-  });
+  }), [filterStatus, filterTech]);
+
+   // Set initial selected project when list changes
+   useEffect(() => {
+    if (filteredProjects.length > 0 && selectedProjectId === null) {
+        setSelectedProjectId(filteredProjects[0].id);
+    }
+  }, [filteredProjects, selectedProjectId]);
+
+
+  const activeProject = projects.find(p => p.id === selectedProjectId) || filteredProjects[0];
+
+  const handleProjectClick = (projectId: string) => {
+      setSelectedProjectId(projectId);
+      setShowMobileDetail(true);
+  }
+
+  const handleBackToList = () => {
+      setShowMobileDetail(false);
+  }
 
   return (
-    <div className="min-h-screen" style={checkerboardStyle}>
+    <div className="h-screen flex flex-col overflow-hidden" style={checkerboardStyle}>
       {/* Menu Bar */}
-      <div className="h-10 sm:h-6 bg-white border-b-2 border-black flex items-center px-3 sm:px-2 text-[10px] uppercase tracking-wider select-none sticky top-0 z-50">
-        <span className="mr-3 sm:mr-4 font-bold">💼 Projects</span>
+      <div className="h-10 sm:h-6 bg-white border-b-2 border-black flex items-center px-3 sm:px-2 text-[10px] uppercase tracking-wider select-none shrink-0 z-50 font-mono">
+        <span className="mr-3 sm:mr-4 font-bold">💼 Projects Explorer</span>
         <Link href="/" className="mr-3 sm:mr-4 hover:bg-black hover:text-white px-2 py-1 active:bg-black active:text-white">Home</Link>
-        <Link href="/admin" className="mr-3 sm:mr-4 hover:bg-black hover:text-white px-2 py-1 active:bg-black active:text-white">Admin</Link>
         <div className="flex-1"></div>
-        <span className="font-mono text-[9px] sm:text-[10px]">{filteredProjects.length} project{filteredProjects.length !== 1 ? 's' : ''}</span>
+        <span className="font-mono text-[9px] sm:text-[10px]">{filteredProjects.length} items</span>
       </div>
 
-      {/* Main Container */}
-      <div className="p-2 md:p-4">
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)]">
+      {/* Main Container - Now a fixed height container for internal scrolling */}
+      <div className="flex-1 p-2 md:p-4 overflow-hidden flex flex-col">
+        <div className="bg-white border-2 border-black shadow-[4px_4px_0_rgba(0,0,0,1)] flex-1 flex flex-col overflow-hidden">
           {/* Window Title Bar */}
-          <div className="h-6 bg-white border-b-2 border-black flex items-center px-2">
-            <div className="w-3 h-3 border border-black mr-2"></div>
-            <span className="text-[10px] font-bold uppercase tracking-wider flex-1 text-center">Kyle&apos;s Projects & Apps</span>
+          <div className="h-6 bg-white border-b-2 border-black flex items-center px-2 shrink-0 font-mono">
+            <div className="w-3 h-3 border border-black mr-2 bg-white"></div>
+            <span className="text-[10px] font-bold uppercase tracking-wider flex-1 text-center">
+                {showMobileDetail && activeProject ? activeProject.name : "Kyle's Projects & Apps"}
+            </span>
           </div>
 
-          {/* Filter Bar */}
-          <div className="border-b-2 border-black bg-gray-100 p-3">
-            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center text-[10px]">
+          {/* Filter Bar (Only visible in list view on mobile) */}
+          <div className={`border-b-2 border-black bg-gray-100 p-2 shrink-0 ${showMobileDetail ? 'hidden md:block' : 'block'}`}>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-2 sm:items-center text-[10px] font-mono">
               <span className="font-bold uppercase tracking-wider">Filters:</span>
-
               {/* Status Filter */}
               <select
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="border-2 border-black px-3 py-2 bg-white font-mono uppercase text-[10px] min-h-[44px] sm:min-h-0 sm:py-1"
+                className="border-2 border-black px-2 py-1 bg-white font-mono uppercase text-[10px]"
               >
                 <option value="all">All Status</option>
                 <option value="Live">Live</option>
@@ -289,7 +313,7 @@ export default function ProjectsPage() {
               <select
                 value={filterTech}
                 onChange={(e) => setFilterTech(e.target.value)}
-                className="border-2 border-black px-3 py-2 bg-white font-mono uppercase text-[10px] min-h-[44px] sm:min-h-0 sm:py-1"
+                className="border-2 border-black px-2 py-1 bg-white font-mono uppercase text-[10px]"
               >
                 <option value="all">All Tech</option>
                 {allTechnologies.map(tech => (
@@ -297,11 +321,11 @@ export default function ProjectsPage() {
                 ))}
               </select>
 
-              {/* Reset Filters */}
-              {(filterStatus !== 'all' || filterTech !== 'all') && (
+               {/* Reset Filters */}
+               {(filterStatus !== 'all' || filterTech !== 'all') && (
                 <button
                   onClick={() => { setFilterStatus('all'); setFilterTech('all'); }}
-                  className="px-3 py-2 bg-white border-2 border-black text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 active:bg-gray-300 min-h-[44px] sm:min-h-0 sm:py-1"
+                  className="px-2 py-1 bg-white border-2 border-black text-[10px] font-bold uppercase tracking-wider hover:bg-gray-200 active:bg-gray-300 font-mono"
                 >
                   Reset
                 </button>
@@ -309,196 +333,198 @@ export default function ProjectsPage() {
             </div>
           </div>
 
-          {/* Projects Grid */}
-          <div className="p-3 md:p-4 min-h-[70vh]">
-            {filteredProjects.length === 0 ? (
-              <div className="flex items-center justify-center py-20">
-                <div className="text-xs uppercase tracking-wider text-gray-500">No projects match your filters</div>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                {filteredProjects.map((project) => (
-                  <div
-                    key={project.id}
-                    className={`border-2 border-black bg-white shadow-[2px_2px_0_rgba(0,0,0,1)] transition-all ${
-                      selectedProject === project.id ? 'ring-2 ring-black ring-offset-2' : ''
-                    }`}
-                  >
-                    {/* Project Header */}
-                    <div className="border-b-2 border-black bg-gray-100 p-3">
-                      <div className="flex flex-col sm:flex-row sm:items-start gap-3">
-                        <div className="flex items-start gap-3 flex-1 min-w-0">
-                          {/* App Icon */}
-                          <div className="relative w-16 h-16 sm:w-16 sm:h-16 shrink-0">
-                            <Image
-                              src={project.icon}
-                              alt={project.name}
-                              width={64}
-                              height={64}
-                              className="w-full h-full object-cover border-2 border-black"
-                              priority={filteredProjects.indexOf(project) === 0}
-                              loading={filteredProjects.indexOf(project) === 0 ? undefined : "lazy"}
-                              sizes="64px"
-                              quality={75}
-                            />
-                          </div>
 
-                          {/* Project Info */}
-                          <div className="flex-1 min-w-0">
-                            <h2 className="text-sm sm:text-sm font-bold uppercase tracking-wider truncate">{project.name}</h2>
-                            <p className="text-[10px] sm:text-[10px] text-gray-600 truncate">{project.tagline}</p>
-                            <div className="flex items-center gap-2 mt-1 flex-wrap">
-                              <span className="text-[10px] font-mono bg-white border border-black px-1">
-                                {project.category}
-                              </span>
-                              <span className="text-[10px] text-gray-500">{project.date}</span>
-                            </div>
-                          </div>
-                        </div>
+          {/* Master-Detail Content Area */}
+          <div className="flex-1 flex overflow-hidden relative font-mono">
 
-                        {/* Website & Status Badge */}
-                        <div className="flex items-center gap-2 sm:shrink-0 flex-wrap sm:flex-nowrap">
-                          {project.website && (
-                            <a
-                              href={project.website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[9px] font-bold uppercase tracking-wider px-3 py-2 sm:px-2 sm:py-1 border border-black bg-white hover:bg-gray-100 transition-colors min-h-[44px] sm:min-h-0 flex items-center justify-center"
-                            >
-                              🌐 Website
-                            </a>
-                          )}
-                          {project.appStoreLink && project.status.includes('Live') ? (
-                            <a
-                              href={project.appStoreLink}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className={`text-[9px] font-bold uppercase tracking-wider px-3 py-2 sm:px-2 sm:py-1 border border-black bg-black text-white hover:bg-gray-800 transition-colors min-h-[44px] sm:min-h-0 flex items-center justify-center`}
-                            >
-                              {project.status}
-                            </a>
-                          ) : (
-                            <div className={`text-[9px] font-bold uppercase tracking-wider px-3 py-2 sm:px-2 sm:py-1 border border-black min-h-[44px] sm:min-h-0 flex items-center justify-center ${
-                              project.status.includes('Live') ? 'bg-black text-white' : 'bg-white'
-                            }`}>
-                              {project.status}
-                            </div>
-                          )}
-                        </div>
-                      </div>
+            {/* --- LEFT PANE: Project List (Sidebar) --- */}
+            {/* Hidden on mobile if detail is shown */}
+            <div className={`w-full md:w-1/3 lg:w-1/4 border-r-2 border-black bg-gray-50 overflow-y-auto ${showMobileDetail ? 'hidden md:block' : 'block'}`}>
+                {filteredProjects.length === 0 ? (
+                    <div className="p-4 text-[10px] uppercase">No projects found.</div>
+                ) : (
+                    <ul className="p-2 space-y-2">
+                        {filteredProjects.map(project => (
+                            <li key={project.id}>
+                                <button
+                                    onClick={() => handleProjectClick(project.id)}
+                                    className={`w-full text-left flex items-center gap-3 p-2 border-2 ${selectedProjectId === project.id ? 'border-black bg-black text-white shadow-[2px_2px_0_rgba(255,255,255,1)]' : 'border-transparent hover:border-black hover:bg-white hover:shadow-[2px_2px_0_rgba(0,0,0,1)]'} transition-all group`}
+                                >
+                                     <div className="relative w-8 h-8 shrink-0">
+                                        <Image
+                                            src={project.icon}
+                                            alt={project.name}
+                                            width={32}
+                                            height={32}
+                                            className={`w-full h-full object-cover border border-black ${selectedProjectId === project.id ? 'border-white' : ''}`}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <div className="text-[10px] font-bold uppercase tracking-wider truncate">{project.name}</div>
+                                        <div className={`text-[9px] truncate ${selectedProjectId === project.id ? 'text-gray-300' : 'text-gray-500'}`}>{project.category}</div>
+                                    </div>
+                                     {selectedProjectId === project.id && <span className="text-[10px]">▶</span>}
+                                </button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+                {/* Return to Desktop - Desktop only */}
+                <div className="p-3 border-t-2 border-black bg-gray-100 hidden md:block">
+                    <Link href="/" className="w-full flex items-center justify-center gap-2 text-[10px] font-bold uppercase border-2 border-black px-3 py-2 bg-white hover:bg-gray-50 shadow-[2px_2px_0_black] active:shadow-none active:translate-y-[2px] active:translate-x-[2px] transition-all">
+                        <Image src="/favicon.png" alt="KyleOS" width={14} height={14} />
+                        Return to Desktop
+                    </Link>
+                </div>
+                {/* Exit to Home - Mobile only */}
+                <div className="p-4 mt-4 flex justify-center md:hidden">
+                    <Link href="/" className="text-[10px] font-bold uppercase border-2 border-black px-3 py-2 bg-white hover:bg-gray-100 shadow-[2px_2px_0_black] active:shadow-none active:translate-y-[2px] active:translate-x-[2px] transition-all">
+                        Exit to Home
+                    </Link>
+                </div>
+            </div>
 
-                      {/* Tech Stack - No title */}
-                      <div className="mt-3">
-                        <div className="flex flex-wrap gap-1">
-                          {project.technologies.map((tech, i) => (
-                            <span
-                              key={i}
-                              className="text-[10px] bg-white border border-black px-2 py-1 font-mono"
-                            >
-                              {tech}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Screenshots & Video Demo */}
-                    {(project.screenshots.length > 0 || project.videoId) && (
-                      <div className="border-b-2 border-black bg-white p-2 overflow-x-auto snap-x snap-mandatory">
-                        <div className="flex gap-2">
-                          {/* Video Demo */}
-                          {project.videoId && (
-                            <button
-                              onClick={() => setSelectedScreenshot({ projectId: project.id, index: -1 })}
-                              className={`border-2 border-black bg-black shrink-0 overflow-hidden active:opacity-80 transition-opacity snap-start ${
-                                project.videoAspectRatio === 'portrait' ? 'h-32 w-[72px]' : 'h-32 w-[228px]'
-                              }`}
-                            >
-                              <iframe
-                                src={`https://player.vimeo.com/video/${project.videoId}?title=0&byline=0&portrait=0`}
-                                className="w-full h-full pointer-events-none"
-                                frameBorder="0"
-                                allow="autoplay; fullscreen; picture-in-picture"
-                                allowFullScreen
-                                loading="lazy"
-                              />
+            {/* --- RIGHT PANE: Project Details --- */}
+            {/* Hidden on mobile unless detail is shown */}
+            <div className={`w-full md:w-2/3 lg:w-3/4 bg-white overflow-y-auto absolute inset-0 md:relative z-10 md:z-0 ${showMobileDetail ? 'block' : 'hidden md:block'}`}>
+                
+                {activeProject ? (
+                    <div className="flex flex-col min-h-full">
+                         {/* Mobile Back Button Header */}
+                         <div className="md:hidden bg-gray-100 border-b-2 border-black p-2 sticky top-0 z-20 flex">
+                            <button onClick={handleBackToList} className="text-[10px] font-bold uppercase border-2 border-black px-2 py-1 bg-white shadow-[2px_2px_0_black] active:shadow-none active:translate-y-[2px] active:translate-x-[2px] flex items-center">
+                                <span className="mr-1">◀</span> Back to List
                             </button>
-                          )}
+                        </div>
 
-                          {/* Screenshots */}
-                          {project.screenshots.map((screenshot, i) => (
-                            <button
-                              key={i}
-                              onClick={() => setSelectedScreenshot({ projectId: project.id, index: i })}
-                              className="border-2 border-black bg-gray-100 shrink-0 h-32 overflow-hidden active:opacity-80 transition-opacity flex items-center justify-center snap-start"
-                            >
-                              <Image
-                                src={screenshot}
-                                alt={`${project.name} screenshot ${i + 1}`}
-                                width={72}
-                                height={156}
-                                className="h-full w-auto object-contain"
-                                loading={filteredProjects.indexOf(project) === 0 && i < 3 ? undefined : "lazy"}
-                                priority={filteredProjects.indexOf(project) === 0 && i === 0}
-                                sizes="(max-width: 640px) 72px, 72px"
-                                quality={60}
-                              />
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
+                        {/* Project Header Section */}
+                        <div className="p-3 md:p-4 border-b-2 border-black bg-gray-50">
+                            <div className="flex flex-row gap-3 md:gap-4 items-start">
+                                {/* Icon */}
+                                <div className="relative w-16 h-16 md:w-20 md:h-20 shrink-0 border-2 border-black shadow-[2px_2px_0_black]">
+                                    <Image
+                                        src={activeProject.icon}
+                                        alt={activeProject.name}
+                                        width={80}
+                                        height={80}
+                                        className="w-full h-full object-cover"
+                                        priority
+                                    />
+                                </div>
+                                {/* Title & Info */}
+                                <div className="flex-1 min-w-0">
+                                    <h1 className="text-base md:text-xl font-bold uppercase tracking-wider font-sans truncate">{activeProject.name}</h1>
+                                    <p className="text-[10px] md:text-xs text-gray-600 mb-1.5 md:mb-2 font-sans line-clamp-1">{activeProject.tagline}</p>
 
-                    {/* Project Body */}
-                    <div className="p-3 flex flex-col" style={{ minHeight: project.screenshots.length > 0 || project.videoId ? '200px' : '348px' }}>
-                      {/* Description */}
-                      <div className="flex-1">
-                        <div className="text-[10px] sm:text-[10px] uppercase tracking-wider font-bold mb-1 border-b border-black pb-1">
-                          Description
+                                     {/* Status & Links */}
+                                     <div className="flex flex-wrap gap-1.5 md:gap-2 items-center">
+                                        {activeProject.status === 'Live on App Store' && activeProject.appStoreLink ? (
+                                            <a
+                                                href={activeProject.appStoreLink}
+                                                target="_blank"
+                                                rel="noopener noreferrer"
+                                                className="text-[8px] md:text-[9px] font-bold uppercase tracking-wider px-1.5 md:px-2 py-0.5 md:py-1 border border-black bg-black text-white hover:bg-gray-800 flex items-center gap-1"
+                                            >
+                                                🍎 App Store
+                                            </a>
+                                        ) : (
+                                            <div className={`text-[8px] md:text-[9px] font-bold uppercase tracking-wider px-1.5 md:px-2 py-0.5 md:py-1 border border-black flex items-center ${activeProject.status.includes('Live') ? 'bg-black text-white' : 'bg-white'}`}>
+                                                {activeProject.status}
+                                            </div>
+                                        )}
+                                        {activeProject.website && (
+                                            <a href={activeProject.website} target="_blank" rel="noopener noreferrer" className="text-[8px] md:text-[9px] font-bold uppercase tracking-wider px-1.5 md:px-2 py-0.5 md:py-1 border border-black bg-white hover:bg-gray-100">
+                                                🌐 Web
+                                            </a>
+                                        )}
+                                     </div>
+                                     <div className="mt-1.5 md:mt-2 text-[8px] md:text-[9px] text-gray-500">{activeProject.date} • {activeProject.category}</div>
+                                </div>
+                            </div>
                         </div>
-                        <div className={`text-sm sm:text-xs leading-relaxed whitespace-pre-line ${
-                          selectedProject !== project.id && project.detailedDescription && project.detailedDescription !== project.description
-                            ? (project.screenshots.length > 0 || project.videoId ? 'line-clamp-[8]' : 'line-clamp-[15]')
-                            : ''
-                        }`}>
-                          {selectedProject === project.id && project.detailedDescription
-                            ? project.detailedDescription
-                            : project.description}
-                        </div>
-                      </div>
-                      {/* Read More Button & Made by Kyle tag - Same row */}
-                      <div className="mt-3 flex items-center justify-between gap-2">
-                        {project.detailedDescription && project.detailedDescription !== project.description ? (
-                          <button
-                            onClick={() => setSelectedProject(selectedProject === project.id ? null : project.id)}
-                            className="text-[10px] uppercase tracking-wider font-bold hover:underline min-h-[44px] sm:min-h-0 flex items-center justify-center sm:justify-start flex-1 sm:flex-initial bg-gray-50 sm:bg-transparent border-2 border-black sm:border-0 active:bg-gray-100 active:scale-95 transition-all duration-150 animate-bounce-subtle px-3 sm:px-0"
-                          >
-                            {selectedProject === project.id ? '▼ Show Less' : '▶ Read More'}
-                          </button>
-                        ) : (
-                          <div className="flex-1"></div>
+
+                         {/* Gallery Section (Screenshots/Video) - Kept existing implementation mostly */}
+                         {(activeProject.screenshots.length > 0 || activeProject.videoId) && (
+                            <div className="border-b-2 border-black bg-gray-100 p-3 overflow-x-auto snap-x snap-mandatory flex gap-3">
+                                {/* Video Demo */}
+                                {activeProject.videoId && (
+                                    <button
+                                    onClick={() => setSelectedScreenshot({ projectId: activeProject.id, index: -1 })}
+                                    className={`border-2 border-black bg-black shrink-0 overflow-hidden hover:opacity-90 transition-opacity snap-start shadow-[2px_2px_0_black] ${
+                                        activeProject.videoAspectRatio === 'portrait' ? 'h-40 w-[90px]' : 'h-40 w-[285px]'
+                                    }`}
+                                    >
+                                    <iframe
+                                        src={`https://player.vimeo.com/video/${activeProject.videoId}?title=0&byline=0&portrait=0&background=1`}
+                                        className="w-full h-full pointer-events-none opacity-80"
+                                        frameBorder="0"
+                                        allow="autoplay; fullscreen; picture-in-picture"
+                                        
+                                    />
+                                    </button>
+                                )}
+                                {/* Screenshots */}
+                                {activeProject.screenshots.map((screenshot, i) => (
+                                    <button
+                                    key={i}
+                                    onClick={() => setSelectedScreenshot({ projectId: activeProject.id, index: i })}
+                                    className="border-2 border-black bg-white shrink-0 h-40 w-auto overflow-hidden hover:opacity-90 transition-opacity flex items-center justify-center snap-start shadow-[2px_2px_0_black]"
+                                    >
+                                    <Image
+                                        src={screenshot}
+                                        alt={`${activeProject.name} screenshot ${i + 1}`}
+                                        width={150}
+                                        height={300}
+                                        className="h-full w-auto object-contain"
+                                    />
+                                    </button>
+                                ))}
+                            </div>
                         )}
-                        <span className="text-[9px] font-mono text-gray-500 border border-gray-300 px-2 py-0.5 bg-gray-50 shrink-0">
-                          &lt;/&gt; made by kyle
-                        </span>
-                      </div>
+
+                        {/* Tech Stack Section */}
+                        <div className="p-4 border-b-2 border-black bg-white">
+                             <div className="text-[10px] uppercase tracking-wider font-bold mb-2">Technologies</div>
+                             <div className="flex flex-wrap gap-2">
+                                {activeProject.technologies.map((tech, i) => (
+                                    <span key={i} className="text-[10px] bg-gray-50 border border-black px-2 py-1 shadow-[1px_1px_0_black]">{tech}</span>
+                                ))}
+                             </div>
+                        </div>
+
+                        {/* FULL Description Section - NO TRUNCATION */}
+                        <div className="p-4 flex-1 bg-white">
+                             <div className="text-[10px] uppercase tracking-wider font-bold mb-3 border-b border-black pb-1 inline-block">{activeProject.name.toUpperCase()}.TXT</div>
+                             <div className="text-xs leading-relaxed whitespace-pre-line font-sans prose prose-sm max-w-none">
+                                {activeProject.detailedDescription || activeProject.description}
+                             </div>
+                        </div>
+                        
+                        {/* Footer filler to ensure scrolling feels right */}
+                        <div className="h-8 bg-gray-50 border-t-2 border-black shrink-0 flex items-center justify-center">
+                            <span className="text-[9px] text-gray-400">--- End of File ---</span>
+                        </div>
+
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                ) : (
+                    <div className="h-full flex items-center justify-center text-[10px] uppercase text-gray-500">
+                        Select a project from the list to view details.
+                    </div>
+                )}
+            </div>
+
           </div>
 
           {/* Status Bar */}
-          <div className="h-5 bg-gray-100 border-t-2 border-black flex items-center px-2 text-[10px]">
-            <span>Kyle's Portfolio</span>
+          <div className="h-5 bg-gray-100 border-t-2 border-black flex items-center px-2 text-[10px] shrink-0 font-mono z-20">
+            <span>{activeProject ? `Viewing: ${activeProject.id.toUpperCase()}.App` : 'Ready.'}</span>
             <div className="flex-1"></div>
-            <span className="font-mono">Built with Next.js • React • TypeScript</span>
+            <span>Mem: 640K OK</span>
           </div>
         </div>
       </div>
 
-      {/* Screenshot Modal */}
+      {/* Screenshot Modal (Reusing existing logic exactly) */}
       {selectedScreenshot && (() => {
         const currentProject = projects.find(p => p.id === selectedScreenshot.projectId);
         const hasVideo = !!currentProject?.videoId;
@@ -532,7 +558,7 @@ export default function ProjectsPage() {
 
         return (
           <div
-            className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-50"
+            className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center p-4 z-[100] font-mono"
             onClick={() => setSelectedScreenshot(null)}
           >
             {/* Previous arrow */}
@@ -555,23 +581,23 @@ export default function ProjectsPage() {
               </button>
             )}
 
-            <div className={`relative border-4 border-white shadow-[8px_8px_0_rgba(255,255,255,0.3)] ${
+            <div className={`relative border-4 border-white shadow-[8px_8px_0_rgba(255,255,255,0.3)] bg-black ${
               isVideo
                 ? currentProject?.videoAspectRatio === 'portrait'
                   ? 'w-[50vh] h-[90vh]'
                   : 'w-[90vw] max-w-4xl h-[50vh]'
                 : 'max-w-4xl max-h-[90vh]'
-            }`}>
+            }`} onClick={(e) => e.stopPropagation()}>
               {/* Close button */}
               <button
                 onClick={() => setSelectedScreenshot(null)}
-                className="absolute -top-10 sm:-top-8 right-0 w-10 h-10 sm:w-6 sm:h-6 bg-white border-2 border-white flex items-center justify-center text-black font-bold text-xl sm:text-base active:bg-gray-200 touch-manipulation"
+                className="absolute -top-10 sm:-top-8 right-0 w-10 h-10 sm:w-6 sm:h-6 bg-white border-2 border-white flex items-center justify-center text-black font-bold text-xl sm:text-base active:bg-gray-200 touch-manipulation shadow-[2px_2px_0_rgba(0,0,0,1)]"
               >
                 ✕
               </button>
 
               {/* Image/Video counter */}
-              <div className="absolute -top-10 sm:-top-8 left-0 px-3 py-2 sm:px-2 sm:py-1 bg-white border-2 border-white text-xs sm:text-[10px] font-mono font-bold">
+              <div className="absolute -top-10 sm:-top-8 left-0 px-3 py-2 sm:px-2 sm:py-1 bg-white border-2 border-white text-xs sm:text-[10px] font-mono font-bold shadow-[2px_2px_0_rgba(0,0,0,1)]">
                 {displayPosition} / {totalItems}
               </div>
 
@@ -582,7 +608,6 @@ export default function ProjectsPage() {
                   frameBorder="0"
                   allow="autoplay; fullscreen; picture-in-picture"
                   allowFullScreen
-                  loading="lazy"
                 />
               ) : (
                 <Image
@@ -600,26 +625,6 @@ export default function ProjectsPage() {
           </div>
         );
       })()}
-
-      {/* Custom Animation Styles */}
-      <style jsx>{`
-        @keyframes bounce-subtle {
-          0%, 100% {
-            transform: translateY(0);
-          }
-          50% {
-            transform: translateY(-4px);
-          }
-        }
-
-        .animate-bounce-subtle {
-          animation: bounce-subtle 2s ease-in-out infinite;
-        }
-
-        .animate-bounce-subtle:hover {
-          animation: none;
-        }
-      `}</style>
     </div>
   );
 }

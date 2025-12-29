@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
+import Image from 'next/image';
 import { MapPin, Calendar, Cpu, Heart } from 'lucide-react';
 import FaultyTerminal from './components/FaultyTerminal';
 import MacWindow from './components/ui/MacWindow';
@@ -30,7 +31,8 @@ import {
 } from './lib/analytics';
 
 // Wallpaper configuration
-const WALLPAPER_CONFIGS: Record<WallpaperType, { gradient: string }> = {
+const WALLPAPER_CONFIGS: Record<WallpaperType, { gradient: string; image?: string }> = {
+  'vintage': { gradient: '', image: '/vintage.png' },
   'terminal': { gradient: '' },
   'ripple': { gradient: '' },
   'iridescence': { gradient: '' },
@@ -141,7 +143,7 @@ const WallpaperBackground = React.memo(({ wallpaper }: { wallpaper: WallpaperTyp
     <div
       className="fixed inset-0 z-0 transition-opacity duration-700"
       style={{
-        backgroundImage: config.gradient,
+        backgroundImage: config.image ? `url(${config.image})` : config.gradient,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
         backgroundRepeat: 'no-repeat',
@@ -152,7 +154,7 @@ const WallpaperBackground = React.memo(({ wallpaper }: { wallpaper: WallpaperTyp
 
 WallpaperBackground.displayName = 'WallpaperBackground';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages' | 'game' | 'appstore';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'safari' | 'paint' | 'messages' | 'game' | 'appstore';
 
 interface WindowState {
   isOpen: boolean;
@@ -160,7 +162,7 @@ interface WindowState {
   isMaximized: boolean;
   zIndex: number;
   title: string;
-  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes' | 'appstore';
+  iconType: 'drive' | 'folder' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes' | 'appstore';
   pos: { x: number; y: number };
   size: { width: number; height: number };
 }
@@ -173,7 +175,7 @@ export default function MacOsPortfolio() {
   const [activeProject, setActiveProject] = useState<any>(null);
   const [showAppleMenu, setShowAppleMenu] = useState(false);
   const [showControlCenter, setShowControlCenter] = useState(false);
-  const [currentWallpaper, setCurrentWallpaper] = useState<WallpaperType>('terminal');
+  const [currentWallpaper, setCurrentWallpaper] = useState<WallpaperType>('vintage');
   const [wallpaperTransition, setWallpaperTransition] = useState(false);
   const appleMenuRef = useRef<HTMLDivElement>(null);
 
@@ -205,12 +207,6 @@ export default function MacOsPortfolio() {
       title: 'resume.pdf',
       iconType: 'doc' as const,
       pos: { x: 400, y: 100 }, size: { width: 600, height: 600 }
-    },
-    terminal: {
-      isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
-      title: 'Terminal',
-      iconType: 'terminal' as const,
-      pos: { x: 100, y: 400 }, size: { width: 500, height: 350 }
     },
     safari: {
       isOpen: false, isMinimized: false, isMaximized: false, zIndex: 9,
@@ -251,12 +247,11 @@ export default function MacOsPortfolio() {
     hd: { x: 20, y: 40 },
     finder: { x: 20, y: 150 },
     resume: { x: 20, y: 260 },
-    terminal: { x: 20, y: 370 },
-    safari: { x: 20, y: 480 },
-    paint: { x: 20, y: 590 },
-    messages: { x: 20, y: 700 },
-    game: { x: 20, y: 810 },
-    appstore: { x: 20, y: 920 }
+    safari: { x: 20, y: 370 },
+    paint: { x: 20, y: 480 },
+    messages: { x: 20, y: 590 },
+    game: { x: 20, y: 700 },
+    appstore: { x: 20, y: 810 }
   });
 
   const [iconScale, setIconScale] = useState(1);
@@ -265,7 +260,6 @@ export default function MacOsPortfolio() {
     hd: 'intro',
     finder: 'my apps',
     resume: 'resume.pdf',
-    terminal: 'Terminal',
     safari: 'Safari',
     paint: 'Paint',
     messages: 'KyleBOT',
@@ -482,7 +476,7 @@ export default function MacOsPortfolio() {
         const scale = viewportWidth < 400 ? 0.85 : 0.95;
 
         const icons = [
-          'hd', 'finder', 'resume', 'terminal',
+          'hd', 'finder', 'resume',
           'safari', 'paint', 'messages', 'game', 'appstore'
         ];
 
@@ -557,12 +551,11 @@ export default function MacOsPortfolio() {
           hd: { x: 20, y: topPadding },
           finder: { x: 20, y: topPadding + iconSpacing },
           resume: { x: 20, y: topPadding + iconSpacing * 2 },
-          terminal: { x: 20, y: topPadding + iconSpacing * 3 },
-          safari: { x: 20, y: topPadding + iconSpacing * 4 },
-          paint: { x: 20, y: topPadding + iconSpacing * 5 },
-          messages: { x: 20, y: topPadding + iconSpacing * 6 },
-          game: { x: 20, y: topPadding + iconSpacing * 7 },
-          appstore: { x: 20, y: topPadding + iconSpacing * 8 }
+          safari: { x: 20, y: topPadding + iconSpacing * 3 },
+          paint: { x: 20, y: topPadding + iconSpacing * 4 },
+          messages: { x: 20, y: topPadding + iconSpacing * 5 },
+          game: { x: 20, y: topPadding + iconSpacing * 6 },
+          appstore: { x: 20, y: topPadding + iconSpacing * 7 }
         });
 
         setIconScale(scale);
@@ -926,7 +919,6 @@ export default function MacOsPortfolio() {
       hd: 'welcome',
       finder: 'finder',
       resume: 'resume',
-      terminal: 'terminal',
       safari: 'safari',
       paint: 'paint',
       messages: 'messages',
@@ -1086,7 +1078,7 @@ export default function MacOsPortfolio() {
 
             {/* Apple Menu Dropdown with LetterGlitch */}
             {showAppleMenu && (
-              <div className="absolute top-full left-0 mt-1 w-[320px] md:w-[300px] h-[220px] bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/10 overflow-hidden">
+              <div className="absolute top-full left-0 mt-1 w-[320px] md:w-[300px] h-[280px] bg-[#1a1a1a]/95 backdrop-blur-xl rounded-lg shadow-2xl border border-white/10 overflow-hidden">
                 <LetterGlitch
                   glitchSpeed={50}
                   centerVignette={true}
@@ -1099,17 +1091,36 @@ export default function MacOsPortfolio() {
                     <p className="text-white text-center text-base font-semibold mb-3 leading-relaxed">
                       Hire me to create a<br />resume website :)
                     </p>
-                    <a
-                      href="https://www.linkedin.com/in/kos33/"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex items-center justify-center gap-2 bg-[#0077b5] hover:bg-[#006396] text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 text-sm"
-                    >
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                        <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
-                      </svg>
-                      Kyle O'Sullivan
-                    </a>
+                    <div className="flex flex-col gap-2">
+                      <a
+                        href="https://www.linkedin.com/in/kos33/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex items-center justify-center gap-2 bg-[#0077b5] hover:bg-[#006396] text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 text-sm"
+                      >
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                          <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                        </svg>
+                        Kyle O'Sullivan
+                      </a>
+                      <button
+                        onClick={() => {
+                          setShowAppleMenu(false);
+                          setSafariUrl('/projects');
+                          openWindow('safari');
+                        }}
+                        className="group flex items-center justify-center gap-2 bg-gradient-to-r from-gray-700 to-gray-800 hover:from-gray-600 hover:to-gray-700 text-white font-medium px-4 py-2 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl hover:scale-105 text-sm border border-white/10"
+                      >
+                        <Image
+                          src="/favicon.png"
+                          alt="Projects"
+                          width={18}
+                          height={18}
+                          className="group-hover:animate-pulse"
+                        />
+                        View Projects
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1170,16 +1181,6 @@ export default function MacOsPortfolio() {
            initialPos={iconPos.resume}
            scale={iconScale}
            onDoubleClick={() => openWindow('resume')}
-           onRename={handleIconRename}
-           onContextMenu={handleIconContextMenu}
-         />
-         <DesktopIcon
-           id="terminal"
-           label={iconLabels.terminal}
-           type="terminal"
-           initialPos={iconPos.terminal}
-           scale={iconScale}
-           onDoubleClick={() => openWindow('terminal')}
            onRename={handleIconRename}
            onContextMenu={handleIconContextMenu}
          />
@@ -1392,37 +1393,6 @@ export default function MacOsPortfolio() {
           </div>
       </MacWindow>
 
-      {/* TERMINAL WINDOW */}
-      <MacWindow
-        id="terminal"
-        title={windows.terminal.title}
-        isOpen={windows.terminal.isOpen}
-        isMinimized={windows.terminal.isMinimized}
-        isMaximized={windows.terminal.isMaximized}
-        zIndex={windows.terminal.zIndex}
-        pos={windows.terminal.pos}
-        size={windows.terminal.size}
-        onClose={closeWindow}
-        onMinimize={minimizeWindow}
-        onMaximize={maximizeWindow}
-        onFocus={focusWindow}
-      >
-         <div className="bg-black p-2 font-mono text-xs text-white h-full selection:bg-gray-500">
-             <p>Last login: {time} on ttys000</p>
-             <br/>
-             <p>Kyles-MacBook-Pro:~ kyle$ <span className="text-yellow-400">cat skills.json</span></p>
-             <pre className="text-green-400 mt-1">
-{`{
-  "languages": ["Python", "SQL", "R", "Dart", "JavaScript"],
-  "frameworks": ["Flutter", "React", "Next.js", "Firebase"],
-  "tools": ["LangGraph", "Office.js", "Excel"],
-  "soft_skills": ["Strategy", "Public Speaking"]
-}`}
-             </pre>
-             <p className="mt-2">Kyles-MacBook-Pro:~ kyle$ <span className="animate-pulse">_</span></p>
-         </div>
-      </MacWindow>
-
       {/* SAFARI WINDOW */}
       <MacWindow
         id="safari"
@@ -1475,7 +1445,19 @@ export default function MacOsPortfolio() {
         onFocus={focusWindow}
         flashCloseButton={true}
       >
-         <MessagesApp />
+         <MessagesApp
+           onOpenSafari={(url) => {
+             setSafariUrl(url);
+             openWindow('safari');
+           }}
+           onOpenAppStore={(appId) => {
+             // Open the App Store window - it will show the app based on installed apps
+             openWindow('appstore');
+           }}
+           onOpenResume={() => {
+             openWindow('resume');
+           }}
+         />
       </MacWindow>
 
       <MacWindow
@@ -1514,6 +1496,10 @@ export default function MacOsPortfolio() {
            onAppInstalled={handleAppInstalled}
            onUninstallAll={handleUninstallAll}
            initialInstalledApps={installedApps}
+           onOpenSafari={(url) => {
+             setSafariUrl(url);
+             openWindow('safari');
+           }}
          />
       </MacWindow>
 

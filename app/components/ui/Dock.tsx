@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { FloatingDock } from './floating-dock';
-import { MacFolderIcon, MacDocIcon, MacTerminalIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon, MacMessagesIcon, MacPaintIcon, MacNotesIcon, MacAppStoreIcon } from './Icons';
+import { MacFolderIcon, MacDocIcon, MacDriveIcon, MacPreviewIcon, MacSafariIcon, MacMessagesIcon, MacPaintIcon, MacNotesIcon, MacAppStoreIcon } from './Icons';
 import { AppData } from '../apps/AppStore';
 
-type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'terminal' | 'safari' | 'paint' | 'messages' | 'game' | 'appstore';
+type WindowId = 'welcome' | 'finder' | 'preview' | 'resume' | 'safari' | 'paint' | 'messages' | 'game' | 'appstore';
 
 interface WindowState {
   isOpen: boolean;
@@ -12,7 +12,7 @@ interface WindowState {
   isMaximized: boolean;
   zIndex: number;
   title: string;
-  iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes' | 'appstore';
+  iconType: 'drive' | 'folder' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes' | 'appstore';
   pos: { x: number; y: number };
   size: { width: number; height: number };
 }
@@ -76,11 +76,10 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
   }, [hasMaximizedWindow, isHoveringDock]);
-  const renderIcon = (iconType: 'drive' | 'folder' | 'terminal' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes' | 'appstore') => {
+  const renderIcon = (iconType: 'drive' | 'folder' | 'doc' | 'preview' | 'safari' | 'messages' | 'paint' | 'notes' | 'appstore') => {
     switch (iconType) {
       case 'drive': return <MacDriveIcon />;
       case 'folder': return <MacFolderIcon />;
-      case 'terminal': return <MacTerminalIcon />;
       case 'doc': return <MacDocIcon />;
       case 'preview': return <MacPreviewIcon />;
       case 'safari': return <MacSafariIcon />;
@@ -103,7 +102,6 @@ const Dock: React.FC<DockProps> = ({ windows, onOpenWindow, onRestoreWindow, onF
     { id: 'preview', title: windows.preview.title, icon: renderIcon(windows.preview.iconType), isOpen: windows.preview.isOpen },
     { id: 'paint', title: windows.paint.title, icon: renderIcon(windows.paint.iconType), isOpen: windows.paint.isOpen },
     { id: 'resume', title: windows.resume.title, icon: renderIcon(windows.resume.iconType), isOpen: windows.resume.isOpen },
-    { id: 'terminal', title: windows.terminal.title, icon: renderIcon(windows.terminal.iconType), isOpen: windows.terminal.isOpen },
     { id: 'welcome', title: windows.welcome?.title || 'Notes', icon: renderIcon(windows.welcome?.iconType || 'notes'), isOpen: windows.welcome?.isOpen || false },
     { id: 'appstore', title: windows.appstore?.title || 'App Store', icon: renderIcon(windows.appstore?.iconType || 'appstore'), isOpen: windows.appstore?.isOpen || false },
   ];
