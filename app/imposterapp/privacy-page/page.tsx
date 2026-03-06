@@ -1,4 +1,6 @@
 import { Metadata } from "next";
+import Image from "next/image";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Imposter - Privacy Policy",
@@ -8,22 +10,41 @@ export const metadata: Metadata = {
 export default function PrivacyPolicyPage() {
   return (
     <div className="min-h-screen bg-[#7C3AED]">
-      <div className="mx-auto max-w-2xl px-6 py-16">
+      {/* Top bar */}
+      <div className="sticky top-0 z-10 border-b border-white/10 bg-[#7C3AED]/90 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-lg items-center justify-between px-5 py-3">
+          <span className="text-[13px] font-bold tracking-wide text-white/50">
+            IMPOSTER
+          </span>
+          <Link
+            href="/"
+            className="flex items-center gap-2 rounded-full bg-white/10 px-3 py-1.5 text-[12px] font-semibold text-white/80 transition-colors active:bg-white/20"
+          >
+            <Image
+              src="/favicon.png"
+              alt="KyleOS"
+              width={18}
+              height={18}
+              className="rounded-[4px]"
+            />
+            KyleOS
+          </Link>
+        </div>
+      </div>
+
+      <div className="mx-auto max-w-lg px-5 pb-16 pt-10">
         {/* Header */}
-        <div className="mb-12 text-center">
-          <h1 className="text-3xl font-black tracking-tight text-white sm:text-4xl">
+        <div className="mb-10">
+          <h1 className="text-[28px] font-black leading-tight tracking-tight text-white">
             Privacy Policy
           </h1>
-          <p className="mt-3 text-sm font-medium text-white/60">
-            Imposter &mdash; Party Game
-          </p>
-          <p className="mt-1 text-xs text-white/40">
+          <p className="mt-2 text-[13px] font-medium text-white/50">
             Last updated: 6 March 2025
           </p>
         </div>
 
         {/* Content */}
-        <div className="space-y-10 text-[15px] leading-relaxed text-white/85">
+        <div className="space-y-8 text-[14px] leading-[1.7] text-white/80">
           <Section title="Overview">
             <p>
               Imposter is a pass-the-phone party game. We respect your privacy
@@ -33,39 +54,45 @@ export default function PrivacyPolicyPage() {
           </Section>
 
           <Section title="Information We Collect">
-            <p>Imposter collects minimal data to provide and improve the game experience:</p>
-            <ul className="mt-3 list-disc space-y-2 pl-5">
-              <li>
-                <strong className="text-white">Game session analytics</strong> &mdash;
-                anonymous gameplay data such as player count, category played,
-                round duration, and vote outcomes. This data is not linked to
-                your identity.
-              </li>
-              <li>
-                <strong className="text-white">Apple Sign In</strong> &mdash; if you
-                choose to sign in, we receive the user identifier and name
+            <p>
+              Imposter collects minimal data to provide and improve the game
+              experience:
+            </p>
+            <ul className="mt-2.5 space-y-2 pl-4">
+              <Li>
+                <strong className="text-white">Game session analytics</strong>{" "}
+                &mdash; anonymous gameplay data such as player count, category
+                played, round duration, and vote outcomes. This data is not
+                linked to your identity.
+              </Li>
+              <Li>
+                <strong className="text-white">Apple Sign In</strong> &mdash; if
+                you choose to sign in, we receive the user identifier and name
                 provided by Apple. We do not receive or store your Apple ID
                 email unless you choose to share it.
-              </li>
-              <li>
-                <strong className="text-white">User-created content</strong> &mdash;
-                custom categories you create and submit to the community are
-                stored on our servers along with the creator name you provide.
-              </li>
-              <li>
-                <strong className="text-white">Device identifier</strong> &mdash; a
-                randomly generated ID stored locally on your device, used solely
-                for aggregating anonymous game statistics.
-              </li>
+              </Li>
+              <Li>
+                <strong className="text-white">User-created content</strong>{" "}
+                &mdash; custom categories you create and submit to the community
+                are stored on our servers along with the creator name you
+                provide.
+              </Li>
+              <Li>
+                <strong className="text-white">Device identifier</strong>{" "}
+                &mdash; a randomly generated ID stored locally on your device,
+                used solely for aggregating anonymous game statistics.
+              </Li>
             </ul>
           </Section>
 
           <Section title="Information We Do Not Collect">
-            <ul className="list-disc space-y-2 pl-5">
-              <li>We do not collect your location.</li>
-              <li>We do not access your contacts, microphone, or files.</li>
-              <li>We do not serve advertisements or share data with ad networks.</li>
-              <li>We do not sell or rent your data to third parties.</li>
+            <ul className="space-y-2 pl-4">
+              <Li>We do not collect your location.</Li>
+              <Li>We do not access your contacts, microphone, or files.</Li>
+              <Li>
+                We do not serve advertisements or share data with ad networks.
+              </Li>
+              <Li>We do not sell or rent your data to third parties.</Li>
             </ul>
           </Section>
 
@@ -80,34 +107,24 @@ export default function PrivacyPolicyPage() {
 
           <Section title="Third-Party Services">
             <p>Imposter uses the following third-party services:</p>
-            <ul className="mt-3 list-disc space-y-2 pl-5">
-              <li>
-                <strong className="text-white">Firebase (Google)</strong> &mdash;
-                for authentication, database storage, and analytics. Firebase
-                may collect device and usage data as described in the{" "}
-                <a
-                  href="https://firebase.google.com/support/privacy"
-                  className="underline decoration-white/30 underline-offset-2 transition-colors hover:text-white"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+            <ul className="mt-2.5 space-y-2 pl-4">
+              <Li>
+                <strong className="text-white">Firebase (Google)</strong>{" "}
+                &mdash; for authentication, database storage, and analytics.
+                Firebase may collect device and usage data as described in the{" "}
+                <InlineLink href="https://firebase.google.com/support/privacy">
                   Firebase Privacy Policy
-                </a>
+                </InlineLink>
                 .
-              </li>
-              <li>
+              </Li>
+              <Li>
                 <strong className="text-white">Apple Sign In</strong> &mdash;
                 authentication is handled by Apple and subject to{" "}
-                <a
-                  href="https://www.apple.com/legal/privacy/"
-                  className="underline decoration-white/30 underline-offset-2 transition-colors hover:text-white"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                >
+                <InlineLink href="https://www.apple.com/legal/privacy/">
                   Apple&apos;s Privacy Policy
-                </a>
+                </InlineLink>
                 .
-              </li>
+              </Li>
             </ul>
           </Section>
 
@@ -150,12 +167,9 @@ export default function PrivacyPolicyPage() {
             <p>
               If you have questions about this privacy policy or your data,
               contact us at{" "}
-              <a
-                href="mailto:kylesull1011@gmail.com"
-                className="underline decoration-white/30 underline-offset-2 transition-colors hover:text-white"
-              >
-                kylesull1011@gmail.com
-              </a>
+              <InlineLink href="mailto:kyle.osullivan@arcadeus.ai">
+                kyle.osullivan@arcadeus.ai
+              </InlineLink>
               .
             </p>
           </Section>
@@ -174,8 +188,35 @@ function Section({
 }) {
   return (
     <section>
-      <h2 className="mb-3 text-lg font-bold text-white">{title}</h2>
+      <h2 className="mb-2 text-[15px] font-bold text-white">{title}</h2>
       {children}
     </section>
+  );
+}
+
+function Li({ children }: { children: React.ReactNode }) {
+  return (
+    <li className="relative pl-3 before:absolute before:left-0 before:top-[0.6em] before:h-[5px] before:w-[5px] before:rounded-full before:bg-white/30">
+      {children}
+    </li>
+  );
+}
+
+function InlineLink({
+  href,
+  children,
+}: {
+  href: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <a
+      href={href}
+      className="underline decoration-white/30 underline-offset-2 transition-colors hover:text-white"
+      target={href.startsWith("mailto:") ? undefined : "_blank"}
+      rel={href.startsWith("mailto:") ? undefined : "noopener noreferrer"}
+    >
+      {children}
+    </a>
   );
 }
