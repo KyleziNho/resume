@@ -310,22 +310,22 @@ export default function CrossyRoad() {
 
       {/* HUD */}
       <div className="absolute top-4 left-4 flex gap-3 z-20">
-        <div className="bg-white/90 backdrop-blur px-4 py-2 rounded-lg shadow-lg">
+        <div className="bg-white px-4 py-2 rounded-lg shadow-lg">
           <div className="text-xs text-gray-500 font-bold">SCORE</div>
           <div className="text-2xl font-black text-gray-900">{score}</div>
         </div>
-        <div className="bg-white/70 backdrop-blur px-4 py-2 rounded-lg">
+        <div className="bg-white px-4 py-2 rounded-lg">
           <div className="text-xs text-gray-500 font-bold">SKILLS</div>
           <div className="text-2xl font-black text-blue-600">{skills}</div>
         </div>
-        <div className="bg-white/70 backdrop-blur px-3 py-2 rounded-lg">
+        <div className="bg-white px-3 py-2 rounded-lg">
           <div className="text-xs text-gray-400 font-bold">BEST</div>
           <div className="text-xl font-bold text-gray-600">{highScore}</div>
         </div>
       </div>
 
       {/* Canvas */}
-      <canvas ref={canvasRef} className="border-4 border-white shadow-2xl rounded-lg" />
+      <canvas ref={canvasRef} className="border-4 border-white shadow-lg rounded-lg" />
 
       {/* Menu */}
       {gameState === 'menu' && (
@@ -397,7 +397,7 @@ export default function CrossyRoad() {
 
       {/* Legend */}
       {gameState === 'playing' && (
-        <div className="absolute top-4 right-4 bg-white/80 backdrop-blur p-3 rounded-lg shadow-lg text-xs z-20">
+        <div className="absolute top-4 right-4 bg-white p-3 rounded-lg shadow text-xs z-20">
           <div className="font-bold mb-2">LEGEND:</div>
           <div className="flex gap-2 items-center mb-1">
             <span className="w-4 h-4 bg-red-500 rounded"></span> BUG (avoid)
