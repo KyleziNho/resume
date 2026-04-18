@@ -129,8 +129,23 @@ export default function CrossyRoad() {
       lanesRef.current.push(generateLane(lanesRef.current.length));
     }
 
-    // Update obstacles and check collisions
-    lanesRef.current.forEach((lane, index) => {
+    // Trim old lanes far behind the camera to prevent unbounded growth
+    const trimThreshold = 50;
+    if (cameraYRef.current > trimThreshold) {
+      const trimCount = Math.floor(cameraYRef.current - trimThreshold);
+      if (trimCount > 0) {
+        lanesRef.current.splice(0, trimCount);
+        playerRef.current.y -= trimCount;
+        cameraYRef.current -= trimCount;
+      }
+    }
+
+    // Only update lanes near the viewport (not all lanes ever created)
+    const visibleStart = Math.max(0, Math.floor(cameraYRef.current) - 2);
+    const visibleEnd = Math.min(lanesRef.current.length, Math.floor(cameraYRef.current) + GRID_HEIGHT + 2);
+
+    for (let index = visibleStart; index < visibleEnd; index++) {
+      const lane = lanesRef.current[index];
       lane.obstacles.forEach(obs => {
         obs.x += lane.speed * 0.02;
         if (obs.x > GRID_WIDTH + 1) obs.x = -1;
@@ -142,7 +157,7 @@ export default function CrossyRoad() {
             gameOver();
           } else if (obs.type === 'skill') {
             setSkills(s => s + 1);
-            obs.x = -999; // Remove
+            obs.x = -999;
             haptic();
           } else if (obs.type === 'coffee') {
             setScore(s => s + 5);
@@ -151,7 +166,10 @@ export default function CrossyRoad() {
           }
         }
       });
-    });
+
+      // Remove collected obstacles from the array
+      lane.obstacles = lane.obstacles.filter(obs => obs.x > -900);
+    }
   };
 
   const gameOver = () => {
@@ -259,7 +277,12 @@ export default function CrossyRoad() {
     canvas.width = GRID_WIDTH * CELL_SIZE;
     canvas.height = GRID_HEIGHT * CELL_SIZE;
 
-    animationRef.current = requestAnimationFrame(gameLoop);
+    if (gameState === 'playing') {
+      animationRef.current = requestAnimationFrame(gameLoop);
+    } else {
+      // Draw one frame for menu/gameover so the canvas isn't blank
+      draw();
+    }
 
     return () => {
       if (animationRef.current) {
