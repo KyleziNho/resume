@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM52067 Flashcards</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1.5rem; }
+  .fc-app { max-width: 680px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 1rem; color: #1a1a1a; }
+  .fc-topic-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .fc-topic-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer; transition: all 0.15s; }
+  .fc-topic-btn.active { background: #1a1a1a; color: #fff; border-color: transparent; }
+  .fc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .fc-hint-text { font-size: 13px; color: #888; }
+  .fc-progress { font-size: 13px; color: #888; margin-left: auto; }
+  .fc-shuffle { font-size: 12px; color: #888; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+  .fc-card-wrap { perspective: 1000px; width: 100%; height: 240px; cursor: pointer; margin-bottom: 1rem; }
+  .fc-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.4s ease; border-radius: 12px; }
+  .fc-card.flipped { transform: rotateY(180deg); }
+  .fc-face { position: absolute; inset: 0; border-radius: 12px; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.5rem; text-align: center; border: 1px solid #e0e0e0; background: #fff; }
+  .fc-back { transform: rotateY(180deg); background: #f9f9f7; }
+  .fc-topic-tag { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+  .fc-q { font-size: 17px; font-weight: 500; color: #1a1a1a; line-height: 1.4; }
+  .fc-a { font-size: 14px; color: #1a1a1a; line-height: 1.6; max-width: 100%; }
+  .fc-hint { font-size: 12px; color: #ccc; margin-top: 1rem; }
+  .fc-controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .fc-controls button { padding: 8px 24px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; font-size: 14px; transition: background 0.15s; }
+  .fc-controls button:hover { background: #f0f0f0; }
+  .fc-controls button.correct { border-color: #2d7a2d; color: #2d7a2d; }
+  .fc-controls button.wrong { border-color: #c0392b; color: #c0392b; }
+  .fc-score { display: flex; gap: 16px; font-size: 13px; color: #888; justify-content: center; margin-top: 0.5rem; }
+  .fc-score .g { color: #2d7a2d; font-weight: 500; }
+  .fc-score .b { color: #c0392b; font-weight: 500; }
+  .fc-done { text-align: center; padding: 2rem; background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; }
+  .fc-done h3 { font-size: 20px; font-weight: 500; margin-bottom: 0.5rem; }
+  .fc-done p { color: #888; font-size: 14px; margin-bottom: 1.5rem; }
+  .btn-retry { padding: 8px 20px; border-radius: 8px; border: 1px solid #c0392b; color: #c0392b; background: #fff; cursor: pointer; font-size: 14px; margin-right: 8px; }
+  .btn-all { padding: 8px 20px; border-radius: 8px; border: 1px solid #ccc; color: #1a1a1a; background: #fff; cursor: pointer; font-size: 14px; }
+  .nav-tabs { display: flex; gap: 4px; margin-bottom: 1rem; border-bottom: 1px solid #e0e0e0; }
+  .nav-tab { padding: 8px 16px; text-decoration: none; color: #888; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: #1a1a1a; }
+  .nav-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+  .saved-indicator { font-size: 11px; color: #2d7a2d; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
+  .saved-indicator.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="fc-app">
+  <nav class="nav-tabs">
+    <a href="flashcards.html" class="nav-tab active">Flashcards</a>
+    <a href="mcq.html" class="nav-tab">MCQ Practice</a>
+    <a href="exam-practice.html" class="nav-tab">Exam Practice</a>
+  </nav>
+  <h1>CM52067 — Revision Flashcards</h1>
+  <div class="fc-topic-bar" id="topicBar"></div>
+  <div class="fc-header">
+    <div class="fc-hint-text">Tap card to reveal answer</div>
+    <div class="fc-progress" id="progress"></div>
+    <button class="fc-shuffle" onclick="shuffleCards()">Shuffle</button>
+    <button class="fc-shuffle" onclick="resetProgress()">Reset progress</button>
+    <span class="saved-indicator" id="savedIndicator">✓ saved</span>
+  </div>
+
+  <div class="fc-card-wrap" id="cardWrap" onclick="flipCard()">
+    <div class="fc-card" id="card">
+      <div class="fc-face fc-front">
+        <div class="fc-topic-tag" id="cardTopic"></div>
+        <div class="fc-q" id="cardQ"></div>
+        <div class="fc-hint">tap to reveal</div>
+      </div>
+      <div class="fc-face fc-back">
+        <div class="fc-a" id="cardA"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fc-controls" id="controls" style="display:none">
+    <button class="wrong" onclick="rate(false)">✗ Missed it</button>
+    <button class="correct" onclick="rate(true)">✓ Got it</button>
+  </div>
+  <div class="fc-score">
+    <div>Got it: <span class="g" id="scoreG">0</span></div>
+    <div>Missed: <span class="b" id="scoreB">0</span></div>
+    <div>Remaining: <span id="scoreR">0</span></div>
+  </div>
+
+  <div class="fc-done" id="doneMsg" style="display:none">
+    <h3>Round complete!</h3>
+    <p>Review the ones you missed</p>
+    <button class="btn-retry" onclick="restartMissed()">Retry missed cards</button>
+    <button class="btn-all" onclick="restartAll()">Restart all</button>
+  </div>
+</div>
+
+<script>
+const ALL_CARDS = [
+  {t:"Static Analysis",q:"What is static analysis?",a:"Analysing source code WITHOUT running it. Like a spell checker for code. The contrast is dynamic analysis which requires execution."},
+  {t:"Static Analysis",q:"Why is static analysis valuable BEFORE execution?",a:"1) Cost of fixing a defect grows the later it is found — minutes on a developer's machine vs formal change control before release. 2) Some defects are invisible to humans but trivially detectable by tools (e.g. memory leaks across complex code paths)."},
+  {t:"Static Analysis",q:"What is a memory leak?",a:"Memory is allocated but NOT freed on every code path. The program slowly consumes all available memory. Example: malloc() called, function returns early on one branch without calling free()."},
+  {t:"Static Analysis",q:"What is a buffer overflow?",a:"Writing past the end of an allocated array. Example: array declared as char[20], but an index from user input with no bounds check accesses index 50. Real example: Ariane rocket explosion."},
+  {t:"Static Analysis",q:"What is a null pointer dereference?",a:"Using a pointer to access memory without first checking it isn't null. Example: p = findPatient(id); p->name — if findPatient returns null, this crashes the program."},
+  {t:"Static Analysis",q:"What is dead code / unreachable code?",a:"Code that can never be executed. Example: Apple SSL goto fail bug — a copy-paste error created an unconditional goto that made all security checks unreachable. Static analysis finds it immediately."},
+  {t:"Static Analysis",q:"What is an uninitialised variable?",a:"A variable is read before it has been assigned a value on at least one code path. Contains garbage memory. Tool detects it via data flow analysis — tracks every path from declaration to use."},
+  {t:"Static Analysis",q:"What is a dead assignment?",a:"A variable is assigned a value that is immediately overwritten before being read. The first assignment is wasted. Usually a copy-paste or logic error. Tool detects via data flow analysis."},
+  {t:"Static Analysis",q:"What is a false positive in static analysis?",a:"The tool reports a defect that is NOT actually a real problem. The tool is being conservative without full runtime context. How to handle: manually review, confirm it is safe, suppress with a comment explaining why."},
+  {t:"Static Analysis",q:"What are the two main critical defect categories from Coverity?",a:"1) Memory errors — leaks, buffer overflow, null pointer dereference. 2) Security vulnerabilities — OWASP Top 10 (broken access control, cryptographic failures)."},
+  {t:"Static Analysis",q:"What is technical debt?",a:"Quality issues ignored during development that accumulate over time — exactly like financial debt. The longer they are left, the worse they get and the more expensive to fix."},
+  {t:"Static Analysis",q:"What is coupling? Why is it bad?",a:"When two components depend on each other. Bad because your change breaks my code. The fix is decoupling — making components independent so changes are isolated. Stability should be above 90%."},
+  {t:"Static Analysis",q:"What is the difference between a review and an inspection?",a:"Review = comments and approvals, checking work meets a standard. Inspection (Fagan) = specifically finding defects. In practice they are merged in modern tools like GitLab."},
+  {t:"Static Analysis",q:"Name two static analysis tools from the lectures.",a:"Clockwork (Perforce) — shows memory leaks with full traceback. Coverity — similar to Clockwork, cited in mock paper. SonarQube — integrates with GitLab, OWASP Top 10. Lint — the original static analyser."},
+  {t:"Testing",q:"What is black-box testing?",a:"Test cases derived from the SPECIFICATION only — no knowledge of implementation needed. Tests what the software should do. Techniques: equivalence partitioning, boundary value analysis."},
+  {t:"Testing",q:"What is white-box testing?",a:"Test cases derived from the CODE STRUCTURE. Requires seeing the code. Tests what the software actually does. Techniques: branch coverage, MC/DC. Used to reach branches that black-box tests miss."},
+  {t:"Testing",q:"What is equivalence partitioning?",a:"Divide inputs into groups where all values behave the same. Test one value per group. Example: age function 18-65 has three classes — below range (17), valid (30), above range (66). Testing 17 tells you the same as testing 5."},
+  {t:"Testing",q:"What is boundary value analysis?",a:"Test at and just around the EDGES of each partition. Most errors occur at boundaries (off-by-one, <= vs <). Always test zero. Example for age 18-65: test 17, 18, 65, 66. Testing 18 vs 17 catches 'age > 18' instead of 'age >= 18'."},
+  {t:"Testing",q:"What is a stub?",a:"A fake REPLACEMENT for an external function. Your code calls the stub instead of the real function. Used for unit testing to isolate completely from dependencies. Called a mock in Java/Python."},
+  {t:"Testing",q:"What is a wrapper?",a:"INTERCEPTS calls to a real external function. The real function still exists — the wrapper sits between and can modify inputs or outputs. Used to simulate edge cases like out-of-memory by wrapping malloc to return null."},
+  {t:"Testing",q:"What are the 5 steps of the testing recipe?",a:"1) Make it run — simplest possible test first. 2) Black-box — prove functionality with spec-derived tests. 3) Negative tests — check software doesn't do what it shouldn't. 4) Special considerations — memory, security, performance. 5) Coverage — ensure all code is exercised."},
+  {t:"Testing",q:"What is regression testing?",a:"Re-running the existing test suite after any code change to verify nothing previously working has broken. Automated in the pipeline — every merge triggers the full suite."},
+  {t:"Testing",q:"What is negative testing?",a:"Testing that software does NOT do what it should not do. Example: file upload — upload a file over the size limit (should reject gracefully), upload an executable disguised as an image (should detect and reject)."},
+  {t:"Testing",q:"A function has 100% coverage but crashes on out-of-memory. What does this tell you?",a:"Coverage is necessary but NOT sufficient. 100% branch coverage means every branch was executed but not every possible value. The out-of-memory path existed but no test caused malloc to return null. Coverage tells you what you tested, not what could go wrong."},
+  {t:"Testing",q:"What are the four test levels in order?",a:"1) Unit test — single function in isolation with stubs. 2) Integration test — multiple units working together with wrappers. 3) System test — whole system end-to-end, no stubs. 4) Acceptance test — does it meet user requirements?"},
+  {t:"MC/DC",q:"What is branch coverage?",a:"Every true/false branch in every conditional must be executed at least once. For 'if (A)' you need 2 tests — one where A is true and one where A is false."},
+  {t:"MC/DC",q:"What is MC/DC?",a:"Modified Condition/Decision Coverage. Each individual Boolean condition within a compound decision must INDEPENDENTLY affect the outcome. Flipping A alone must change the result, flipping B alone must change it, etc."},
+  {t:"MC/DC",q:"For 'if (A AND B AND C)', how many tests for branch coverage vs MC/DC?",a:"Branch coverage: 2 tests (whole condition true, whole condition false). MC/DC: minimum 4 tests — must show each condition independently affects the outcome. Branch coverage could miss a bug in one condition entirely."},
+  {t:"MC/DC",q:"Why is MC/DC used in safety-critical systems but not standard apps?",a:"Safety-critical: cost of a missed defect is catastrophic (loss of life). Mandated by DO-178C (aviation). Standard app: cost is an annoyed user. The 2^n problem makes full testing impractical at scale. MC/DC is the practical compromise."},
+  {t:"MC/DC",q:"What is the 2^n problem?",a:"For full condition coverage you need every combination of n Boolean conditions: 2^n tests. With 10 conditions = 1,024 tests. With 100 conditions = more than atoms in the universe. MC/DC reduces this to n+1 minimum tests."},
+  {t:"DevOps",q:"What is the null release?",a:"The answer to: if I change one line of code, what is every step needed before releasing? It reveals team maturity. Good pipeline: push, auto build, analyse, test, generate docs, deploy in minutes. Bad team: manual steps, takes days."},
+  {t:"DevOps",q:"What happens at T0 in the pipeline?",a:"On the developer's machine, BEFORE committing. Static analysis runs in the IDE as code is written. Cheapest point to fix — takes minutes, affects nobody else."},
+  {t:"DevOps",q:"What happens at T1?",a:"When a feature branch is PUSHED to the server. Full build, static analysis, unit tests, and CVE dependency scan run automatically. Problems here affect only the developer's branch."},
+  {t:"DevOps",q:"What happens at T2?",a:"When the feature branch is MERGED to main. The same suite runs again plus a nightly longer test run. Problems visible to the whole team but traceable to a specific recent change."},
+  {t:"DevOps",q:"What happens at T3?",a:"PRE-RELEASE pipeline. Everything from T1/T2 plus DocOps — automatically generates test evidence report, coverage summary, and requirements traceability matrix. Required by regulators and clients."},
+  {t:"DevOps",q:"What is infrastructure as code?",a:"Pipeline configuration written as code files (YAML) stored in the repository alongside the application code. Version-controlled, reviewable, auditable. In GitLab: .gitlab-ci.yml file."},
+  {t:"DevOps",q:"What is DocOps?",a:"Automatically generating documentation from the pipeline rather than writing it by hand. At T3 a container generates test evidence reports, coverage summaries, and traceability matrices automatically."},
+  {t:"DevOps",q:"What is an SBOM?",a:"Software Bill of Materials — a complete list of every component, library, and dependency in the software. Important because most security vulnerabilities enter through third-party packages."},
+  {t:"DevOps",q:"What is SOUP?",a:"Software of Unknown Provenance. Third-party code of unknown origin. When developers use AI coding tools they often install packages without knowing what they contain. SBOM tools eliminate SOUP."},
+  {t:"DevOps",q:"What is the isolate, verify, merge workflow?",a:"Isolate: work on a feature branch, separate from main. Verify: run full pipeline on your branch before merging. Merge: bring verified change into main. Solves the chaos of everyone working on the same codebase simultaneously."},
+  {t:"DevOps",q:"What is GitOps?",a:"Using Git as the single source of truth for everything — code, config, infrastructure, deployments. Any change to the environment happens by changing it in Git, giving a full audit trail and ability to roll back anything."},
+  {t:"DevOps",q:"What is semantic versioning?",a:"Automated version numbering: major.minor.patch. Built into the pipeline so version numbers increment automatically on release rather than being managed manually."},
+  {t:"Git",q:"What is version control?",a:"Tracking every change to code over time with the ability to roll back. Every commit is a saved snapshot. Git is the dominant version control system. The repository is always the single source of truth."},
+  {t:"Git",q:"What is a branch in Git?",a:"A parallel copy of the codebase for developing a feature in isolation. Your changes cannot affect other developers until you merge. The main branch should always be in a deployable state."},
+  {t:"Git",q:"What is a merge request?",a:"A formal request to bring changes from a branch into main. Triggers automated pipeline and code review. Only merged when pipeline passes and reviewer approves."},
+  {t:"Git",q:"What is traceability in Git?",a:"Linking every commit message to an issue number, creating a traceable line from customer requirement to issue to branch to code in main. DTAC auditors check this."},
+  {t:"Git",q:"What is the feature branch workflow?",a:"1) Create issue. 2) Create branch from that issue. 3) Develop in isolation. 4) Push to server. 5) Create merge request — triggers pipeline and review. 6) When pipeline passes and reviewer approves, merge to main. 7) Issue closes automatically."},
+  {t:"ML/MLOps",q:"What is the CACE principle?",a:"Changing Anything Changes Everything. A change anywhere in the ML pipeline — even unrelated — can change model outputs with NO ERROR raised. Example: changing blood pressure normalisation shifts model output distribution silently."},
+  {t:"ML/MLOps",q:"What is concept drift?",a:"The real world changes so the model's training data no longer represents what it now encounters. Example: bird feathers change colour in winter — model trained on summer plumage fails. The MAPPING between input and correct output changes."},
+  {t:"ML/MLOps",q:"What is data drift?",a:"The statistical distribution of incoming data shifts suddenly. Different from concept drift — the data looks different, not the underlying concept. Example: sudden increase in rain and snow changes what CCTV cameras see."},
+  {t:"ML/MLOps",q:"What is silent deployment?",a:"New model runs in PARALLEL receiving real requests, but outputs are NEVER shown to users. Team monitors outputs. After a validation period with stable results, new model is promoted. No user impact."},
+  {t:"ML/MLOps",q:"What is canary deployment?",a:"Incrementally route a percentage of real users to the new model (10%, 20%, etc.). Named after canaries in coal mines — a small number of users exposed first to catch problems before full rollout."},
+  {t:"ML/MLOps",q:"Why is silent deployment better than canary for a hospital?",a:"Canary means some clinicians get model v1 outputs and others get model v2 simultaneously — ethically inconsistent clinical decision support. Silent keeps ALL clinicians on the validated model until the new one is confirmed safe."},
+  {t:"ML/MLOps",q:"What is static vs dynamic model deployment?",a:"Static: model bundled with the app on user's device, no network needed, but IP is exposed. Dynamic: model sits on a server behind an API, protected and scalable, but needs internet. Dynamic preferred for large models."},
+  {t:"ML/MLOps",q:"Why does ML testing need more than just coverage?",a:"CACE: a change anywhere can affect the model silently. You cannot verify correctness against a full specification like traditional software. Mitigation: version the data pipeline in Git and maintain a regression suite of fixed input/output pairs."},
+  {t:"Cloud",q:"What is IaaS?",a:"Infrastructure as a Service. You manage the OS and everything above it. Provider manages physical hardware and networking. Requires significant technical expertise. Examples: AWS EC2, Azure VMs."},
+  {t:"Cloud",q:"What is PaaS?",a:"Platform as a Service. You manage your application code only. Provider manages OS, runtime, and hardware. Requires development expertise but not infrastructure expertise."},
+  {t:"Cloud",q:"What is SaaS?",a:"Software as a Service. You just use the software — no technical setup or management required. Provider manages everything. Examples: Gmail, Salesforce. Best for non-technical users."},
+  {t:"Cloud",q:"Which cloud service model suits non-technical users and why?",a:"SaaS. No technical expertise required — the software is simply there to use. IaaS requires managing infrastructure, PaaS requires managing code deployments. SaaS requires nothing technical."},
+  {t:"Cloud",q:"What is elasticity in cloud computing?",a:"The cloud automatically scales UP when demand increases and DOWN when demand decreases. You are not paying for idle capacity."},
+  {t:"Cloud",q:"What is measured service in cloud computing?",a:"You pay for only what you use — pay-as-you-go pricing. No upfront hardware costs. You pay for CPU hours, storage used, requests made, etc."},
+  {t:"Cloud",q:"What are the big three cloud providers?",a:"AWS (largest market share), Azure (second, best for Microsoft integration), GCP (smallest, best for AI/ML with Vertex AI)."},
+  {t:"Cloud",q:"What is load balancing?",a:"Distributes incoming requests across multiple server instances so no single instance is overwhelmed. Combined with auto-scaling: new instances added as traffic increases, removed as it decreases."},
+  {t:"Data",q:"What is structured data? Give an example and storage technology.",a:"Fixed predefined schema — every row conforms to the same columns. Example: student records table with name, ID, course, grade. Storage: PostgreSQL, SQL Server, Snowflake."},
+  {t:"Data",q:"What is semi-structured data? Give an example and storage technology.",a:"Flexible schema that can change and evolve. Example: JSON document where different users might have different fields. Storage: MongoDB, DynamoDB."},
+  {t:"Data",q:"What is unstructured data? Give an example and storage technology.",a:"No predefined format. Examples: images, video, audio, PDFs. Storage: AWS S3 bucket, Azure Blob Storage, GCP Bucket. Be specific with the technology name."},
+  {t:"Data",q:"What is a primary key?",a:"Uniquely identifies each row in a table. Must be unique and NOT null. Two types: composite (multiple columns combined) or surrogate (auto-increment ID with no real-world meaning)."},
+  {t:"Data",q:"For the bird sighting table, what is the best primary key?",a:"Composite key of Date + Time + Latitude + Longitude (optionally + Phone Number). Uniquely identifies each sighting. Do NOT use Phone Number alone — people change numbers."},
+  {t:"Data",q:"How do you store a photo and link it to a sighting record?",a:"Store the photo in AWS S3 / Azure Blob Storage / GCP Bucket. Store the URL or file path returned by the bucket in the corresponding row of the relational sightings table."},
+  {t:"Data",q:"What is Volume in the 6 Vs?",a:"How much data is stored and processed. CCTV: high and continuous. Citizen science: sporadic and low, dependent on people going outside."},
+  {t:"Data",q:"What is Velocity in the 6 Vs?",a:"How fast data is generated and needs processing. CCTV: constant real-time stream. Citizen science: slow and infrequent — humans have reaction times and must choose to report."},
+  {t:"Data",q:"What is Variety in the 6 Vs?",a:"Different formats, sources, and structures. Citizen science: high variety — different devices, lighting, skill levels. CCTV: more consistent but varies by camera angle and time of day."},
+  {t:"Data",q:"What is Veracity in the 6 Vs?",a:"How truthful and reliable the data is. Citizen science: depends on human accuracy. CCTV: depends on model quality — a bad model produces unreliable data even from a camera."},
+  {t:"Data",q:"What is Value in the 6 Vs?",a:"The insights derivable from the data. CCTV: continuous monitoring. Citizen science: occasional but contextual observations with human judgment."},
+  {t:"Data",q:"What is Variability in the 6 Vs?",a:"Inconsistency in the data over time — the meaning or format changes. Example: citizen science data quality varies enormously between reporters, times of day, and seasons."},
+  {t:"Data",q:"What is OLTP vs OLAP?",a:"OLTP (Online Transaction Processing): fast read/write for day-to-day operations (social media, banking). OLAP (Online Analytical Processing): deep analysis and reporting (weekly summaries, forecasting). Data moves from OLTP to OLAP via an ETL pipeline."},
+  {t:"Data",q:"What does ETL stand for and what does it do?",a:"Extract, Transform, Load. Moves data from OLTP to OLAP. Extract: pull from source. Transform: clean, filter, validate. Load: insert into OLAP store. Usually runs on a schedule."},
+  {t:"HCI",q:"What is the difference between correctness and usability?",a:"Correctness: software produces right outputs — the code works. Usability: people can achieve their goals effectively, efficiently, and without frustration. A system can be both correct AND unusable — these are independent."},
+  {t:"HCI",q:"What is a mental model in HCI?",a:"A user's internal expectation of how a system works, based on prior experience. If the system doesn't match the user's mental model, they make errors even when the system is technically correct."},
+  {t:"HCI",q:"What is affordance?",a:"Design cues that signal what actions are possible. A button that looks clickable will be clicked. A button that doesn't look interactive won't be used even if it works."},
+  {t:"HCI",q:"What is feedback in HCI?",a:"The system tells the user what happened after an action. No feedback = user doesn't know if their action succeeded. Example: no confirmation after submitting a report → user submits multiple times."},
+  {t:"HCI",q:"What is cognitive load?",a:"The mental effort required to use the system. Too many steps, too many options, too much information = user gives up. Good design minimises cognitive load by making the right action obvious."},
+  {t:"HCI",q:"What is context of use?",a:"The real environment in which users interact with the system. Designed in an office may fail when used on a phone, outdoors, under time pressure, by someone unfamiliar with online forms."},
+  {t:"HCI",q:"Name four goals of usability.",a:"Effectiveness (can users complete their goals?), Efficiency (without wasted effort?), Usability (is it easy to use?), Safety (does it prevent errors and support recovery?)."},
+  {t:"Evaluation",q:"What is heuristic evaluation?",a:"3-5 experts independently evaluate the interface against Nielsen's 10 heuristics. Each notes every violation. Results are aggregated — problems found by multiple experts weighted as more serious. No users required."},
+  {t:"Evaluation",q:"Name four of Nielsen's 10 heuristics.",a:"1) Visibility of system status. 2) Match between system and real world. 3) Error prevention. 4) User control and freedom. (Also: recognition over recall, consistency and standards, flexibility, aesthetic design, error recovery, help and documentation.)"},
+  {t:"Evaluation",q:"What is a cognitive walkthrough?",a:"Experts simulate a user completing a specific task step by step. At each step: Will the user know what to do? Can they do it? Will they get feedback? No users required."},
+  {t:"Evaluation",q:"Why is heuristic evaluation appropriate when no users are available?",a:"Requires only expert time. Can be completed quickly. Identifies obvious usability violations before release. No user recruitment or facilities needed. Much better than no evaluation at all."},
+  {t:"Evaluation",q:"What is expert bias?",a:"The main limitation of analytic methods. Experts find problems real users don't have, and miss problems real users do have. Their technical fluency means they don't experience the same confusion as a first-time user."},
+  {t:"Evaluation",q:"How do you address expert bias once the system is live?",a:"Empirical methods with real users: usability testing (observe real users completing tasks), surveys (wider feedback at scale), analytics (track where users abandon or make errors in the live system)."},
+  {t:"Evaluation",q:"What is the difference between analytic and empirical evaluation?",a:"Analytic: expert review, no users, fast, cheap, finds design-level issues. Used early. Empirical: involves real users, slower, finds real usage problems. Used post-launch when users are available."},
+];
+
+const STORAGE_KEY = 'cm52067_flashcards_v1';
+
+let deck = [...ALL_CARDS];
+let idx = 0, got = 0, missed = 0;
+let missed_cards = [];
+let flipped = false;
+let activeTopic = 'All';
+
+const topics = ['All', ...new Set(ALL_CARDS.map(c => c.t))];
+
+function saveState() {
+  try {
+    const state = {
+      activeTopic,
+      deckIndices: deck.map(c => ALL_CARDS.indexOf(c)),
+      idx, got, missed,
+      missedIndices: missed_cards.map(c => ALL_CARDS.indexOf(c))
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const ind = document.getElementById('savedIndicator');
+    if (ind) {
+      ind.classList.add('show');
+      clearTimeout(saveState._t);
+      saveState._t = setTimeout(() => ind.classList.remove('show'), 1200);
+    }
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || !Array.isArray(s.deckIndices) || s.deckIndices.length === 0) return false;
+    activeTopic = s.activeTopic || 'All';
+    deck = s.deckIndices.map(i => ALL_CARDS[i]).filter(Boolean);
+    idx = Math.min(s.idx || 0, deck.length);
+    got = s.got || 0;
+    missed = s.missed || 0;
+    missed_cards = (s.missedIndices || []).map(i => ALL_CARDS[i]).filter(Boolean);
+    return true;
+  } catch (e) { return false; }
+}
+
+function resetProgress() {
+  if (!confirm('Reset all flashcard progress?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  activeTopic = 'All';
+  deck = [...ALL_CARDS];
+  shuffle(deck);
+  idx = 0; got = 0; missed = 0; missed_cards = [];
+  flipped = false;
+  document.getElementById('doneMsg').style.display = 'none';
+  document.getElementById('cardWrap').style.display = 'block';
+  document.getElementById('controls').style.display = 'none';
+  renderTopicBar();
+  render();
+}
+
+function renderTopicBar() {
+  document.getElementById('topicBar').innerHTML = topics.map(t =>
+    `<button class="fc-topic-btn${t===activeTopic?' active':''}" onclick="setTopic('${t}')">${t}</button>`
+  ).join('');
+}
+
+function setTopic(t) {
+  activeTopic = t;
+  renderTopicBar();
+  deck = (t === 'All' ? [...ALL_CARDS] : ALL_CARDS.filter(c => c.t === t));
+  shuffle(deck);
+  idx = 0; got = 0; missed = 0; missed_cards = [];
+  flipped = false;
+  document.getElementById('doneMsg').style.display = 'none';
+  document.getElementById('cardWrap').style.display = 'block';
+  document.getElementById('controls').style.display = 'none';
+  saveState();
+  render();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function shuffleCards() { setTopic(activeTopic); }
+
+function render() {
+  if (idx >= deck.length) {
+    document.getElementById('cardWrap').style.display = 'none';
+    document.getElementById('controls').style.display = 'none';
+    document.getElementById('doneMsg').style.display = 'block';
+    updateScore();
+    return;
+  }
+  const c = deck[idx];
+  document.getElementById('cardTopic').textContent = c.t;
+  document.getElementById('cardQ').textContent = c.q;
+  document.getElementById('cardA').textContent = c.a;
+  document.getElementById('progress').textContent = `${idx + 1} / ${deck.length}`;
+  document.getElementById('card').classList.remove('flipped');
+  flipped = false;
+  document.getElementById('controls').style.display = 'none';
+  updateScore();
+}
+
+function flipCard() {
+  if (idx >= deck.length) return;
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+  if (flipped) document.getElementById('controls').style.display = 'flex';
+}
+
+function rate(correct) {
+  if (correct) got++; else { missed++; missed_cards.push(deck[idx]); }
+  idx++;
+  saveState();
+  render();
+}
+
+function updateScore() {
+  document.getElementById('scoreG').textContent = got;
+  document.getElementById('scoreB').textContent = missed;
+  document.getElementById('scoreR').textContent = Math.max(0, deck.length - idx);
+}
+
+function restartMissed() {
+  if (missed_cards.length === 0) { restartAll(); return; }
+  deck = [...missed_cards];
+  shuffle(deck);
+  idx = 0; got = 0; missed = 0; missed_cards = [];
+  flipped = false;
+  document.getElementById('doneMsg').style.display = 'none';
+  document.getElementById('cardWrap').style.display = 'block';
+  document.getElementById('controls').style.display = 'none';
+  saveState();
+  render();
+}
+
+function restartAll() { setTopic(activeTopic); }
+
+if (!loadState()) {
+  shuffle(deck);
+}
+renderTopicBar();
+render();
+</script>
+</body>
+</html>

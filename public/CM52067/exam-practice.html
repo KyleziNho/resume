@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM52067 Exam Practice</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1.5rem; }
+  .app { max-width: 820px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 1rem; line-height: 1.5; }
+  .nav-tabs { display: flex; gap: 4px; margin-bottom: 1rem; border-bottom: 1px solid #e0e0e0; }
+  .nav-tab { padding: 8px 16px; text-decoration: none; color: #888; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: #1a1a1a; }
+  .nav-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; padding: 12px 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; }
+  .toolbar-btn { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; }
+  .toolbar-btn:hover { background: #f0f0f0; }
+  .toolbar-summary { margin-left: auto; font-size: 13px; color: #888; }
+  .toolbar-summary .g { color: #2d7a2d; font-weight: 500; }
+  .toolbar-summary .b { color: #c0392b; font-weight: 500; }
+  .saved-indicator { font-size: 11px; color: #2d7a2d; opacity: 0; transition: opacity 0.3s; }
+  .saved-indicator.show { opacity: 1; }
+
+  .scenario-jump { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .jump-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer; text-decoration: none; }
+  .jump-btn:hover { background: #f0f0f0; color: #1a1a1a; }
+
+  .scenario { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+  .scenario-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 0.75rem; flex-wrap: wrap; }
+  .scenario-num { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #aaa; }
+  .scenario-title { font-size: 17px; font-weight: 500; }
+  .scenario-marks { font-size: 12px; color: #888; margin-left: auto; }
+  .scenario-context { font-size: 14px; color: #444; line-height: 1.6; padding: 12px 16px; background: #f9f9f7; border-left: 3px solid #888; border-radius: 4px; margin-bottom: 1.25rem; }
+  .scenario-context strong { color: #1a1a1a; }
+
+  .part { border-top: 1px solid #f0f0ec; padding: 1rem 0; }
+  .part:first-of-type { border-top: none; padding-top: 0; }
+  .part:last-of-type { padding-bottom: 0; }
+  .part-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .part-ref { font-weight: 500; font-size: 14px; color: #1a1a1a; min-width: 50px; }
+  .part-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; padding: 2px 8px; border: 1px solid #e0e0e0; border-radius: 10px; }
+  .part-marks { font-size: 12px; color: #888; margin-left: auto; }
+  .part-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .part-status.got { background: #f0faf0; color: #2d7a2d; border: 1px solid #cfe8cf; }
+  .part-status.review { background: #fdf0f0; color: #c0392b; border: 1px solid #f0d0cc; }
+  .part-question { font-size: 14px; line-height: 1.6; color: #1a1a1a; margin-bottom: 0.75rem; }
+  .answer-toggle { padding: 6px 14px; border-radius: 6px; border: 1px solid #1a1a1a; background: #1a1a1a; color: #fff; font-size: 13px; cursor: pointer; }
+  .answer-toggle:hover { background: #333; }
+  .answer-toggle.hide { background: #fff; color: #1a1a1a; }
+  .answer-box { display: none; margin-top: 0.75rem; padding: 12px 16px; background: #f9f9f7; border-left: 3px solid #2d7a2d; border-radius: 4px; font-size: 13px; line-height: 1.7; color: #1a1a1a; white-space: pre-wrap; }
+  .answer-box.show { display: block; }
+  .self-rate { display: none; gap: 8px; margin-top: 0.75rem; align-items: center; }
+  .self-rate.show { display: flex; }
+  .self-rate-label { font-size: 12px; color: #888; margin-right: 4px; }
+  .rate-btn { font-size: 12px; padding: 4px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  .rate-btn.got { color: #2d7a2d; border-color: #2d7a2d; }
+  .rate-btn.got.active { background: #2d7a2d; color: #fff; }
+  .rate-btn.review { color: #c0392b; border-color: #c0392b; }
+  .rate-btn.review.active { background: #c0392b; color: #fff; }
+  .rate-btn.clear { color: #888; }
+
+  @media (max-width: 600px) {
+    .scenario { padding: 1rem; }
+    .toolbar-summary { width: 100%; margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="nav-tabs">
+    <a href="flashcards.html" class="nav-tab">Flashcards</a>
+    <a href="mcq.html" class="nav-tab">MCQ Practice</a>
+    <a href="exam-practice.html" class="nav-tab active">Exam Practice</a>
+  </nav>
+  <h1>CM52067 — Exam Practice</h1>
+  <p class="subtitle">Long-form scenario questions from the mock paper. Be concise, be objective — as long as the answer is there you get the marks. Tap <strong>Show answer</strong> to reveal each model answer.</p>
+
+  <div class="toolbar">
+    <button class="toolbar-btn" onclick="showAll()">Show all answers</button>
+    <button class="toolbar-btn" onclick="hideAll()">Hide all answers</button>
+    <button class="toolbar-btn" onclick="resetProgress()">Reset progress</button>
+    <span class="saved-indicator" id="savedIndicator">✓ saved</span>
+    <span class="toolbar-summary" id="summary"></span>
+  </div>
+
+  <div class="scenario-jump" id="scenarioJump"></div>
+
+  <div id="content"></div>
+</div>
+
+<script>
+const STORAGE_KEY = 'cm52067_exam_v1';
+
+const EXAM = [
+  {
+    id: 1,
+    title: "Citizen Science & CCTV",
+    scenario: "A local environment volunteer group is setting up a citizen science project which will allow users to report sightings of rare birds in and around Bath. This data will then be combined with a comprehensive CCTV network which monitors and records rare birds along the River Avon.",
+    parts: [
+      {
+        ref: "(a)(i)", topic: "Data", marks: 2,
+        question: "Participants in the citizen science project are asked to submit the following data for each sighting: Date, Time, Latitude, Longitude, Type of bird, Spotter's Phone Number. Storing this data in a relational database would require a primary key to be identified. Suggest a suitable primary key and justify your choice.",
+        answer: "PRIMARY KEY: composite of Date + Time + Latitude + Longitude (optionally + Phone Number).\n\nJUSTIFICATION: this combination uniquely identifies each sighting — two people cannot be at exactly the same place at exactly the same time reporting the same sighting.\n\nA surrogate auto-increment ID is also acceptable — guaranteed unique and not tied to mutable data values.\n\nDo NOT use Phone Number alone — people change phone numbers, which breaks the uniqueness guarantee and corrupts existing relationships."
+      },
+      {
+        ref: "(a)(ii)", topic: "Data", marks: 2,
+        question: "The charity would also provide users the option of uploading a photo of the bird. Photos are an example of unstructured data. Describe how the photo could be stored and related to the sighting entry.",
+        answer: "Mark 1 — STORE the photo in a NAMED cloud object store: AWS S3 bucket, Azure Blob Storage, or GCP Bucket. Be specific — 'unstructured data store' alone is not enough.\n\nMark 2 — LINK by storing the URL or file path returned by the bucket in the corresponding row of the relational sightings table, linking the sighting row to its photo."
+      },
+      {
+        ref: "(b)", topic: "Cloud", marks: 2,
+        question: "The charity has no paid employees and relies on volunteers who often lack technical experience. Given these limitations, explain whether the charity would benefit from cloud technologies.",
+        answer: "ANSWER: SaaS (Software as a Service).\n\nJUSTIFICATION: volunteers lack technical experience, so IaaS (manage OS + infrastructure) and PaaS (manage application deployments) are unsuitable. SaaS requires no technical setup — the software is just used as-is.\n\nALTERNATIVE VALID ANSWER: none of the above — even SaaS requires some onboarding, and with zero technical staff even that may be unmanageable. Either answer earns the marks if justified."
+      },
+      {
+        ref: "(c)", topic: "Data", marks: 3,
+        question: "The scalability of the data provided by citizen scientists vs. the CCTV network will be influenced by different elements of the Vs of Big Data. Compare and contrast the effect of the Big Vs on both the citizen science reports and the automated CCTV reports.",
+        answer: "VOLUME: CCTV is continuous and high; citizen science is sporadic and low — depends on people going outside.\n\nVELOCITY: CCTV streams constantly in real time; humans report slowly and unpredictably.\n\nVARIETY: citizen science has high variety — different devices, lighting, angles, skill levels; CCTV is more consistent but varies by camera angle and time of day.\n\nVERACITY: citizen science depends on human accuracy; CCTV depends on on-board model quality — a bad model gives low-veracity data even from a camera.\n\nVALUE: CCTV gives continuous monitoring; citizen science gives occasional but richer observations with human context.\n\nVARIABILITY: citizen science varies enormously by reporter, time, season; CCTV is steadier but shifts with seasonal lighting/weather."
+      },
+      {
+        ref: "(d)", topic: "ML/MLOps", marks: 1,
+        question: "The CCTV cameras use an on-board image classification model to determine the type of bird. However, during winter the feathers of some birds change colour. What problem is this known as?",
+        answer: "CONCEPT DRIFT.\n\nThe mapping between input (bird image) and correct output (species) changes as the real world changes. The model was trained on summer plumage and now sees winter plumage — the concept it learned no longer matches reality.\n\n(Data skew is also accepted; concept drift is more precise.)"
+      }
+    ]
+  },
+  {
+    id: 2,
+    title: "Library Loan Application",
+    scenario: "A university IT department is developing a desktop application for managing library book loans. The application is in early development: some functions attempt to return values from branches that should return nothing, array indices are sometimes computed from user input without bounds checks, and several variables are assigned values that are immediately overwritten. The team wants to catch as many issues as possible before running the program.",
+    parts: [
+      {
+        ref: "(a)", topic: "Static Analysis", marks: 4,
+        question: "Explain what static checking is and why it is particularly valuable before the code is executed.",
+        answer: "DEFINITION: static analysis = analysing source code WITHOUT executing it — like a spell checker for code.\n\nCONTRAST: dynamic analysis runs the code.\n\nWHY VALUABLE BEFORE EXECUTION:\n(1) Cost of fixing a defect grows the later it is found — minutes on the developer's machine vs formal change control delaying release.\n(2) It finds problems invisible to a human reader — memory leaks across complex paths, buffer overflows, null pointer dereferences.\n\nFOR THE LIBRARY APP: catches the listed problems before the code ever runs, fixing them cheaply at the developer's IDE."
+      },
+      {
+        ref: "(b)", topic: "Static Analysis", marks: 6,
+        question: "Identify three defects from the scenario above that static analysis tools would likely detect. For each defect, explain why static checking is well suited to finding it.",
+        answer: "1) DEAD / UNREACHABLE CODE (functions returning from a branch that should return nothing).\nWhy static finds it: the tool traces every possible execution path and flags code no path can reach. Humans miss this — Apple SSL 'goto fail' was this exact defect.\n\n2) BUFFER OVERFLOW (array indices computed from user input without bounds checks).\nWhy static finds it: the tool tracks buffer size and the range of possible index values; if the index can exceed the buffer size on any path it is flagged. Ariane 5 rocket failure was a buffer overflow.\n\n3) DEAD ASSIGNMENT / UNINITIALISED VARIABLE (variables assigned values that are immediately overwritten).\nWhy static finds it: data flow analysis tracks every write and read; if a write is overwritten before any read, the assignment is dead and gets flagged."
+      },
+      {
+        ref: "(c)", topic: "Static Analysis", marks: 3,
+        question: "According to industry research discussed in lectures (e.g., Coverity scan data), a small number of checker categories account for the majority of critical defects discovered. Name two of these critical defect categories and give a concrete example of how one might appear in the library loan application.",
+        answer: "Category 1: MEMORY ERRORS — leaks, buffer overflows, null pointer dereferences.\n\nCategory 2: SECURITY VULNERABILITIES — OWASP Top 10 (broken access control, cryptographic failures).\n\nCONCRETE LIBRARY-APP EXAMPLE: a book ID typed by a user is used directly as an array index with no bounds check before accessing the book array — this is a buffer overflow (memory error) AND a security vulnerability, because an attacker can craft input to read arbitrary memory or crash the service."
+      },
+      {
+        ref: "(d)", topic: "Static Analysis", marks: 4,
+        question: "Static analysis tools often report false positives. Describe two examples of false positives that might occur in this project and explain how the development team should handle them.",
+        answer: "DEFINITION: false positive = the tool reports a defect that is not actually a real defect — the tool is being conservative without full runtime context.\n\nEXAMPLE 1: tool flags a variable as potentially uninitialised, but a guard condition higher up always sets it in practice. The tool cannot prove this statically.\n\nEXAMPLE 2: tool flags a possible null dereference on a Book object, but every call site passes a non-null object. The tool treats every pointer as potentially null.\n\nHOW TO HANDLE: do NOT ignore the tool. Manually review each finding, confirm it is genuinely safe, and suppress with a code annotation/comment that explains WHY it is not a real issue, so future reviewers understand."
+      }
+    ]
+  },
+  {
+    id: 3,
+    title: "Food Delivery Mobile App",
+    scenario: "You are advising a team developing a food delivery mobile app. The app allows customers to browse restaurant menus, add items to a basket, apply discount codes, and complete checkout. The prototype is now functional, and the team needs to establish a comprehensive testing strategy.",
+    parts: [
+      {
+        ref: "(a)", topic: "Testing", marks: 4,
+        question: "Explain the difference between black-box testing and white-box testing. Describe how each approach could be applied to the app's discount code validation feature.",
+        answer: "BLACK-BOX: test cases derived from the SPECIFICATION only — no knowledge of implementation needed.\nFor discount codes: valid code accepts and applies discount; expired code rejects with clear message; invalid format rejects; empty string rejects. The tester does not see the code.\n\nWHITE-BOX: test cases derived from the CODE STRUCTURE — requires seeing the code.\nFor discount codes: inspect every if/else branch in the validation logic (format check, expiry check, usage-limit check) and design tests that hit each true/false branch. White-box catches branches black-box tests might leave unexercised."
+      },
+      {
+        ref: "(b)", topic: "Testing", marks: 6,
+        question: "Propose three black-box test cases for the basket functionality (adding/removing items, updating quantities), ensuring they cover boundary or edge-case behaviour. Explain why each test case is important.",
+        answer: "TEST CASE 1: Add 0 items / checkout with empty basket.\nBoundary: lower bound — 0 is always a special case.\nWhy important: systems often crash or behave wrongly at zero (divide-by-zero on average price, null total).\n\nTEST CASE 2: Add exactly 1 item then remove it.\nBoundary: the 1 → 0 transition.\nWhy important: tests basket correctly reaches the empty state rather than going negative, losing the item, or crashing.\n\nTEST CASE 3: Add the maximum allowed quantity of a single item (and one above the maximum).\nBoundary: upper bound of the quantity field.\nWhy important: if quantity is a fixed-width integer with a limit, exceeding it could overflow, be silently truncated, or break the price calculation."
+      },
+      {
+        ref: "(c)", topic: "MC/DC", marks: 4,
+        question: "Define branch coverage and MC/DC (Modified Condition/Decision Coverage). Describe a situation in the checkout process where MC/DC would provide stronger assurance than simple branch coverage alone.",
+        answer: "BRANCH COVERAGE: every true/false branch in every conditional is executed at least once. For a single if statement only 2 tests are needed.\n\nMC/DC: each individual Boolean condition in a compound decision must INDEPENDENTLY affect the outcome — flipping A alone must change the result, flipping B alone must change it, etc.\n\nCHECKOUT EXAMPLE: 'if (payment_valid AND stock_available AND user_verified) complete order'.\n• Branch coverage passes with just 2 tests (whole expression true once, false once) — could miss a bug in any single condition (e.g. stock_available wired backwards).\n• MC/DC requires a minimum of n+1 = 4 tests showing each condition independently affects the outcome — catching the bug branch coverage would miss."
+      },
+      {
+        ref: "(d)", topic: "Testing", marks: 4,
+        question: "A bug report indicates that the app crashes when a customer applies two discount codes in rapid succession. Explain how this defect might have escaped earlier testing, and propose two unit tests and one system test that would prevent similar issues in future.",
+        answer: "HOW IT ESCAPED: earlier tests ran sequentially and in isolation. Unit tests mock external state so timing / shared-state issues do not appear. Race conditions and state-management bugs only surface when two operations happen simultaneously or in rapid succession — no existing test had covered that specific sequence.\n\nUNIT TEST 1: apply one valid discount code, assert the final price and discount state are correct.\n\nUNIT TEST 2: apply a second valid discount code after the first, assert the state after the second is correct AND the first code's state has not been corrupted.\n\nSYSTEM TEST: end-to-end, apply two discount codes in rapid succession (automated, minimal delay between calls), verify the basket total and applied-codes list are both correct AND the app does not crash."
+      }
+    ]
+  },
+  {
+    id: 4,
+    title: "City Council Issue-Reporting System",
+    scenario: "A city council is developing a web-based system that allows residents to report local issues (e.g. potholes, broken streetlights, overflowing bins). The system is technically correct and stable, but early internal feedback suggests residents find it confusing and frustrating to use. You have been asked to advise the team on how to evaluate and improve the system's usability.",
+    parts: [
+      {
+        ref: "(a)", topic: "HCI", marks: 4,
+        question: "Explain why the system can still fail even if it is functionally correct, making reference to Human–Computer Interaction (HCI) principles.",
+        answer: "CORE ARGUMENT: correctness means the software does what its specification requires. Usability means real users can achieve their goals effectively, efficiently, and without frustration. These are INDEPENDENT — a system can compute the right answer but present it in a way that confuses users, uses unfamiliar language, or requires steps that do not match how users think.\n\nHCI PRINCIPLES TO REFERENCE:\n• MENTAL MODELS — users expect the system to work like things they know; mismatch causes errors.\n• AFFORDANCE — the interface should signal what actions are possible; a button that doesn't look interactive won't be used.\n• FEEDBACK — the system must tell users what happened after an action; missing feedback leads to repeated submissions.\n• COGNITIVE LOAD — too many steps or options overwhelm users into giving up.\n• CONTEXT OF USE — works fine in a lab but fails on a phone, outdoors, in the rain, under time pressure.\n\nFunctionally correct ≠ usable."
+      },
+      {
+        ref: "(b)", topic: "Evaluation", marks: 4,
+        question: "The team has limited time and no access to real users before release. Propose one suitable analytic (inspection-based) evaluation method, briefly explain how it works, and explain why it is appropriate in this situation.",
+        answer: "METHOD: HEURISTIC EVALUATION.\n\nHOW IT WORKS: 3–5 experts independently evaluate the interface against Nielsen's 10 usability heuristics (visibility of system status, match between system and real world, error prevention, user control and freedom, consistency, recognition over recall, etc.). Each expert lists every violation; findings are aggregated; problems found by multiple experts are weighted as more serious. No users required.\n\nWHY APPROPRIATE: the team has no users, limited time, and needs results quickly. Heuristic evaluation uses only expert time, is fast and cheap, and identifies obvious usability violations before release — far better than no evaluation.\n\nCOGNITIVE WALKTHROUGH is an equally valid alternative — experts simulate a user stepping through a task, asking at each step: will the user know what to do? Can they do it? Will they get feedback?"
+      },
+      {
+        ref: "(c)", topic: "Evaluation", marks: 2,
+        question: "Give one limitation of relying only on analytic evaluation methods and briefly explain how this limitation could be addressed once the system is live.",
+        answer: "LIMITATION: EXPERT BIAS. Experts bring technical knowledge real users do not have, so they do not experience the same confusion — they find problems users would not notice AND miss problems users actually struggle with.\n\nADDRESS ONCE LIVE: use EMPIRICAL methods with real users —\n• Usability testing — observe real users completing tasks.\n• Surveys — collect wider feedback at scale.\n• Analytics — track where users abandon flows or make errors in the live system."
+      }
+    ]
+  }
+];
+
+let state = {};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) { state = {}; return; }
+    const parsed = JSON.parse(raw);
+    state = (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch (e) { state = {}; }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const ind = document.getElementById('savedIndicator');
+    if (ind) {
+      ind.classList.add('show');
+      clearTimeout(saveState._t);
+      saveState._t = setTimeout(() => ind.classList.remove('show'), 1200);
+    }
+  } catch (e) {}
+}
+
+function partKey(qid, ref) { return qid + ref; }
+
+function getPart(qid, ref) {
+  const key = partKey(qid, ref);
+  return state[key] || { revealed: false, status: null };
+}
+
+function setPart(qid, ref, patch) {
+  const key = partKey(qid, ref);
+  state[key] = Object.assign({ revealed: false, status: null }, state[key] || {}, patch);
+  saveState();
+}
+
+function resetProgress() {
+  if (!confirm('Reset all exam practice progress (revealed answers + got/review marks)?')) return;
+  state = {};
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+}
+
+function showAll() {
+  EXAM.forEach(q => q.parts.forEach(p => {
+    const cur = getPart(q.id, p.ref);
+    state[partKey(q.id, p.ref)] = Object.assign({}, cur, { revealed: true });
+  }));
+  saveState();
+  render();
+}
+
+function hideAll() {
+  EXAM.forEach(q => q.parts.forEach(p => {
+    const cur = getPart(q.id, p.ref);
+    state[partKey(q.id, p.ref)] = Object.assign({}, cur, { revealed: false });
+  }));
+  saveState();
+  render();
+}
+
+function toggleAnswer(qid, ref) {
+  const cur = getPart(qid, ref);
+  setPart(qid, ref, { revealed: !cur.revealed });
+  renderPart(qid, ref);
+  updateSummary();
+}
+
+function setStatus(qid, ref, status) {
+  const cur = getPart(qid, ref);
+  const next = (cur.status === status) ? null : status;
+  setPart(qid, ref, { status: next });
+  renderPart(qid, ref);
+  updateSummary();
+}
+
+function partElId(qid, ref) { return 'part-' + qid + '-' + ref.replace(/[^a-z0-9]/gi, ''); }
+
+function renderPart(qid, ref) {
+  const el = document.getElementById(partElId(qid, ref));
+  if (!el) return;
+  const q = EXAM.find(x => x.id === qid);
+  const p = q.parts.find(x => x.ref === ref);
+  const st = getPart(qid, ref);
+
+  const statusBadge = st.status === 'got'
+    ? '<span class="part-status got">✓ Got it</span>'
+    : st.status === 'review'
+      ? '<span class="part-status review">✗ Needs review</span>'
+      : '';
+
+  el.innerHTML = `
+    <div class="part-head">
+      <span class="part-ref">${p.ref}</span>
+      <span class="part-tag">${p.topic}</span>
+      ${statusBadge}
+      <span class="part-marks">[${p.marks} mark${p.marks === 1 ? '' : 's'}]</span>
+    </div>
+    <div class="part-question">${escapeHtml(p.question)}</div>
+    <button class="answer-toggle ${st.revealed ? 'hide' : ''}" onclick="toggleAnswer(${qid}, '${p.ref}')">${st.revealed ? 'Hide answer' : 'Show answer'}</button>
+    <div class="answer-box ${st.revealed ? 'show' : ''}">${escapeHtml(p.answer)}</div>
+    <div class="self-rate ${st.revealed ? 'show' : ''}">
+      <span class="self-rate-label">How did you do?</span>
+      <button class="rate-btn got ${st.status === 'got' ? 'active' : ''}" onclick="setStatus(${qid}, '${p.ref}', 'got')">✓ Got it</button>
+      <button class="rate-btn review ${st.status === 'review' ? 'active' : ''}" onclick="setStatus(${qid}, '${p.ref}', 'review')">✗ Needs review</button>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function updateSummary() {
+  let total = 0, revealed = 0, got = 0, review = 0;
+  EXAM.forEach(q => q.parts.forEach(p => {
+    total++;
+    const st = getPart(q.id, p.ref);
+    if (st.revealed) revealed++;
+    if (st.status === 'got') got++;
+    if (st.status === 'review') review++;
+  }));
+  document.getElementById('summary').innerHTML =
+    `<span class="g">✓ ${got}</span> · <span class="b">✗ ${review}</span> · Revealed ${revealed}/${total}`;
+}
+
+function render() {
+  const jump = document.getElementById('scenarioJump');
+  jump.innerHTML = EXAM.map(q => {
+    const totalMarks = q.parts.reduce((s, p) => s + p.marks, 0);
+    return `<a class="jump-btn" href="#q${q.id}">Q${q.id} · ${q.title} (${totalMarks})</a>`;
+  }).join('');
+
+  const content = document.getElementById('content');
+  content.innerHTML = EXAM.map(q => {
+    const totalMarks = q.parts.reduce((s, p) => s + p.marks, 0);
+    return `
+      <section class="scenario" id="q${q.id}">
+        <div class="scenario-head">
+          <span class="scenario-num">Question ${q.id}</span>
+          <span class="scenario-title">${escapeHtml(q.title)}</span>
+          <span class="scenario-marks">${totalMarks} marks total</span>
+        </div>
+        <div class="scenario-context"><strong>Scenario.</strong> ${escapeHtml(q.scenario)}</div>
+        ${q.parts.map(p => `<div class="part" id="${partElId(q.id, p.ref)}"></div>`).join('')}
+      </section>
+    `;
+  }).join('');
+
+  EXAM.forEach(q => q.parts.forEach(p => renderPart(q.id, p.ref)));
+  updateSummary();
+}
+
+loadState();
+render();
+</script>
+</body>
+</html>

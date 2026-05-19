@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM52067 — Software Development Revision</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 2rem 1.5rem; display: flex; align-items: center; justify-content: center; }
+  .home { max-width: 640px; width: 100%; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; margin-bottom: 6px; }
+  h1 { font-size: 26px; font-weight: 500; margin-bottom: 0.5rem; line-height: 1.25; }
+  .lead { font-size: 14px; color: #666; line-height: 1.6; margin-bottom: 2rem; }
+  .cards { display: grid; gap: 12px; }
+  .card { display: block; padding: 1.25rem 1.5rem; background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; text-decoration: none; color: #1a1a1a; transition: border-color 0.15s, transform 0.15s; }
+  .card:hover { border-color: #1a1a1a; transform: translateY(-1px); }
+  .card-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 4px; }
+  .card-title { font-size: 16px; font-weight: 500; }
+  .card-arrow { margin-left: auto; color: #ccc; font-size: 18px; transition: color 0.15s; }
+  .card:hover .card-arrow { color: #1a1a1a; }
+  .card-desc { font-size: 13px; color: #666; line-height: 1.5; }
+  .foot { font-size: 12px; color: #aaa; margin-top: 2.5rem; text-align: center; }
+  .foot a { color: #888; text-decoration: none; }
+  .foot a:hover { color: #1a1a1a; }
+</style>
+</head>
+<body>
+<div class="home">
+  <div class="eyebrow">University of Bath</div>
+  <h1>CM52067 — Software Development</h1>
+  <p class="lead">Revision tools for the module. Your progress is saved in your browser — close the tab and pick up where you left off.</p>
+  <div class="cards">
+    <a class="card" href="flashcards.html">
+      <div class="card-head">
+        <div class="card-title">Flashcards</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="card-desc">Quick-recall cards organised by topic. Tap to flip, rate yourself, retry missed cards.</div>
+    </a>
+    <a class="card" href="mcq.html">
+      <div class="card-head">
+        <div class="card-title">MCQ Practice</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="card-desc">Multiple choice with immediate feedback and explanations grounded in the lectures.</div>
+    </a>
+    <a class="card" href="exam-practice.html">
+      <div class="card-head">
+        <div class="card-title">Exam Practice</div>
+        <div class="card-arrow">→</div>
+      </div>
+      <div class="card-desc">Scenario-grouped long-form mock paper questions with hidden model answers and self-rating.</div>
+    </a>
+  </div>
+  <p class="foot"><a href="https://www.kyleosullivan.uk">kyleosullivan.uk</a></p>
+</div>
+</body>
+</html>

@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM52067 MCQ Practice</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1.5rem; }
+  .app { max-width: 720px; margin: 0 auto; }
+  h1 { font-size: 20px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 1rem; }
+  .topic-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .topic-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer; }
+  .topic-btn.active { background: #1a1a1a; color: #fff; border-color: transparent; }
+  .progress-bar { height: 4px; background: #e0e0e0; border-radius: 2px; margin-bottom: 1rem; }
+  .progress-fill { height: 100%; background: #2d7a2d; border-radius: 2px; transition: width 0.3s; }
+  .meta { display: flex; justify-content: space-between; font-size: 13px; color: #888; margin-bottom: 1rem; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+  .topic-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #aaa; margin-bottom: 0.75rem; }
+  .question { font-size: 16px; font-weight: 500; line-height: 1.5; margin-bottom: 1.25rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option { padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-size: 14px; line-height: 1.4; transition: all 0.15s; background: #fff; text-align: left; width: 100%; }
+  .option:hover:not(:disabled) { border-color: #999; background: #f9f9f9; }
+  .option.correct { border-color: #2d7a2d; background: #f0faf0; color: #1a4d1a; }
+  .option.wrong { border-color: #c0392b; background: #fdf0f0; color: #7a1a1a; }
+  .option.show-correct { border-color: #2d7a2d; background: #f0faf0; color: #1a4d1a; }
+  .option:disabled { cursor: default; }
+  .explanation { margin-top: 1rem; padding: 12px 16px; background: #f5f5f0; border-radius: 8px; font-size: 13px; line-height: 1.6; color: #444; border-left: 3px solid #888; display: none; }
+  .explanation.show { display: block; }
+  .explanation.correct-exp { border-left-color: #2d7a2d; }
+  .explanation.wrong-exp { border-left-color: #c0392b; }
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+  .nav-btn { padding: 8px 20px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 14px; }
+  .nav-btn:disabled { opacity: 0.4; cursor: default; }
+  .nav-btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .score-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 2rem; text-align: center; }
+  .score-big { font-size: 48px; font-weight: 500; margin: 0.5rem 0; }
+  .score-label { font-size: 14px; color: #888; margin-bottom: 1.5rem; }
+  .score-breakdown { display: flex; gap: 1rem; justify-content: center; font-size: 13px; margin-bottom: 1.5rem; }
+  .score-breakdown .g { color: #2d7a2d; }
+  .score-breakdown .b { color: #c0392b; }
+  .restart-btn { padding: 10px 24px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 14px; margin: 0 4px; }
+  .restart-btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .shuffle-btn { font-size: 12px; color: #888; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+  .nav-tabs { display: flex; gap: 4px; margin-bottom: 1rem; border-bottom: 1px solid #e0e0e0; }
+  .nav-tab { padding: 8px 16px; text-decoration: none; color: #888; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: #1a1a1a; }
+  .nav-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+  .meta-actions { display: flex; gap: 12px; align-items: center; }
+  .saved-indicator { font-size: 11px; color: #2d7a2d; opacity: 0; transition: opacity 0.3s; }
+  .saved-indicator.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="nav-tabs">
+    <a href="flashcards.html" class="nav-tab">Flashcards</a>
+    <a href="mcq.html" class="nav-tab active">MCQ Practice</a>
+    <a href="exam-practice.html" class="nav-tab">Exam Practice</a>
+  </nav>
+  <h1>CM52067 — MCQ Practice</h1>
+  <p class="subtitle">Based on lecture content. Select a topic or practice all questions.</p>
+  <div class="topic-bar" id="topicBar"></div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="meta">
+    <span id="qMeta"></span>
+    <div class="meta-actions">
+      <span class="saved-indicator" id="savedIndicator">✓ saved</span>
+      <button class="shuffle-btn" onclick="shuffleAndRestart()">Shuffle</button>
+      <button class="shuffle-btn" onclick="resetProgress()">Reset progress</button>
+    </div>
+  </div>
+  <div id="quizArea"></div>
+</div>
+
+<script>
+const ALL_Q = [
+
+// ── STATIC ANALYSIS ──────────────────────────────────────────────────────────
+{t:"Static Analysis", q:"What is static analysis?",
+ opts:["Running the code and checking outputs","Analysing source code without executing it","Testing the user interface manually","Reviewing the architecture diagram"],
+ ans:1, exp:"Static analysis examines code without running it — like a spell checker. The contrast is dynamic analysis, which actually executes the code."},
+
+{t:"Static Analysis", q:"Which famous rocket failure was caused by a buffer overflow that static analysis would have detected?",
+ opts:["Space Shuttle Challenger","Ariane 5","Saturn V","Falcon 9"],
+ ans:1, exp:"The Ariane 5 rocket explosion was caused by a buffer overflow — a 64-bit number was stored in a 16-bit variable. The lecturer specifically cited this as a case static analysis would have caught."},
+
+{t:"Static Analysis", q:"The Apple SSL 'goto fail' bug is an example of which defect type?",
+ opts:["Memory leak","Buffer overflow","Dead/unreachable code","Null pointer dereference"],
+ ans:2, exp:"A copy-paste error created an unconditional 'goto fail' statement, making all subsequent security checks dead/unreachable code. Static analysis would have found it immediately."},
+
+{t:"Static Analysis", q:"What is a false positive in static analysis?",
+ opts:["The tool misses a real defect","The tool reports a defect that is not actually a real problem","The tool crashes on complex code","The tool takes too long to run"],
+ ans:1, exp:"A false positive is when the tool reports something as a defect when it is actually safe. The tool applies conservative rules without full runtime context."},
+
+{t:"Static Analysis", q:"According to the lectures, what are the two main critical defect categories that Coverity scan data shows account for most critical defects?",
+ opts:["Performance issues and memory errors","Memory errors and security vulnerabilities (OWASP Top 10)","Dead code and infinite loops","Null pointers and uninitialised variables only"],
+ ans:1, exp:"The lecturer cited Coverity showing that memory errors (leaks, overflow, null dereference) and security vulnerabilities (OWASP Top 10) account for the majority of critical defects."},
+
+{t:"Static Analysis", q:"What does technical debt refer to?",
+ opts:["The cost of software licences","Quality issues ignored during development that accumulate over time","The time taken to write tests","The financial cost of a data breach"],
+ ans:1, exp:"Technical debt is like financial debt — quality issues left unfixed accumulate and become more expensive to fix over time. The lecturer described a badly coupled codebase as a 'crime scene'."},
+
+{t:"Static Analysis", q:"What is coupling in software architecture?",
+ opts:["When two components are completely independent","When two components depend on each other","When a component has high test coverage","When pipelines are chained together"],
+ ans:1, exp:"Coupling is when two components depend on each other — A uses B, B uses A. Bad because your change breaks my code. The fix is decoupling."},
+
+{t:"Static Analysis", q:"Which static analysis tool was used in the Siemens Healthineers case study described in the DevOps lecture?",
+ opts:["SonarQube","Trivy","Clockwork","ESLint"],
+ ans:2, exp:"The lecturer specifically mentioned Clockwork (from Perforce) as the static analysis tool used in the Siemens Healthineers pipeline. They also mentioned QVC."},
+
+{t:"Static Analysis", q:"What is a dead assignment?",
+ opts:["Code that cannot be reached by any execution path","A variable that is assigned a value then immediately overwritten before being read","A function that always returns null","A loop that never terminates"],
+ ans:1, exp:"A dead assignment is when a variable is written to but that value is never read before the variable is overwritten again. The first assignment is wasted and usually indicates a logic error."},
+
+{t:"Static Analysis", q:"What metric did the lecturer say well-structured codebases should have above 90%?",
+ opts:["Test coverage","Stability","Code duplication reduction","Pipeline pass rate"],
+ ans:1, exp:"The lecturer said stability — the degree to which components can change without cascading impact elsewhere — should be above 90% in a well-structured codebase."},
+
+// ── TESTING ───────────────────────────────────────────────────────────────────
+{t:"Testing", q:"What is the key difference between black-box and white-box testing?",
+ opts:["Black-box requires more tools","Black-box is derived from the specification; white-box is derived from the code structure","White-box only tests security","Black-box always has better coverage"],
+ ans:1, exp:"Black-box derives test cases from the specification — no knowledge of implementation needed. White-box derives them from the code structure and requires seeing the code."},
+
+{t:"Testing", q:"What is equivalence partitioning?",
+ opts:["Testing every possible input value","Dividing inputs into groups where all values behave the same and testing one per group","Testing only boundary values","Running tests in parallel"],
+ ans:1, exp:"Equivalence partitioning divides the input space into classes where all values behave the same. Testing one value per class is sufficient — testing 17 tells you the same as testing 5 if both are below a minimum boundary."},
+
+{t:"Testing", q:"According to the lecturer, where do most software errors occur in an input range?",
+ opts:["In the middle of valid ranges","At the boundaries of partitions","In negative number inputs","In string inputs only"],
+ ans:1, exp:"The lecturer stated that most errors occur at the boundaries. This is why boundary value analysis specifically tests at and just around the edges of each partition — off-by-one errors, <= vs < bugs, etc."},
+
+{t:"Testing", q:"In the testing recipe from the lectures, what is Step 1?",
+ opts:["Write black-box tests","Ensure 100% branch coverage","Make it run — write the simplest possible test first","Write negative tests"],
+ ans:2, exp:"The 5-step testing recipe starts with 'make it run' — the simplest possible test to get the test infrastructure working. Then: black-box, negative tests, special considerations, coverage."},
+
+{t:"Testing", q:"What is a stub in software testing?",
+ opts:["A complete fake replacement for an external function used in isolation testing","A wrapper that intercepts calls to a real function","A type of boundary value test","A report generated by the pipeline"],
+ ans:0, exp:"A stub completely replaces an external function with a fake version. In Java/Python this is called a mock. Contrast with a wrapper, which intercepts calls to the real function rather than replacing it."},
+
+{t:"Testing", q:"What is a wrapper in software testing?",
+ opts:["A complete replacement for an external function","Sits between your code and a real external function, can modify inputs/outputs","A test framework configuration file","A type of equivalence class"],
+ ans:1, exp:"A wrapper intercepts calls to a real external function without replacing it. The lecturer demonstrated wrapping malloc to simulate out-of-memory — the real malloc still existed but the wrapper forced it to return null."},
+
+{t:"Testing", q:"A function has 100% branch coverage and all tests pass. A wrapper simulating out-of-memory is added and the function crashes. What does this demonstrate?",
+ opts:["Branch coverage is unnecessary","Coverage is necessary but not sufficient — it tells you what was tested, not what could go wrong","The function was correctly implemented","Wrappers should not be used in testing"],
+ ans:1, exp:"This was the key demo from the lectures. 100% coverage did not catch the out-of-memory crash because no test had ever caused malloc to return null. Coverage measures lines executed, not values tested."},
+
+{t:"Testing", q:"What is negative testing?",
+ opts:["Testing that software handles negative numbers","Testing that software does NOT do what it should not do","Testing with no test data","Testing in a negative/dark mode environment"],
+ ans:1, exp:"Negative testing checks that software doesn't do what it shouldn't — that it handles invalid, unexpected, or hostile inputs safely rather than crashing. The lecturer described it as: does our software not do what it's not supposed to?"},
+
+{t:"Testing", q:"Which test level uses stubs to isolate a single function from all its dependencies?",
+ opts:["System testing","Integration testing","Unit testing","Acceptance testing"],
+ ans:2, exp:"Unit tests test a single function in isolation using stubs/mocks to replace all dependencies. Integration tests use wrappers instead of stubs to include real functions. System tests use no stubs at all."},
+
+{t:"Testing", q:"What is regression testing?",
+ opts:["Testing software on older hardware","Re-running the existing test suite after any change to verify nothing previously working has broken","Testing only new features","Testing performance under load"],
+ ans:1, exp:"Regression testing re-runs existing tests after every code change to catch unintended side effects. Automated in the pipeline — every merge to main triggers the full suite."},
+
+// ── MC/DC ─────────────────────────────────────────────────────────────────────
+{t:"MC/DC", q:"What does MC/DC stand for?",
+ opts:["Multiple Code/Dependency Coverage","Modified Condition/Decision Coverage","Minimum Coverage/Detection Criteria","Multi-Condition/Development Check"],
+ ans:1, exp:"MC/DC stands for Modified Condition/Decision Coverage. Each individual Boolean condition within a compound decision must independently affect the outcome of that decision."},
+
+{t:"MC/DC", q:"For the condition 'if (A AND B AND C)', how many tests does branch coverage require at minimum?",
+ opts:["8","4","3","2"],
+ ans:3, exp:"Branch coverage requires the whole condition to be true once and false once — just 2 tests. It does NOT test each condition independently, which means a bug in any single condition could go undetected."},
+
+{t:"MC/DC", q:"For the condition 'if (A AND B AND C)', what is the minimum number of tests MC/DC requires?",
+ opts:["8","4","2","6"],
+ ans:1, exp:"MC/DC requires a minimum of n+1 tests where n is the number of Boolean conditions. With 3 conditions, that's 4 tests minimum — enough to show each condition independently affects the outcome."},
+
+{t:"MC/DC", q:"Why does the 2^n problem make full condition coverage impractical?",
+ opts:["Modern processors cannot handle 2^n calculations","The number of required tests grows exponentially — 10 conditions needs 1,024 tests, 100 conditions needs more tests than atoms in the universe","Test tools cannot generate that many test cases","2^n coverage only applies to safety-critical systems"],
+ ans:1, exp:"Full condition coverage requires every combination of n Boolean conditions — 2^n tests. This grows exponentially and becomes completely impractical. MC/DC is the compromise that provides strong assurance at n+1 tests."},
+
+{t:"MC/DC", q:"Which aviation standard mandates MC/DC coverage?",
+ opts:["ISO 26262","IEC 61508","DO-178C","MIL-STD-882"],
+ ans:2, exp:"DO-178C is the aviation software standard that mandates MC/DC coverage. The lecturer referenced Boeing 737 Max as an example of what happens when conditions are not fully tested."},
+
+{t:"MC/DC", q:"Why is MC/DC not typically required for a standard mobile app?",
+ opts:["Mobile apps are too simple for MC/DC","The overhead of designing MC/DC tests is not justified — cost of a defect is an annoyed user, not a fatal accident","MC/DC tools don't support mobile platforms","Mobile apps don't have Boolean conditions"],
+ ans:1, exp:"MC/DC is a safety-critical standard. For a mobile app the cost of a missed defect is an annoyed user. The overhead of MC/DC level testing for every condition is not justified by that risk level."},
+
+// ── DEVOPS ────────────────────────────────────────────────────────────────────
+{t:"DevOps", q:"What is the null release according to the lectures?",
+ opts:["A release with no new features","The answer to: if I change one line of code, what is every step needed to release it?","A failed deployment","A release to the null/dev environment"],
+ ans:1, exp:"The null release is the answer to: if I change one line of code, what is every step to release? The lecturer called it the most important interview question you can ask a team — it reveals their automation maturity."},
+
+{t:"DevOps", q:"In the T0/T1/T2/T3 pipeline model from the Siemens Healthineers case study, what happens at T0?",
+ opts:["Pre-release pipeline run","Merge to main branch","Static analysis runs in the developer's IDE before anything is committed","Feature branch push to server"],
+ ans:2, exp:"T0 is time zero — the developer's own machine, before committing. Static analysis (like Clockwork) runs in VS Code as code is written, catching issues before they even reach the shared codebase."},
+
+{t:"DevOps", q:"What triggers a T1 pipeline?",
+ opts:["A pre-release approval","A feature branch being pushed to the server","A merge to main","A weekly scheduled run"],
+ ans:1, exp:"T1 triggers when a feature branch is pushed to the server. It runs full build, static analysis, unit tests, and a CVE/dependency scan on the new branch code."},
+
+{t:"DevOps", q:"What additional outputs does the T3 pipeline generate compared to earlier stages?",
+ opts:["Only security reports","DocOps outputs: test evidence report, coverage summary, and requirements traceability matrix","Performance benchmarks only","User interface screenshots"],
+ ans:1, exp:"T3 is the pre-release pipeline and adds DocOps — automatically generated test evidence report, coverage summary, and requirements traceability matrix. The MHRA and clients expect these documents at each release."},
+
+{t:"DevOps", q:"What does DocOps mean in the context of DevOps pipelines?",
+ opts:["Documentation about DevOps processes","Automatically generating documentation (test reports, coverage reports) from the pipeline rather than writing it by hand","A tool for managing Docker containers","Daily operations documentation"],
+ ans:1, exp:"DocOps is automated documentation generation. The lecturer said he used to write these reports by hand — now a LaTeX container in the pipeline generates them automatically. Essential for regulated industries."},
+
+{t:"DevOps", q:"What does SBOM stand for?",
+ opts:["Software Build Operations Model","Software Bill of Materials","Static Binary Output Module","System Build and Operations Management"],
+ ans:1, exp:"SBOM stands for Software Bill of Materials — a complete list of every component, library, and dependency in the software and where each came from. Tools: Snyk, Mend, Black Duck."},
+
+{t:"DevOps", q:"What does SOUP stand for in the context of DevOps?",
+ opts:["Software Output Under Production","Software of Unknown Provenance","System Operations Unified Pipeline","Static Output Unit Processing"],
+ ans:1, exp:"SOUP stands for Software of Unknown Provenance — third-party code of unknown origin. The lecturer linked it to vibe coding with AI tools that install packages without the developer knowing what they contain."},
+
+{t:"DevOps", q:"In GitLab, what file contains the CI/CD pipeline configuration?",
+ opts:[".gitignore",".gitlab-ci.yml","pipeline.json","devops.config"],
+ ans:1, exp:"The .gitlab-ci.yml file (a hidden dot file) contains the pipeline configuration as code. The lecturer said YAML is 'the language of DevOps' and that this infrastructure as code is version-controlled alongside the application."},
+
+{t:"DevOps", q:"What is infrastructure as code (IaC)?",
+ opts:["Writing the application code in a specific language","Pipeline configuration and build scripts written as code files stored in the repository","Physical server configuration documents","Cloud billing management"],
+ ans:1, exp:"Infrastructure as code means writing pipeline config (YAML files, Dockerfiles, scripts) as code stored in the repository. It's version-controlled, reviewable, and auditable. DevOps engineers are sometimes called IaC engineers."},
+
+{t:"DevOps", q:"What was the DevOps platform built for Siemens Healthineers called, and what was its core workflow?",
+ opts:["The Verifier CDP, with isolate-verify-merge workflow","The Jenkins platform, with build-test-deploy workflow","The GitOps system, with branch-review-release workflow","The Parasoft platform, with scan-fix-release workflow"],
+ ans:0, exp:"The lecturer described building the Verifier Continuous Delivery Platform (CDP) for Siemens, supporting 1000 developers across Massachusetts and Beijing. The core workflow was isolate, verify, merge."},
+
+{t:"DevOps", q:"What is GitOps?",
+ opts:["A paid version of GitHub","Using Git as the single source of truth for everything — code, config, infrastructure, deployments","A Git branching strategy","A tool for automating Git merges"],
+ ans:1, exp:"GitOps means Git is the single source of truth. Any change to the environment happens by changing it in the Git repository, giving a full audit trail and the ability to roll back anything. When in doubt, what's in Git is the answer."},
+
+{t:"DevOps", q:"What is semantic versioning?",
+ opts:["Versioning based on the meaning of the code changes","Automated version numbering in the format major.minor.patch, built into the pipeline","Manual version numbering by the release manager","A git branching naming convention"],
+ ans:1, exp:"Semantic versioning is automated version numbering (major.minor.patch) built into the pipeline. The lecturer described automating version increment and labelling as part of the Siemens pipeline."},
+
+// ── ML/MLOPS ──────────────────────────────────────────────────────────────────
+{t:"ML/MLOps", q:"What does the CACE principle stand for?",
+ opts:["Changing Applications Creates Errors","Changing Anything Changes Everything","Continuous Analysis Creates Efficiency","Code Analysis and Compliance Engine"],
+ ans:1, exp:"CACE stands for Changing Anything Changes Everything. In ML systems, a change anywhere in the data pipeline — even an unrelated change — can alter model outputs with no error raised."},
+
+{t:"ML/MLOps", q:"What is concept drift?",
+ opts:["When the code logic gradually degrades","When the real world changes so the model's training data no longer represents what it encounters — the mapping between input and correct output changes","When data volumes increase over time","When model accuracy improves unexpectedly"],
+ ans:1, exp:"Concept drift is when the real world changes so the model's learned mapping no longer applies. The lecturer's example: bird feathers change colour in winter — the model trained on summer plumage fails on winter data."},
+
+{t:"ML/MLOps", q:"In the mock exam question about CCTV cameras misclassifying birds in winter, what is this problem most technically called?",
+ opts:["Data corruption","Data skew","Concept drift","Buffer overflow"],
+ ans:2, exp:"Concept drift is the most technically correct answer — the mapping between the bird and its classification changes as feathers change colour. The lecturer said data skew would also be accepted but concept drift is more precise."},
+
+{t:"ML/MLOps", q:"What is silent deployment of a machine learning model?",
+ opts:["Deploying a model with no logging","New model runs in parallel receiving real requests, outputs are never shown to users until validated","Deploying only to a small percentage of users","Deploying without notifying the client"],
+ ans:1, exp:"Silent deployment runs the new model in shadow — it receives real requests and outputs are monitored, but users never see the new model's output until the validation period passes. Then it is promoted or rolled back."},
+
+{t:"ML/MLOps", q:"What is canary deployment?",
+ opts:["Deploying in a test environment only","Incrementally routing a percentage of real users to the new model version","Deploying silently with no monitoring","Named after the programming language Canary"],
+ ans:1, exp:"Canary deployment routes a small percentage of real users to the new model (e.g. 10%, then 20%), expanding if the new model looks good. Named after canaries in coal mines — a small number exposed first to catch problems."},
+
+{t:"ML/MLOps", q:"Why is canary deployment problematic in a hospital clinical AI context?",
+ opts:["It requires too much compute","Some clinicians on the same ward would get model v1 outputs while others get model v2 — ethically inconsistent clinical decision support","Hospital networks cannot support canary routing","Canary deployment requires Docker which hospitals don't use"],
+ ans:1, exp:"Canary means different clinicians simultaneously seeing different model outputs. For clinical decision support on the same ward this is ethically problematic. Silent deployment keeps all clinicians on the validated model."},
+
+{t:"ML/MLOps", q:"What is the difference between static and dynamic model deployment?",
+ opts:["Static is faster, dynamic is slower","Static: model bundled with app on device, no network needed, but IP exposed. Dynamic: model on server behind API, protected, needs internet","Static uses less memory","Dynamic deployment requires Docker"],
+ ans:1, exp:"Static deployment bundles the model with the app — works offline but exposes the model's IP. Dynamic deployment hosts the model on a server behind an API — protected and scalable but requires connectivity."},
+
+{t:"ML/MLOps", q:"According to the lecture transcript, roughly what percentage of ML projects between 2017-2021 failed to reach deployment?",
+ opts:["40%","60%","86%","25%"],
+ ans:2, exp:"The lecturer stated that 86% of a survey of ML projects across the US failed during 2017-2021, mostly because of infrastructure and deployment challenges rather than the ML itself. 'A lot of the time, the ML is the easy part.'"},
+
+{t:"ML/MLOps", q:"What is the key difference between a data scientist and a machine learning engineer?",
+ opts:["Data scientists earn more","Data scientists develop models to resolve business problems; ML engineers deploy models and integrate them into production systems","ML engineers only work with large language models","There is no meaningful difference"],
+ ans:1, exp:"The lecturer was clear: data scientists develop models in constrained environments. ML engineers handle data transformation, version control of data and models, deployment, and integration into wider ecosystems."},
+
+// ── CLOUD ─────────────────────────────────────────────────────────────────────
+{t:"Cloud", q:"Which is NOT a characteristic of cloud computing according to the lecture?",
+ opts:["Resource pooling","Complete control","Elasticity","Measured service"],
+ ans:1, exp:"Complete control is NOT a cloud characteristic — this was the correct answer in the Slido quiz from the lecture. With cloud you share resources with other tenants and do not control the physical hardware."},
+
+{t:"Cloud", q:"Which cloud service model gives clients the ability to deploy their own applications without control of the operating system?",
+ opts:["IaaS","SaaS","PaaS","On-premise"],
+ ans:2, exp:"PaaS (Platform as a Service) — clients deploy their own applications but have no access or control of the underlying OS or infrastructure. This was the Slido quiz answer from the lecture."},
+
+{t:"Cloud", q:"Which of the big three cloud providers has the lowest market share as of 2025?",
+ opts:["AWS","Azure","GCP","Oracle Cloud"],
+ ans:2, exp:"GCP has the lowest market share of the big three. The lecturer confirmed this in a Slido quiz. GCP is best for AI/ML (Vertex AI). Azure is second and favoured by companies already using Microsoft services."},
+
+{t:"Cloud", q:"Which cloud provider is specifically noted as best for AI/ML workloads?",
+ opts:["AWS","Azure","GCP","IBM Cloud"],
+ ans:2, exp:"GCP (Google Cloud Platform) is noted as best for AI/ML due to Vertex AI, which the lecturer described as 'far superior to the others' for ML platform capabilities."},
+
+{t:"Cloud", q:"Why might a company choose Azure over AWS?",
+ opts:["Azure is always cheaper","Azure has better AI tools","Most companies already use Microsoft services so Azure integrates better","Azure has more data centres"],
+ ans:2, exp:"The lecturer said Azure is preferred because most companies have 'already sold their souls to Microsoft' — the integration with existing Microsoft services (Teams, Office, Active Directory) is the key advantage."},
+
+{t:"Cloud", q:"What is elasticity in cloud computing?",
+ opts:["The ability to store elastic data structures","Automatic adjustment of resources based on changing workload demands","The flexibility to choose different cloud providers","The ability to stretch payment terms"],
+ ans:1, exp:"Elasticity is the automatic scaling up or down of resources based on demand. The lecturer explained this means you don't need to pre-define exact capacity and don't pay for idle resources during quiet periods."},
+
+{t:"Cloud", q:"What is measured service in cloud computing?",
+ opts:["Measuring the quality of service","Costs are metered based on what you use — pay-as-you-go pricing","Measuring network bandwidth","Monthly fixed fee billing"],
+ ans:1, exp:"Measured service means you pay for what you use. The lecturer noted different cloud providers charge differently for different aspects — AWS might be cheaper for storage, GCP cheaper for web services, for example."},
+
+{t:"Cloud", q:"What is the difference between horizontal and vertical scaling?",
+ opts:["Horizontal = more servers/instances; vertical = bigger single server","Horizontal = bigger server; vertical = more servers","Horizontal scales storage; vertical scales compute","They are the same thing"],
+ ans:0, exp:"Horizontal scaling adds more instances/servers to distribute load. Vertical scaling makes one server bigger. The lecturer noted vertical scaling is more expensive and creates a single point of failure — all eggs in one basket."},
+
+{t:"Cloud", q:"Which cloud service model was used in the live GCP demo in the lecture?",
+ opts:["IaaS (EC2 virtual machines)","SaaS (Google Workspace)","PaaS-style container deployment via Google Cloud Run","On-premise Docker"],
+ ans:2, exp:"The lecturer deployed a container to GCP Cloud Run in approximately 2-3 minutes during the live demo. Cloud Run is a PaaS-style managed container service — you don't manage the underlying infrastructure."},
+
+// ── DATA ─────────────────────────────────────────────────────────────────────
+{t:"Data", q:"What are the six Vs of Big Data as covered in the lectures?",
+ opts:["Volume, Velocity, Variety, Veracity, Value, Variability","Volume, Velocity, Variety, Validity, Value, Visibility","Volume, Velocity, Variance, Veracity, Value, Variability","Volume, Velocity, Variety, Veracity, Value, Volatility"],
+ ans:0, exp:"The six Vs are Volume (how much), Velocity (how fast), Variety (different formats), Veracity (how trustworthy), Value (insights derivable), and Variability (inconsistency over time). The lecturer ran through all six."},
+
+{t:"Data", q:"What is veracity in the context of Big Data?",
+ opts:["How much data is stored","How fast data is generated","The authenticity, availability, and trustworthiness of data","The variety of data formats"],
+ ans:2, exp:"Veracity is about whether data is authentic and trustworthy. The lecturer distinguished it from validity (whether data is logically correct) — they are slightly different concepts."},
+
+{t:"Data", q:"In comparing citizen science bird reports vs CCTV reports, which has higher veracity and why?",
+ opts:["CCTV always has higher veracity","Citizen science has higher veracity because humans are more careful","Neither is automatically more trustworthy — CCTV veracity depends on model quality","Citizen science has higher veracity because there are more reports"],
+ ans:2, exp:"The lecturer made this nuanced point: CCTV veracity depends on the quality of the onboard classification model. A bad model produces untrustworthy data even from a camera. Neither source is automatically more trustworthy."},
+
+{t:"Data", q:"What is a primary key in a relational database?",
+ opts:["The most important column in a table","A unique identifier that uniquely identifies every row, must be unique and not null","The first column in any table","A key that links two tables together"],
+ ans:1, exp:"A primary key uniquely identifies every row in a table. Must be unique and not null. The lecturer showed this in the student enrolment example — every table needs one to enable relationships between tables."},
+
+{t:"Data", q:"What is a composite key?",
+ opts:["A primary key made of multiple combined columns","A key that links to another table","An automatically generated integer ID","A key shared across multiple tables"],
+ ans:0, exp:"A composite key is a primary key made up of multiple columns combined. The lecturer showed this in the enrolment table — the composite key was student ID + module code, as neither alone uniquely identifies an enrolment."},
+
+{t:"Data", q:"For the bird sighting table (date, time, latitude, longitude, bird type, phone number), why should you NOT use phone number alone as the primary key?",
+ opts:["Phone numbers are too long","People change phone numbers, breaking the uniqueness guarantee","Phone numbers contain special characters","The table already has too many columns"],
+ ans:1, exp:"The lecturer explicitly said not to use phone number alone because people change phone numbers — this would break the uniqueness guarantee and could corrupt existing relationships. Use date+time+lat+long instead."},
+
+{t:"Data", q:"When storing an unstructured photo alongside a relational sighting record, what is the correct approach?",
+ opts:["Store the photo as a blob directly in the relational database column","Store the photo in AWS S3/Azure Blob/GCP Bucket and store the URL in the relational table row","Convert the photo to text and store it","Store the photo on the local file system"],
+ ans:1, exp:"The lecturer was specific: store unstructured data in a named cloud store (AWS S3, Azure Blob, GCP Bucket) and store the URL in the relational table. He said 'just saying unstructured data store is not specific enough.'"},
+
+{t:"Data", q:"What is OLTP?",
+ opts:["Online Logical Transaction Protocol","Online Transaction Processing — fast read/write databases for day-to-day operations","Offline Transaction Processing","Object Linked Transaction Platform"],
+ ans:1, exp:"OLTP (Online Transaction Processing) handles fast read/write for day-to-day operations — social media feeds, banking, student records. High velocity, frequent updates. Data moves to OLAP for analysis via ETL."},
+
+{t:"Data", q:"What does ETL stand for?",
+ opts:["Extract, Test, Launch","Extract, Transform, Load","Evaluate, Test, Log","Extract, Transfer, Link"],
+ ans:1, exp:"ETL stands for Extract, Transform, Load. It moves data from OLTP systems to OLAP systems for analysis. Extract: pull from source. Transform: clean, filter, validate. Load: insert into the analytical store."},
+
+{t:"Data", q:"What is a key advantage of the document model (e.g. MongoDB) over the relational model for fast retrieval?",
+ opts:["Documents use less storage","No joins required — related data is embedded in the same document, so retrieval is faster","Documents support SQL queries","Documents have better primary key support"],
+ ans:1, exp:"The lecturer showed that document models embed related data together, so you can retrieve a user and all their enrolments in one query without joins. Trade-off: duplication is allowed, but retrieval is faster."},
+
+{t:"Data", q:"What is flat file storage and what is its main disadvantage?",
+ opts:["Storing data in relational tables; disadvantage is complexity","Storing all data in a single unstructured file; main disadvantages are duplication, difficult querying, and consistency problems","Storing data in the cloud; disadvantage is latency","Storing data in JSON format; disadvantage is schema rigidity"],
+ ans:1, exp:"Flat file storage stores everything in one big file (like a text file or spreadsheet). The lecturer walked through its disadvantages: duplication, difficult querying, consistency problems, privacy issues, and versioning difficulties."},
+
+// ── HCI ───────────────────────────────────────────────────────────────────────
+{t:"HCI", q:"According to Fabio's lectures, what is the key difference between a functionally correct system and a usable system?",
+ opts:["A correct system is faster","A system can produce correct outputs but still fail because users cannot achieve their goals effectively — correctness and usability are independent","A usable system has better performance","There is no meaningful difference"],
+ ans:1, exp:"Fabio stated in the mock exam discussion that correctness means the system works as specified, but usability means users can achieve their goals effectively and without frustration. A system can be both correct and unusable."},
+
+{t:"HCI", q:"What is a mental model in HCI?",
+ opts:["A formal diagram of system behaviour","A user's internal expectation of how a system works based on prior experience","A type of user interface pattern","A method of user testing"],
+ ans:1, exp:"A mental model is the user's internal expectation of how a system works. If the system's structure or behaviour doesn't match this expectation, users make errors even when the system is technically correct."},
+
+{t:"HCI", q:"What is affordance in interface design?",
+ opts:["The processing speed of the interface","Design cues that signal to users what actions are possible","The cost of the system","The number of features available"],
+ ans:1, exp:"Affordance refers to design cues that signal what actions are possible. A button that looks clickable will be clicked. A button that doesn't look interactive won't be used even if it functions correctly."},
+
+{t:"HCI", q:"Fabio listed goals of usability in the lectures. Which of the following is NOT one of those goals?",
+ opts:["Effectiveness","Efficiency","Profitability","Safety"],
+ ans:2, exp:"Fabio listed effectiveness (can users complete goals?), efficiency (without wasted effort?), usability (is it easy?), and safety (does it prevent errors and support recovery?). Profitability is a business goal, not a usability goal."},
+
+{t:"HCI", q:"What is cognitive load in HCI?",
+ opts:["The processing power of the system","The mental effort required to use the system","The number of clicks needed to complete a task","The memory usage of the application"],
+ ans:1, exp:"Cognitive load is the mental effort users must expend to use a system. Too many steps, too many options, or too much information at once exceeds users' cognitive capacity and causes them to give up or make errors."},
+
+// ── EVALUATION ────────────────────────────────────────────────────────────────
+{t:"Evaluation", q:"What is heuristic evaluation?",
+ opts:["Testing with real users completing tasks","3-5 experts independently evaluating the interface against Nielsen's usability heuristics, then aggregating findings","Running automated accessibility checks","A type of A/B testing"],
+ ans:1, exp:"Heuristic evaluation involves a small number of experts (typically 3-5) independently evaluating the interface against Nielsen's 10 heuristics. Findings are aggregated. No users required. Fabio confirmed this in the mock session."},
+
+{t:"Evaluation", q:"What is a cognitive walkthrough?",
+ opts:["Asking users to think aloud while using the system","Experts simulate a user completing a task step by step, asking: will they know what to do, can they do it, will they get feedback?","An automated review of the user journey","A type of user survey"],
+ ans:1, exp:"Cognitive walkthrough has experts step through a task, asking three questions at each step: will the user know what to do? Can they do it? Will they get feedback? No users are needed — it's an analytic method."},
+
+{t:"Evaluation", q:"According to Fabio in the mock session, what are the two main analytic evaluation methods the course covered?",
+ opts:["User testing and surveys","Heuristic evaluation and cognitive walkthrough","A/B testing and analytics","Eye tracking and think-aloud"],
+ ans:1, exp:"Fabio confirmed in the mock session that the two analytic methods covered were heuristic evaluation and cognitive walkthrough. He said if you can't remember the name but can explain what it is, that's also acceptable."},
+
+{t:"Evaluation", q:"What is the main limitation of analytic evaluation methods?",
+ opts:["They are too expensive","Expert bias — experts find problems real users don't have and miss problems real users do have","They take too long","They require specialist software"],
+ ans:1, exp:"Expert bias is the main limitation. Experts bring technical knowledge that users don't have, so they don't experience the same confusion. They find issues real users wouldn't notice and miss issues real users struggle with."},
+
+{t:"Evaluation", q:"How should expert bias be addressed once the system is live?",
+ opts:["Run more heuristic evaluations with different experts","Use empirical methods with real users — usability testing, surveys, analytics","Hire more expert evaluators","Switch to a different evaluation framework"],
+ ans:1, exp:"Fabio confirmed: once the system is live, use empirical methods. Observe real users completing tasks (usability testing), collect wider feedback (surveys), and track where users drop off in the live system (analytics)."},
+
+{t:"Evaluation", q:"Why are analytic methods appropriate when a team has no access to real users before release?",
+ opts:["They are cheaper than user testing","They require only expert time, can be completed quickly, and identify obvious usability violations without needing user recruitment or scheduling","They are more accurate than user testing","Analytic methods are always preferred over user testing"],
+ ans:1, exp:"Fabio explained: no users needed, expert time only, fast, cheap, identifies obvious violations before release. Significantly better than no evaluation. This was directly discussed as the rationale in the mock exam session."},
+
+// ── GIT ───────────────────────────────────────────────────────────────────────
+{t:"Git", q:"In the feature branch workflow demonstrated in the lectures, what triggers the automated pipeline?",
+ opts:["A manual button press in GitLab","When a developer pushes to or creates a merge request from their feature branch","Only when code is merged to main","On a nightly schedule only"],
+ ans:1, exp:"When a developer pushes to a feature branch or opens a merge request, the pipeline triggers automatically. The lecturer demonstrated this in GitLab — the pipeline runs without any manual intervention."},
+
+{t:"Git", q:"What is the purpose of linking commit messages to issue numbers?",
+ opts:["It makes commits easier to search","It creates traceability from a customer requirement all the way through to the code change — which DTAC auditors check","It is required by GitLab","It automatically closes issues"],
+ ans:1, exp:"Traceability links requirement → issue → branch → commits → code in main. The lecturer: 'tie your work to a purpose.' DTAC auditors check this chain as part of supplier assessment."},
+
+{t:"Git", q:"What is the main advantage of using branches in version control?",
+ opts:["Branches make code run faster","Developers can work in isolation — changes cannot affect anyone else until the branch is merged and verified","Branches reduce storage requirements","Branches eliminate the need for testing"],
+ ans:1, exp:"Branches isolate work — your changes can't break anyone else's code until you merge, and their changes can't break yours. This is the foundation of the isolate-verify-merge workflow."},
+
+{t:"Git", q:"In the GitOps model, what happens when people disagree about which version of a file is correct?",
+ opts:["The newest file wins","The file with the most recent commit author wins","Whatever is in Git is the answer — Git is the single source of truth","A vote is held among the team"],
+ ans:2, exp:"The lecturer described GitOps: when in doubt, what's in Git is the answer. This eliminates the 'latest_v2_FINAL.xlsx' problem. Everyone goes to Git to find the current version."},
+
+];
+
+const STORAGE_KEY = 'cm52067_mcq_v1';
+
+let deck = [...ALL_Q];
+let idx = 0, correct = 0, incorrect = 0;
+let answered = false;
+let activeTopic = 'All';
+let lastChosen = null;
+
+const topics = ['All', ...new Set(ALL_Q.map(q => q.t))];
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function saveState() {
+  try {
+    const state = {
+      activeTopic,
+      deckIndices: deck.map(q => ALL_Q.indexOf(q)),
+      idx, correct, incorrect,
+      lastChosen: answered ? lastChosen : null
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const ind = document.getElementById('savedIndicator');
+    if (ind) {
+      ind.classList.add('show');
+      clearTimeout(saveState._t);
+      saveState._t = setTimeout(() => ind.classList.remove('show'), 1200);
+    }
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || !Array.isArray(s.deckIndices) || s.deckIndices.length === 0) return false;
+    activeTopic = s.activeTopic || 'All';
+    deck = s.deckIndices.map(i => ALL_Q[i]).filter(Boolean);
+    idx = Math.min(s.idx || 0, deck.length);
+    correct = s.correct || 0;
+    incorrect = s.incorrect || 0;
+    lastChosen = (s.lastChosen === undefined ? null : s.lastChosen);
+    return true;
+  } catch (e) { return false; }
+}
+
+function resetProgress() {
+  if (!confirm('Reset all MCQ progress?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  activeTopic = 'All';
+  deck = [...ALL_Q];
+  shuffle(deck);
+  idx = 0; correct = 0; incorrect = 0; answered = false; lastChosen = null;
+  renderTopicBar();
+  renderQuestion();
+}
+
+function renderTopicBar() {
+  document.getElementById('topicBar').innerHTML = topics.map(t =>
+    `<button class="topic-btn${t===activeTopic?' active':''}" onclick="setTopic('${t}')">${t} ${t==='All'?'('+ALL_Q.length+')':'('+ALL_Q.filter(q=>q.t===t).length+')'}</button>`
+  ).join('');
+}
+
+function setTopic(t) {
+  activeTopic = t;
+  deck = t === 'All' ? [...ALL_Q] : ALL_Q.filter(q => q.t === t);
+  shuffle(deck);
+  idx = 0; correct = 0; incorrect = 0; answered = false; lastChosen = null;
+  renderTopicBar();
+  saveState();
+  renderQuestion();
+}
+
+function shuffleAndRestart() { setTopic(activeTopic); }
+
+function renderQuestion() {
+  const total = deck.length;
+  document.getElementById('progressFill').style.width = (idx / total * 100) + '%';
+  document.getElementById('qMeta').textContent = `Question ${Math.min(idx+1, total)} of ${total}  ·  ✓ ${correct}  ✗ ${incorrect}`;
+
+  if (idx >= total) { renderDone(); return; }
+
+  const q = deck[idx];
+  answered = false;
+
+  document.getElementById('quizArea').innerHTML = `
+    <div class="card">
+      <div class="topic-tag">${q.t}</div>
+      <div class="question">${q.q}</div>
+      <div class="options" id="opts">
+        ${q.opts.map((o,i) => `<button class="option" id="opt${i}" onclick="selectAnswer(${i})">${String.fromCharCode(65+i)}.  ${o}</button>`).join('')}
+      </div>
+      <div class="explanation" id="exp"></div>
+    </div>
+    <div class="nav">
+      <span></span>
+      <button class="nav-btn primary" id="nextBtn" onclick="nextQ()" style="display:none">Next →</button>
+    </div>
+  `;
+
+  if (lastChosen !== null && lastChosen !== undefined) {
+    answered = true;
+    const isCorrect = lastChosen === q.ans;
+    for (let i = 0; i < q.opts.length; i++) {
+      const btn = document.getElementById('opt'+i);
+      btn.disabled = true;
+      if (i === q.ans) btn.classList.add('correct');
+      else if (i === lastChosen && !isCorrect) btn.classList.add('wrong');
+    }
+    const exp = document.getElementById('exp');
+    exp.textContent = (isCorrect ? '✓ Correct. ' : '✗ Incorrect. ') + q.exp;
+    exp.className = 'explanation show ' + (isCorrect ? 'correct-exp' : 'wrong-exp');
+    document.getElementById('nextBtn').style.display = 'block';
+  }
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+  lastChosen = chosen;
+  const q = deck[idx];
+  const isCorrect = chosen === q.ans;
+  if (isCorrect) correct++; else incorrect++;
+
+  for (let i = 0; i < q.opts.length; i++) {
+    const btn = document.getElementById('opt'+i);
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === chosen && !isCorrect) btn.classList.add('wrong');
+  }
+
+  const exp = document.getElementById('exp');
+  exp.textContent = (isCorrect ? '✓ Correct. ' : '✗ Incorrect. ') + q.exp;
+  exp.className = 'explanation show ' + (isCorrect ? 'correct-exp' : 'wrong-exp');
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('qMeta').textContent = `Question ${idx+1} of ${deck.length}  ·  ✓ ${correct}  ✗ ${incorrect}`;
+  saveState();
+}
+
+function nextQ() {
+  idx++;
+  lastChosen = null;
+  answered = false;
+  saveState();
+  renderQuestion();
+}
+
+function renderDone() {
+  const pct = Math.round(correct / deck.length * 100);
+  const grade = pct >= 70 ? '🟢 Good' : pct >= 50 ? '🟡 Needs work' : '🔴 Keep revising';
+  document.getElementById('quizArea').innerHTML = `
+    <div class="score-card">
+      <div class="score-label">Final score</div>
+      <div class="score-big">${pct}%</div>
+      <div class="score-label">${grade}</div>
+      <div class="score-breakdown">
+        <span class="g">✓ Correct: ${correct}</span>
+        <span class="b">✗ Incorrect: ${incorrect}</span>
+        <span>Total: ${deck.length}</span>
+      </div>
+      <button class="restart-btn primary" onclick="setTopic(activeTopic)">Retry this topic</button>
+      <button class="restart-btn" onclick="setTopic('All')">Try all topics</button>
+    </div>
+  `;
+  document.getElementById('progressFill').style.width = '100%';
+}
+
+if (!loadState()) {
+  shuffle(deck);
+}
+renderTopicBar();
+renderQuestion();
+</script>
+</body>
+</html>
