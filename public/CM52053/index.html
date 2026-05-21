@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM52053 — AI & Machine Learning Flashcards</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1.5rem; }
+  .fc-app { max-width: 720px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; margin-bottom: 4px; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 1rem; color: #1a1a1a; }
+  .fc-topic-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .fc-topic-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer; transition: all 0.15s; }
+  .fc-topic-btn.active { background: #1a1a1a; color: #fff; border-color: transparent; }
+  .fc-header { display: flex; align-items: center; gap: 12px; margin-bottom: 1rem; flex-wrap: wrap; }
+  .fc-hint-text { font-size: 13px; color: #888; }
+  .fc-progress { font-size: 13px; color: #888; margin-left: auto; }
+  .fc-shuffle { font-size: 12px; color: #888; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+  .fc-card-wrap { perspective: 1200px; width: 100%; height: 320px; cursor: pointer; margin-bottom: 1rem; }
+  .fc-card { width: 100%; height: 100%; position: relative; transform-style: preserve-3d; transition: transform 0.4s ease; border-radius: 12px; }
+  .fc-card.flipped { transform: rotateY(180deg); }
+  .fc-face { position: absolute; inset: 0; border-radius: 12px; backface-visibility: hidden; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 1.5rem; text-align: center; border: 1px solid #e0e0e0; background: #fff; overflow-y: auto; }
+  .fc-back { transform: rotateY(180deg); background: #f9f9f7; }
+  .fc-topic-tag { font-size: 11px; color: #aaa; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 0.5rem; }
+  .fc-q { font-size: 17px; font-weight: 500; color: #1a1a1a; line-height: 1.45; }
+  .fc-a { font-size: 14px; color: #1a1a1a; line-height: 1.7; max-width: 100%; }
+  .fc-hint { font-size: 12px; color: #ccc; margin-top: 1rem; }
+  .fc-controls { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .fc-controls button { padding: 8px 24px; border-radius: 8px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; font-size: 14px; transition: background 0.15s; }
+  .fc-controls button:hover { background: #f0f0f0; }
+  .fc-controls button.correct { border-color: #2d7a2d; color: #2d7a2d; }
+  .fc-controls button.wrong { border-color: #c0392b; color: #c0392b; }
+  .fc-score { display: flex; gap: 16px; font-size: 13px; color: #888; justify-content: center; margin-top: 0.5rem; }
+  .fc-score .g { color: #2d7a2d; font-weight: 500; }
+  .fc-score .b { color: #c0392b; font-weight: 500; }
+  .fc-done { text-align: center; padding: 2rem; background: #fff; border-radius: 12px; border: 1px solid #e0e0e0; }
+  .fc-done h3 { font-size: 20px; font-weight: 500; margin-bottom: 0.5rem; }
+  .fc-done p { color: #888; font-size: 14px; margin-bottom: 1.5rem; }
+  .btn-retry { padding: 8px 20px; border-radius: 8px; border: 1px solid #c0392b; color: #c0392b; background: #fff; cursor: pointer; font-size: 14px; margin-right: 8px; }
+  .btn-all { padding: 8px 20px; border-radius: 8px; border: 1px solid #ccc; color: #1a1a1a; background: #fff; cursor: pointer; font-size: 14px; }
+  .saved-indicator { font-size: 11px; color: #2d7a2d; opacity: 0; transition: opacity 0.3s; margin-left: 8px; }
+  .saved-indicator.show { opacity: 1; }
+  .foot { font-size: 12px; color: #aaa; margin-top: 2rem; text-align: center; }
+  .foot a { color: #888; text-decoration: none; }
+  .foot a:hover { color: #1a1a1a; }
+</style>
+</head>
+<body>
+<div class="fc-app">
+  <div class="eyebrow">University of Bath</div>
+  <h1>CM52053 — AI & Machine Learning</h1>
+  <div class="fc-topic-bar" id="topicBar"></div>
+  <div class="fc-header">
+    <div class="fc-hint-text">Tap card to reveal answer</div>
+    <div class="fc-progress" id="progress"></div>
+    <button class="fc-shuffle" onclick="shuffleCards()">Shuffle</button>
+    <button class="fc-shuffle" onclick="resetProgress()">Reset progress</button>
+    <span class="saved-indicator" id="savedIndicator">✓ saved</span>
+  </div>
+
+  <div class="fc-card-wrap" id="cardWrap" onclick="flipCard()">
+    <div class="fc-card" id="card">
+      <div class="fc-face fc-front">
+        <div class="fc-topic-tag" id="cardTopic"></div>
+        <div class="fc-q" id="cardQ"></div>
+        <div class="fc-hint">tap to reveal</div>
+      </div>
+      <div class="fc-face fc-back">
+        <div class="fc-a" id="cardA"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fc-controls" id="controls" style="display:none">
+    <button class="wrong" onclick="rate(false)">✗ Missed it</button>
+    <button class="correct" onclick="rate(true)">✓ Got it</button>
+  </div>
+  <div class="fc-score">
+    <div>Got it: <span class="g" id="scoreG">0</span></div>
+    <div>Missed: <span class="b" id="scoreB">0</span></div>
+    <div>Remaining: <span id="scoreR">0</span></div>
+  </div>
+
+  <div class="fc-done" id="doneMsg" style="display:none">
+    <h3>Round complete!</h3>
+    <p>Review the ones you missed</p>
+    <button class="btn-retry" onclick="restartMissed()">Retry missed cards</button>
+    <button class="btn-all" onclick="restartAll()">Restart all</button>
+  </div>
+
+  <p class="foot"><a href="https://www.kyleosullivan.uk">kyleosullivan.uk</a></p>
+</div>
+
+<script>
+const ALL_CARDS = [
+  // ── SVM ───────────────────────────────────────────────────────────────────
+  {t:"SVM",q:"What does SVM do?",a:"Finds the hyperplane (line) that separates two classes with the maximum margin (widest gap)."},
+  {t:"SVM",q:"What is the margin width formula?",a:"Margin = 2 / ‖w‖, where w is the weight vector read from the decision boundary equation."},
+  {t:"SVM",q:"How do you read w from the equation?",a:"From w₁x₁ + w₂x₂ + b = 0, w = (w₁, w₂). E.g. 3x₁ + 4x₂ − 2 = 0 → w = (3, 4)."},
+  {t:"SVM",q:"How do you compute ‖w‖?",a:"‖w‖ = √(w₁² + w₂²). E.g. w = (3, 4) → ‖w‖ = √(9+16) = √25 = 5."},
+  {t:"SVM",q:"Example margin calculation?",a:"3x₁ + 4x₂ − 2 = 0 → w = (3,4) → ‖w‖ = 5 → margin = 2/5 = 0.4."},
+  {t:"SVM",q:"What are support vectors?",a:"The data points sitting exactly on the margin boundaries. The SVM solution depends only on these points."},
+  {t:"SVM",q:"Why does SVM use y = +1 and −1 instead of 1 and 0?",a:"So both margin constraints combine into one inequality: yᵢ(w·xᵢ + b) ≥ 1."},
+  {t:"SVM",q:"What is the soft margin SVM objective?",a:"Minimise ½‖w‖² + C Σξᵢ. First term = wide margin. Second term = penalty for mistakes. C controls the trade-off."},
+  {t:"SVM",q:"What is ξᵢ (the slack variable)?",a:"Measures how far point i falls short of being safely outside the margin. ξ = max(0, 1 − yᵢ(wᵀxᵢ + b))."},
+  {t:"SVM",q:"What does ξ = 0 mean?",a:"Point is correctly classified and outside the margin. No problem."},
+  {t:"SVM",q:"What does 0 < ξ < 1 mean?",a:"Point is on the correct side but inside the margin. Minor violation."},
+  {t:"SVM",q:"What does ξ = 1 mean?",a:"Point is exactly on the decision boundary. Zero confidence."},
+  {t:"SVM",q:"What does ξ > 1 mean?",a:"Point is misclassified — on the wrong side of the decision boundary."},
+  {t:"SVM",q:"How to quickly check if a point is misclassified?",a:"Compute wᵀx + b. If its sign matches the label y, correct. If signs disagree, misclassified."},
+  {t:"SVM",q:"What does large C do?",a:"Heavily penalises mistakes → narrow margin → overfitting risk."},
+  {t:"SVM",q:"What does small C do?",a:"Tolerates mistakes → wide margin → underfitting risk."},
+  {t:"SVM",q:"What is the kernel trick?",a:"Replace dot products xᵢᵀxⱼ with K(xᵢ, xⱼ) to implicitly work in a higher-dimensional space without ever computing the mapping."},
+  {t:"SVM",q:"What are the three common kernels?",a:"Linear: K = xᵀz. Polynomial: K = (xᵀz + c)ᵈ. RBF: K = exp(−γ‖x−z‖²)."},
+  {t:"SVM",q:"What does the RBF kernel compute?",a:"Similarity between two points based on distance. Close points → K near 1. Far points → K near 0."},
+  {t:"SVM",q:"What does γ do in the RBF kernel?",a:"Controls how far each point's influence reaches. Small γ = smooth boundary (underfitting). Large γ = wiggly boundary (overfitting)."},
+  {t:"SVM",q:"Why normalise features when using RBF?",a:"RBF uses Euclidean distance. Features with larger scales dominate the distance calculation, making smaller-scale features invisible."},
+  {t:"SVM",q:"How do C and γ interact?",a:"Both small → underfitting. Both large → overfitting. Best found by cross-validation (grid search)."},
+  {t:"SVM",q:"Does C change the shape of the decision boundary?",a:"No. C changes the margin width. Only γ (with RBF kernel) changes the shape."},
+
+  // ── MLP ───────────────────────────────────────────────────────────────────
+  {t:"MLP",q:"What is the perceptron formula?",a:"y = g(wᵀx + b). Weighted sum of inputs, add bias, apply activation function."},
+  {t:"MLP",q:"What does wᵀx mean?",a:"Dot product: w₁x₁ + w₂x₂ + ... + wₙxₙ. Multiply each input by its weight and add up."},
+  {t:"MLP",q:"What is sigmoid and when is it used?",a:"σ(x) = 1/(1+e⁻ˣ). Outputs (0,1). Used for output layer of binary classification."},
+  {t:"MLP",q:"What is sigmoid(0)?",a:"0.5. Maximum uncertainty."},
+  {t:"MLP",q:"What is ReLU and when is it used?",a:"max(0, x). Outputs [0, ∞). Used for hidden layers. Most commonly used activation."},
+  {t:"MLP",q:"What is softmax and when is it used?",a:"eᶻⁱ / Σeᶻʲ. Converts scores to probabilities summing to 1. Used for output layer of multi-class classification."},
+  {t:"MLP",q:"What is tanh?",a:"(eˣ − e⁻ˣ)/(eˣ + e⁻ˣ). Outputs (−1, 1). Used in LSTM gates."},
+  {t:"MLP",q:"Why are non-linear activations essential?",a:"Without them, stacking layers collapses to a single linear transformation. Non-linearity lets the network model complex patterns."},
+  {t:"MLP",q:"What is the dying ReLU problem?",a:"When input is negative, ReLU outputs 0 and gradient is 0. The neurone stops learning permanently. Leaky ReLU fixes this."},
+  {t:"MLP",q:"What is the Universal Approximation Theorem?",a:"A neural network with one hidden layer and non-linear activations can approximate any continuous function."},
+  {t:"MLP",q:"How many parameters in a fully connected layer?",a:"(nᵢₙ × nₒᵤₜ) + nₒᵤₜ. The nₒᵤₜ is for biases (one per output neurone)."},
+  {t:"MLP",q:"Example: 512 inputs → 256 outputs?",a:"(512 × 256) + 256 = 131,072 + 256 = 131,328 parameters."},
+  {t:"MLP",q:"What is MSE loss?",a:"(1/N) Σ(y − ŷ)². Used for regression. Measures average squared error."},
+  {t:"MLP",q:"What is Binary Cross-Entropy loss?",a:"−(1/N) Σ [y·log(ŷ) + (1−y)·log(1−ŷ)]. Used for binary classification."},
+  {t:"MLP",q:"BCE shortcut?",a:"y=1 → just compute log(ŷ). y=0 → just compute log(1−ŷ). Add up, divide by N, negate."},
+  {t:"MLP",q:"What is the gradient descent update rule?",a:"w ← w − η × ∂L/∂w. Move weights in the direction that reduces loss."},
+  {t:"MLP",q:"What does the learning rate η control?",a:"Step size. Too small → slow convergence. Too large → overshooting, divergence."},
+  {t:"MLP",q:"What activation + loss for binary classification?",a:"Sigmoid output + Binary Cross-Entropy loss."},
+  {t:"MLP",q:"What activation + loss for multi-class classification?",a:"Softmax output + Multi-class Cross-Entropy loss."},
+  {t:"MLP",q:"What activation + loss for regression?",a:"Linear (no activation) output + MSE loss."},
+
+  // ── CNN ───────────────────────────────────────────────────────────────────
+  {t:"CNN",q:"Why not use MLP for images?",a:"Loses spatial information when flattened. Far too many parameters (millions for one layer)."},
+  {t:"CNN",q:"What does a convolutional layer do?",a:"Slides a small filter (magnifying glass) over the image, computing element-wise multiply + sum at each position to produce a feature map."},
+  {t:"CNN",q:"CNN output size formula?",a:"W₂ = (W₁ − F + 2P) / S + 1. D₂ = K (number of filters)."},
+  {t:"CNN",q:"What is W₁, F, P, S?",a:"W₁ = input width, F = filter size, P = padding, S = stride."},
+  {t:"CNN",q:"Default assumptions if P and S not given?",a:"Stride = 1, Padding = 0."},
+  {t:"CNN",q:"What is same padding?",a:"P = (F−1)/2 with stride 1. Output is same spatial size as input."},
+  {t:"CNN",q:"What is stride?",a:"How many pixels the filter jumps each step. Bigger stride = smaller output."},
+  {t:"CNN",q:"What is padding?",a:"Zeros added around the border. Lets the filter reach the edges properly."},
+  {t:"CNN",q:"How many parameters in a conv layer?",a:"K × (F × F × D₁) + K. K = filters, F = filter size, D₁ = input depth. +K for biases."},
+  {t:"CNN",q:"Example: 24 filters of 5×5, input depth 3?",a:"24 × (5×5×3) + 24 = 24 × 75 + 24 = 1800 + 24 = 1,824."},
+  {t:"CNN",q:"Why do CNNs use far fewer parameters than FC layers?",a:"Local connectivity (filter only sees a small patch) and parameter sharing (same filter used everywhere). Parameter count is independent of image size."},
+  {t:"CNN",q:"What is the receptive field?",a:"The region of the original input that influences one output value. Stacking two 3×3 layers gives a 5×5 receptive field."},
+  {t:"CNN",q:"What are the four key properties of conv layers?",a:"1) Preserves spatial relationships. 2) Local connectivity. 3) Parameter sharing. 4) Hierarchical features (edges → textures → objects)."},
+
+  // ── TRAINING ──────────────────────────────────────────────────────────────
+  {t:"Training",q:"What are the three gradient descent variants?",a:"Batch GD (whole dataset), Mini-batch GD (subset, e.g. 32), Stochastic GD (1 sample). Mini-batch is used in practice."},
+  {t:"Training",q:"How to compute iterations per epoch?",a:"⌈N / batch_size⌉. E.g. 2000 samples, batch 64 → ⌈2000/64⌉ = 32 iterations."},
+  {t:"Training",q:"What is an epoch?",a:"One complete pass through the entire training dataset."},
+  {t:"Training",q:"What is Adam optimiser?",a:"Automatically adjusts learning rate per parameter. Best default choice. Works well without extensive tuning."},
+  {t:"Training",q:"What is learning rate decay?",a:"Start with high learning rate, reduce over time. E.g. halve every 30 epochs."},
+  {t:"Training",q:"What is the vanishing gradient problem?",a:"During backprop, gradients shrink exponentially through layers (sigmoid derivative max = 0.25). Early layers stop learning."},
+  {t:"Training",q:"What are the four solutions to vanishing gradients?",a:"1) ReLU activation (derivative = 1). 2) He initialisation (better starting weights). 3) Batch normalisation (stable activations). 4) Skip connections/ResNet (gradient always at least 1)."},
+  {t:"Training",q:"How do skip connections (ResNet) help?",a:"Output = F(x) + x. Gradient = ∂F/∂x + 1. Even if ∂F/∂x ≈ 0, gradient is at least 1."},
+  {t:"Training",q:"Do skip connections add extra parameters?",a:"No. The identity shortcut is just addition. Zero parameters."},
+  {t:"Training",q:"What is He initialisation for?",a:"ReLU layers. Sets starting weights with variance 2/n to prevent vanishing/exploding signals. NOT for overfitting."},
+  {t:"Training",q:"What is Xavier/Glorot initialisation for?",a:"Sigmoid/tanh layers. Variance 1/n."},
+  {t:"Training",q:"What is batch normalisation?",a:"Normalises outputs of each layer within each mini-batch. Stabilises training, allows higher learning rates."},
+  {t:"Training",q:"How to diagnose overfitting?",a:"Training loss low, validation loss high. Growing gap between them."},
+  {t:"Training",q:"How to diagnose underfitting?",a:"Both training and validation loss are high."},
+  {t:"Training",q:"What is L2 regularisation?",a:"Adds λΣwᵢ² to loss. Penalises large weights. Encourages simpler models. Most commonly used."},
+  {t:"Training",q:"What is L1 regularisation?",a:"Adds λΣ|wᵢ| to loss. Pushes some weights to exactly 0 (feature selection)."},
+  {t:"Training",q:"What does λ too high do?",a:"Forces weights too close to zero → underfitting."},
+  {t:"Training",q:"What is dropout?",a:"Randomly deactivates a fraction of neurones each training iteration. Different neurones each time. Prevents co-adaptation."},
+  {t:"Training",q:"Is dropout applied during testing?",a:"NO. Only during training. Full network used at test time."},
+  {t:"Training",q:"What is early stopping?",a:"Monitor validation loss. Stop when it hasn't improved for a set number of epochs (patience)."},
+  {t:"Training",q:"What is data augmentation?",a:"Artificially expand training data with transformations (flips, rotations, crops, colour changes)."},
+  {t:"Training",q:"What is transfer learning?",a:"Reuse a model pre-trained on a large dataset (ImageNet). Fine-tune on your smaller dataset. Prevents overfitting on small data."},
+  {t:"Training",q:"Which techniques solve vanishing gradients?",a:"ReLU, skip connections, He initialisation, batch normalisation."},
+  {t:"Training",q:"Which techniques solve overfitting?",a:"Dropout, L1/L2 regularisation, early stopping, data augmentation, transfer learning."},
+  {t:"Training",q:"Does dropout solve vanishing gradients?",a:"NO. Dropout prevents overfitting. It has nothing to do with gradients."},
+  {t:"Training",q:"Does Xavier initialisation prevent overfitting?",a:"NO. It prevents vanishing/exploding gradients at the start of training."},
+
+  // ── TRANSFORMERS ──────────────────────────────────────────────────────────
+  {t:"Transformers",q:"Why were transformers invented?",a:"RNNs are slow (sequential processing), have encoding bottlenecks, and struggle with long sequences. Transformers process all tokens simultaneously."},
+  {t:"Transformers",q:"What is self-attention?",a:"Each word looks at every other word to understand its meaning in context. Computes relevance scores between all pairs of words."},
+  {t:"Transformers",q:"What are Query, Key, Value?",a:"Query = what am I looking for? Key = what do I contain? Value = what information do I carry? Computed by multiplying word embeddings by learned matrices Wq, Wk, Wv."},
+  {t:"Transformers",q:"What are the four steps of self-attention?",a:"1) Compute Q, K, V. 2) Dot product of Q with each K (scores). 3) Scale by √D' and softmax (weights). 4) Weighted sum of V vectors (output)."},
+  {t:"Transformers",q:"What is the self-attention matrix formula?",a:"Z = softmax(QKᵀ / √D') × V"},
+  {t:"Transformers",q:"Why divide by √D'?",a:"Prevents scores from getting too extreme before softmax, which would create extreme probabilities."},
+  {t:"Transformers",q:"How to compute self-attention by hand?",a:"Step 1: q·k₁ and q·k₂ (dot products). Step 2: softmax([score1, score2]) → weights summing to 1. Step 3: weight1×v₁ + weight2×v₂ → output."},
+  {t:"Transformers",q:"Sanity checks for self-attention?",a:"Weights must sum to 1. Output must be between v₁ and v₂. Output leans toward the v with the higher weight."},
+  {t:"Transformers",q:"Why multiple heads?",a:"Each head captures a different type of relationship (grammar, reference, meaning). One head isn't enough."},
+  {t:"Transformers",q:"How does multi-head attention work?",a:"Run self-attention H times in parallel with different W matrices. Concatenate outputs. Multiply by Wo."},
+  {t:"Transformers",q:"What is the size of the Wo matrix?",a:"(H × D') × D. Rows = concatenated size from all heads. Columns = original embedding dimension."},
+  {t:"Transformers",q:"What is the output dimension of multi-head attention?",a:"Same as the input dimension D. Always. Required for residual connections."},
+  {t:"Transformers",q:"What are the components of a transformer block?",a:"1) Multi-head self-attention. 2) Residual connection + Layer norm. 3) Position-wise feed-forward network. 4) Another residual connection + Layer norm."},
+  {t:"Transformers",q:"Which component is the ONLY one where tokens interact?",a:"Multi-head self-attention. Everything else operates on each token independently."},
+  {t:"Transformers",q:"What is layer normalisation?",a:"Normalises across the feature dimension for each individual token. Used in transformers (unlike batch norm which normalises across the batch)."},
+  {t:"Transformers",q:"What is positional encoding?",a:"Adds position information to word embeddings. Without it, the transformer treats words as an unordered set."},
+  {t:"Transformers",q:"What are the five criteria for positional encoding?",a:"1) Unique per position. 2) Consistent distance for same gap. 3) Bounded. 4) Generalises to longer sequences. 5) Deterministic. NOT monotonically increasing."},
+  {t:"Transformers",q:"What is the sinusoidal positional encoding formula?",a:"PE(pos,2i) = sin(pos/10000^(2i/d)), PE(pos,2i+1) = cos(pos/10000^(2i/d)). This is provided in the exam."},
+  {t:"Transformers",q:"What is masked self-attention?",a:"Each token can only attend to previous tokens. Future positions set to −∞ before softmax (so their weight becomes 0)."},
+  {t:"Transformers",q:"Mask formula?",a:"Mᵢⱼ = 0 if j ≤ i (allowed), −∞ if j > i (blocked). 0-indexed."},
+  {t:"Transformers",q:"How to quickly apply a mask?",a:"Position i (0-indexed) keeps the first i+1 scores, masks the rest as −∞."},
+  {t:"Transformers",q:"What is BERT?",a:"Encoder-only transformer. Bidirectional attention (sees all tokens). Pre-trained with masked language modelling."},
+  {t:"Transformers",q:"What is GPT?",a:"Decoder-only transformer. Masked attention (only sees previous tokens). Pre-trained to predict next token."},
+  {t:"Transformers",q:"What is an encoder-decoder transformer?",a:"Original transformer for translation. Encoder uses bidirectional attention. Decoder uses masked attention + cross-attention to encoder output."},
+
+  // ── GANs ──────────────────────────────────────────────────────────────────
+  {t:"GANs",q:"What is a GAN?",a:"Two networks competing: Generator creates fake data from noise. Discriminator classifies real vs fake."},
+  {t:"GANs",q:"What does the Generator do?",a:"Takes random noise vector z → produces fake image G(z). Wants to fool the discriminator."},
+  {t:"GANs",q:"What does the Discriminator do?",a:"Takes image (real or fake) → outputs probability it's real (0=fake, 1=real)."},
+  {t:"GANs",q:"What does D(x) represent?",a:"Discriminator's output for a real image. Should be close to 1."},
+  {t:"GANs",q:"What does D(G(z)) represent?",a:"Discriminator's output for a fake image. D wants it close to 0. G wants it close to 1."},
+  {t:"GANs",q:"How is a GAN trained?",a:"Alternating. Step 1: train D (freeze G). Step 2: train G (freeze D). Repeat."},
+  {t:"GANs",q:"What happens at equilibrium (perfect GAN)?",a:"D(anything) = 0.5. The discriminator can't tell real from fake."},
+  {t:"GANs",q:"What is the generator loss (non-saturating)?",a:"L_G = −(1/N) Σ ln(D(G(zᵢ))). Steps: ln each D value → add → ÷ N → negate."},
+  {t:"GANs",q:"Example: D(G(z₁))=0.2, D(G(z₂))=0.5, D(G(z₃))=0.8?",a:"ln(0.2)=−1.609, ln(0.5)=−0.693, ln(0.8)=−0.223. Sum=−2.525. ÷3=−0.842. Negate=0.842."},
+  {t:"GANs",q:"What is the discriminator loss?",a:"L_D = −(1/N)[Σ ln D(xᵢ) + Σ ln(1 − D(G(zᵢ)))]. Two parts: real images + fake images."},
+  {t:"GANs",q:"How to compute the fake part of discriminator loss?",a:"Compute (1−D(G(z))) for each, then ln, then add. E.g. D(G(z))=0.3 → 1−0.3=0.7 → ln(0.7)=−0.357."},
+  {t:"GANs",q:"What is the min-max formulation?",a:"min_G max_D E[log D(x)] + E[log(1 − D(G(z)))]. D maximises (classifies correctly). G minimises (fools D)."},
+  {t:"GANs",q:"Why use non-saturating loss instead of original?",a:"Early in training, D(G(z))≈0. Original loss log(1−D(G(z)))≈log(1)=0 → flat gradient, G can't learn. Non-saturating −log(D(G(z)))=−log(0.01)=4.6 → strong gradient."},
+  {t:"GANs",q:"What is a conditional GAN?",a:"Adds condition y (e.g. class label) to both G and D. G receives (z, y) → generates class-specific images. D receives (image, y) → judges: is this a real image OF THIS CLASS?"},
+  {t:"GANs",q:"Why does D need the condition?",a:"Without it, G could generate a perfect dog when asked for a cat, and D would say it looks real. With the condition, D catches the mismatch."},
+  {t:"GANs",q:"What is DCGAN?",a:"Deep Convolutional GAN. Generator uses transposed convolutions (upsampling). Discriminator is a standard CNN. Discriminator uses Leaky ReLU."},
+  {t:"GANs",q:"What is super-resolution (SRGAN)?",a:"Generator upscales low-resolution image. Loss combines GAN loss with perceptual content loss (features from pre-trained CNN, not pixel-level)."},
+
+  // ── RNN / LSTM ────────────────────────────────────────────────────────────
+  {t:"RNN/LSTM",q:"What is an RNN?",a:"Processes sequences one step at a time. At each step: hₜ = tanh(W[hₜ₋₁, xₜ] + b). Combines previous memory with current input."},
+  {t:"RNN/LSTM",q:"What is hₜ₋₁?",a:"The hidden state from the previous time step. The RNN's memory of everything it's seen so far."},
+  {t:"RNN/LSTM",q:"Why are RNNs bad at long sequences?",a:"Vanishing gradients across time steps. By word 50, the gradient from word 1 is essentially zero."},
+  {t:"RNN/LSTM",q:"What is LSTM?",a:"RNN with three gates controlling information flow. Solves the vanishing gradient problem for sequences."},
+  {t:"RNN/LSTM",q:"What are the three LSTM gates?",a:"Forget gate (what to throw away), Input gate (what new info to store), Output gate (what to reveal now). All use sigmoid (outputs 0-1)."},
+  {t:"RNN/LSTM",q:"What are the two LSTM states?",a:"Cell state (long-term memory, conveyor belt) and Hidden state (short-term memory, current output)."},
+  {t:"RNN/LSTM",q:"LSTM cell state update?",a:"cₜ = fₜ ⊙ cₜ₋₁ + iₜ ⊙ c̃ₜ. New memory = (what I keep from old) + (what I add new)."},
+  {t:"RNN/LSTM",q:"What does ⊙ mean?",a:"Element-wise multiplication. [a,b,c] ⊙ [d,e,f] = [ad, be, cf]."},
+  {t:"RNN/LSTM",q:"Why were LSTMs replaced by Transformers?",a:"Sequential processing (can't parallelise), encoding bottleneck, limited transfer learning. Transformers process all tokens at once."},
+
+  // ── GENERATIVE MODELS ─────────────────────────────────────────────────────
+  {t:"Generative",q:"What is the difference between discriminative and generative models?",a:"Discriminative learns decision boundary P(y|x). Generative learns data distribution P(x) and can create new samples."},
+  {t:"Generative",q:"Name five types of generative models.",a:"VAE, GAN, Autoregressive (GPT), Normalising Flows, Diffusion Models."},
+  {t:"Generative",q:"What are diffusion models?",a:"Forward process adds noise until data becomes pure noise. Reverse process learns to denoise step by step. State of the art for image generation (DALL-E, Stable Diffusion)."},
+
+  // ── SEARCH ────────────────────────────────────────────────────────────────
+  {t:"Search",q:"What is BFS?",a:"Breadth-First Search. Explores level by level using a queue (FIFO). Complete. Optimal with equal costs. O(b^d) time and space."},
+  {t:"Search",q:"What is DFS?",a:"Depth-First Search. Goes as deep as possible using a stack (LIFO). Not complete. Not optimal. O(bm) time, O(bm) space."},
+  {t:"Search",q:"What is Uniform Cost Search?",a:"Like BFS but expands cheapest path first using a priority queue. Complete. Optimal for any positive costs."},
+  {t:"Search",q:"What is A* search?",a:"Expands node with lowest f(n) = g(n) + h(n). g = actual cost so far. h = estimated cost to goal. Optimal if h is admissible."},
+  {t:"Search",q:"What does admissible mean?",a:"The heuristic never overestimates. h(n) ≤ true cost. Always optimistic."},
+  {t:"Search",q:"What is Greedy Best-First Search?",a:"Expands node with lowest h(n) only. Fast but not optimal."},
+  {t:"Search",q:"What is Hill Climbing?",a:"Always move to best neighbour. Gets stuck at local maxima."},
+  {t:"Search",q:"What is Simulated Annealing?",a:"Like hill climbing but sometimes accepts worse moves. Probability decreases over time. Can escape local maxima."},
+
+  // ── ADVERSARIAL SEARCH ────────────────────────────────────────────────────
+  {t:"Adversarial",q:"What is Minimax?",a:"Two-player game algorithm. MAX maximises score, MIN minimises. Build game tree, propagate values from leaves up."},
+  {t:"Adversarial",q:"How to solve a minimax tree?",a:"Work from bottom up. At MIN nodes, take the minimum of children. At MAX nodes, take the maximum."},
+  {t:"Adversarial",q:"What is alpha-beta pruning?",a:"Same result as minimax but skips branches that can't affect the decision. Prune when α ≥ β."},
+  {t:"Adversarial",q:"What is α?",a:"Best value MAX can guarantee so far. Starts at −∞."},
+  {t:"Adversarial",q:"What is β?",a:"Best value MIN can guarantee so far. Starts at +∞."},
+
+  // ── PROBABILITY ───────────────────────────────────────────────────────────
+  {t:"Probability",q:"What is Bayes' Theorem?",a:"P(A|B) = P(B|A) × P(A) / P(B). Probability of A given B = how much A causes B, divided by all ways B happens."},
+  {t:"Probability",q:"How to compute P(B) (total probability)?",a:"P(B) = P(B|A)×P(A) + P(B|¬A)×P(¬A). Sum over all ways B can happen."},
+  {t:"Probability",q:"What is a Naive Bayes classifier?",a:"Assumes all features are conditionally independent given the class. P(class|features) ∝ P(class) × P(f₁|class) × P(f₂|class) × ..."},
+  {t:"Probability",q:"How to classify with Naive Bayes?",a:"Compute the product for each class. Pick the class with the larger product. No need to normalise."},
+  {t:"Probability",q:"What are knowledge graphs?",a:"Encode facts as triples: (subject, predicate, object). E.g. (cow, is-a, animal). Nodes = entities, edges = relationships."},
+
+  // ── MDPs ──────────────────────────────────────────────────────────────────
+  {t:"MDPs",q:"What is an MDP?",a:"Markov Decision Process. States, actions, transition probabilities, rewards, discount factor γ."},
+  {t:"MDPs",q:"What is the discount factor γ?",a:"How much future rewards are valued vs immediate. γ close to 0 = short-sighted. γ close to 1 = far-sighted."},
+  {t:"MDPs",q:"How to compute discounted reward?",a:"R₀ + γR₁ + γ²R₂ + ... E.g. γ=0.9, rewards [10,10,10] → 10 + 9 + 8.1 = 27.1."},
+  {t:"MDPs",q:"What is the Bellman equation?",a:"V(s) = R(s) + γ × max_a Σ T(s,a,s') × V(s'). Value = immediate reward + best discounted future."},
+
+  // ── NEURO-SYMBOLIC ────────────────────────────────────────────────────────
+  {t:"Neuro-Symbolic",q:"What is neuro-symbolic AI?",a:"Hybrid approach combining neural (deep learning, pattern recognition) with symbolic (logic, knowledge graphs, rules)."},
+  {t:"Neuro-Symbolic",q:"What are limitations of pure deep learning?",a:"Hallucinations, lack of common sense, poor interpretability, unsustainable scaling."},
+  {t:"Neuro-Symbolic",q:"What are strengths of symbolic AI?",a:"Trustworthiness (sound inference), interpretability (explainable reasoning), common-sense knowledge."},
+  {t:"Neuro-Symbolic",q:"What are the four operations in Velasquez et al.?",a:"1) Data-driven update (gradient descent). 2) Lift (neural → symbolic). 3) Symbolic update (apply domain knowledge). 4) Projection (symbolic → neural)."},
+  {t:"Neuro-Symbolic",q:"What is System 1 vs System 2 (Kahneman)?",a:"System 1 = fast, automatic, intuitive (5×4=20). System 2 = slow, deliberate, effortful (547×27)."},
+  {t:"Neuro-Symbolic",q:"What is the scaling problem?",a:"AI model parameters double every 4-6 months. AI uses ~5% of US electricity. Physically and economically unsustainable."},
+  {t:"Neuro-Symbolic",q:"How does neuro-symbolic AI address scaling?",a:"Symbolic knowledge can shortcut the learning process, bypassing difficult terrain in the loss landscape that would need many gradient steps."},
+
+  // ── EXAM FORMAT ───────────────────────────────────────────────────────────
+  {t:"Exam Format",q:"What is the exam format?",a:"16 MCQs (66 marks, mix of 3 and 6 mark questions) + 1 essay (34 marks) = 100 marks total."},
+  {t:"Exam Format",q:"What topics do MCQs cover?",a:"Entire year — search, probability/ML, and deep learning, split roughly evenly (~22 marks each)."},
+  {t:"Exam Format",q:"What is the essay about?",a:"Choose one of three neuro-symbolic AI papers. Two known paragraphs (9+9 marks) + one unseen part (16 marks)."},
+  {t:"Exam Format",q:"Are formulae provided?",a:"Some are provided (marked green on the equation sheet). Others must be memorised (marked red)."},
+  {t:"Exam Format",q:"Key formulas to memorise?",a:"SVM margin (2/‖w‖), activation functions, FC params (nᵢₙ×nₒᵤₜ+nₒᵤₜ), CNN output size, CNN params (K(F²D₁)+K), self-attention (softmax(QKᵀ/√D')V), GAN losses."},
+];
+
+const STORAGE_KEY = 'cm52053_flashcards_v1';
+
+let deck = [...ALL_CARDS];
+let idx = 0, got = 0, missed = 0;
+let missed_cards = [];
+let flipped = false;
+let activeTopic = 'All';
+
+const topics = ['All', ...new Set(ALL_CARDS.map(c => c.t))];
+
+function saveState() {
+  try {
+    const state = {
+      activeTopic,
+      deckIndices: deck.map(c => ALL_CARDS.indexOf(c)),
+      idx, got, missed,
+      missedIndices: missed_cards.map(c => ALL_CARDS.indexOf(c))
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const ind = document.getElementById('savedIndicator');
+    if (ind) {
+      ind.classList.add('show');
+      clearTimeout(saveState._t);
+      saveState._t = setTimeout(() => ind.classList.remove('show'), 1200);
+    }
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || !Array.isArray(s.deckIndices) || s.deckIndices.length === 0) return false;
+    activeTopic = s.activeTopic || 'All';
+    deck = s.deckIndices.map(i => ALL_CARDS[i]).filter(Boolean);
+    idx = Math.min(s.idx || 0, deck.length);
+    got = s.got || 0;
+    missed = s.missed || 0;
+    missed_cards = (s.missedIndices || []).map(i => ALL_CARDS[i]).filter(Boolean);
+    return true;
+  } catch (e) { return false; }
+}
+
+function resetProgress() {
+  if (!confirm('Reset all flashcard progress?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  activeTopic = 'All';
+  deck = [...ALL_CARDS];
+  shuffle(deck);
+  idx = 0; got = 0; missed = 0; missed_cards = [];
+  flipped = false;
+  document.getElementById('doneMsg').style.display = 'none';
+  document.getElementById('cardWrap').style.display = 'block';
+  document.getElementById('controls').style.display = 'none';
+  renderTopicBar();
+  render();
+}
+
+function renderTopicBar() {
+  document.getElementById('topicBar').innerHTML = topics.map(t =>
+    `<button class="fc-topic-btn${t===activeTopic?' active':''}" onclick="setTopic('${t.replace(/'/g, "\\'")}')">${t}</button>`
+  ).join('');
+}
+
+function setTopic(t) {
+  activeTopic = t;
+  renderTopicBar();
+  deck = (t === 'All' ? [...ALL_CARDS] : ALL_CARDS.filter(c => c.t === t));
+  shuffle(deck);
+  idx = 0; got = 0; missed = 0; missed_cards = [];
+  flipped = false;
+  document.getElementById('doneMsg').style.display = 'none';
+  document.getElementById('cardWrap').style.display = 'block';
+  document.getElementById('controls').style.display = 'none';
+  saveState();
+  render();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function shuffleCards() { setTopic(activeTopic); }
+
+function render() {
+  if (idx >= deck.length) {
+    document.getElementById('cardWrap').style.display = 'none';
+    document.getElementById('controls').style.display = 'none';
+    document.getElementById('doneMsg').style.display = 'block';
+    updateScore();
+    return;
+  }
+  const c = deck[idx];
+  document.getElementById('cardTopic').textContent = c.t;
+  document.getElementById('cardQ').textContent = c.q;
+  document.getElementById('cardA').textContent = c.a;
+  document.getElementById('progress').textContent = `${idx + 1} / ${deck.length}`;
+  document.getElementById('card').classList.remove('flipped');
+  flipped = false;
+  document.getElementById('controls').style.display = 'none';
+  updateScore();
+}
+
+function flipCard() {
+  if (idx >= deck.length) return;
+  flipped = !flipped;
+  document.getElementById('card').classList.toggle('flipped', flipped);
+  if (flipped) document.getElementById('controls').style.display = 'flex';
+}
+
+function rate(correct) {
+  if (correct) got++; else { missed++; missed_cards.push(deck[idx]); }
+  idx++;
+  saveState();
+  render();
+}
+
+function updateScore() {
+  document.getElementById('scoreG').textContent = got;
+  document.getElementById('scoreB').textContent = missed;
+  document.getElementById('scoreR').textContent = Math.max(0, deck.length - idx);
+}
+
+function restartMissed() {
+  if (missed_cards.length === 0) { restartAll(); return; }
+  deck = [...missed_cards];
+  shuffle(deck);
+  idx = 0; got = 0; missed = 0; missed_cards = [];
+  flipped = false;
+  document.getElementById('doneMsg').style.display = 'none';
+  document.getElementById('cardWrap').style.display = 'block';
+  document.getElementById('controls').style.display = 'none';
+  saveState();
+  render();
+}
+
+function restartAll() { setTopic(activeTopic); }
+
+if (!loadState()) {
+  shuffle(deck);
+}
+renderTopicBar();
+render();
+</script>
+</body>
+</html>
