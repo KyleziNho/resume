@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM52053 MCQ Practice</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1.5rem; }
+  .app { max-width: 720px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; margin-bottom: 4px; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 1rem; }
+  .nav-tabs { display: flex; gap: 4px; margin-bottom: 1rem; border-bottom: 1px solid #e0e0e0; }
+  .nav-tab { padding: 8px 16px; text-decoration: none; color: #888; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: #1a1a1a; }
+  .nav-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+  .topic-bar { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 1rem; }
+  .topic-btn { font-size: 12px; padding: 4px 10px; border-radius: 20px; border: 1px solid #ccc; background: #fff; color: #666; cursor: pointer; }
+  .topic-btn.active { background: #1a1a1a; color: #fff; border-color: transparent; }
+  .progress-bar { height: 4px; background: #e0e0e0; border-radius: 2px; margin-bottom: 1rem; }
+  .progress-fill { height: 100%; background: #2d7a2d; border-radius: 2px; transition: width 0.3s; }
+  .meta { display: flex; justify-content: space-between; align-items: center; font-size: 13px; color: #888; margin-bottom: 1rem; }
+  .meta-actions { display: flex; gap: 12px; align-items: center; }
+  .saved-indicator { font-size: 11px; color: #2d7a2d; opacity: 0; transition: opacity 0.3s; }
+  .saved-indicator.show { opacity: 1; }
+  .shuffle-btn { font-size: 12px; color: #888; cursor: pointer; text-decoration: underline; background: none; border: none; padding: 0; }
+  .card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+  .topic-tag { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #aaa; margin-bottom: 0.75rem; }
+  .question { font-size: 15px; font-weight: 500; line-height: 1.55; margin-bottom: 1.25rem; }
+  .options { display: flex; flex-direction: column; gap: 8px; }
+  .option { padding: 12px 16px; border: 1px solid #e0e0e0; border-radius: 8px; cursor: pointer; font-size: 14px; line-height: 1.4; transition: all 0.15s; background: #fff; text-align: left; width: 100%; }
+  .option:hover:not(:disabled) { border-color: #999; background: #f9f9f9; }
+  .option.correct { border-color: #2d7a2d; background: #f0faf0; color: #1a4d1a; }
+  .option.wrong { border-color: #c0392b; background: #fdf0f0; color: #7a1a1a; }
+  .option:disabled { cursor: default; }
+  .explanation { margin-top: 1rem; padding: 12px 16px; background: #f5f5f0; border-radius: 8px; font-size: 13px; line-height: 1.65; color: #444; border-left: 3px solid #888; display: none; white-space: pre-wrap; }
+  .explanation.show { display: block; }
+  .explanation.correct-exp { border-left-color: #2d7a2d; }
+  .explanation.wrong-exp { border-left-color: #c0392b; }
+  .nav { display: flex; justify-content: space-between; align-items: center; margin-top: 1rem; }
+  .nav-btn { padding: 8px 20px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 14px; }
+  .nav-btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .score-card { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 2rem; text-align: center; }
+  .score-big { font-size: 48px; font-weight: 500; margin: 0.5rem 0; }
+  .score-label { font-size: 14px; color: #888; margin-bottom: 1.5rem; }
+  .score-breakdown { display: flex; gap: 1rem; justify-content: center; font-size: 13px; margin-bottom: 1.5rem; }
+  .score-breakdown .g { color: #2d7a2d; }
+  .score-breakdown .b { color: #c0392b; }
+  .restart-btn { padding: 10px 24px; border-radius: 8px; border: 1px solid #ccc; background: #fff; cursor: pointer; font-size: 14px; margin: 0 4px; }
+  .restart-btn.primary { background: #1a1a1a; color: #fff; border-color: #1a1a1a; }
+  .foot { font-size: 12px; color: #aaa; margin-top: 2rem; text-align: center; }
+  .foot a { color: #888; text-decoration: none; }
+  .foot a:hover { color: #1a1a1a; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="nav-tabs">
+    <a href="/CM52053/flashcards.html" class="nav-tab">Flashcards</a>
+    <a href="/CM52053/mcq.html" class="nav-tab active">MCQ Practice</a>
+  </nav>
+  <div class="eyebrow">University of Bath</div>
+  <h1>CM52053 — MCQ Practice</h1>
+  <p class="subtitle">Worked examples from the module problem sheets. Pick a topic or attempt all questions.</p>
+  <div class="topic-bar" id="topicBar"></div>
+  <div class="progress-bar"><div class="progress-fill" id="progressFill"></div></div>
+  <div class="meta">
+    <span id="qMeta"></span>
+    <div class="meta-actions">
+      <span class="saved-indicator" id="savedIndicator">✓ saved</span>
+      <button class="shuffle-btn" onclick="shuffleAndRestart()">Shuffle</button>
+      <button class="shuffle-btn" onclick="resetProgress()">Reset progress</button>
+    </div>
+  </div>
+  <div id="quizArea"></div>
+  <p class="foot"><a href="https://www.kyleosullivan.uk">kyleosullivan.uk</a></p>
+</div>
+
+<script>
+const ALL_Q = [
+  // ── SEARCH ─────────────────────────────────────────────────────────────────
+  {t:"Search", q:"I am looking for a direct ancestor with exactly the same name as myself. The closest such ancestor is 5 generations away. I use BFS through my family tree starting from my parents (everyone has 2 parents). What is the MINIMUM number of names I will need to check before finding my own?",
+   opts:["5","7","31","63","128"],
+   ans:2, exp:"BFS expands level by level. Levels 1–4 (parents to great-great-grandparents) contain 2+4+8+16 = 30 people. In the minimum case the matching ancestor is the FIRST checked in level 5 → 30 + 1 = 31 names."},
+
+  {t:"Search", q:"Which statement about admissible vs consistent heuristics is TRUE?",
+   opts:["If a heuristic is admissible, it is definitely consistent","If a heuristic is admissible, it MIGHT be consistent","If a heuristic is admissible, it is definitely NOT consistent","If a heuristic is not admissible, it MIGHT still be consistent"],
+   ans:1, exp:"Consistency implies admissibility but NOT the reverse. An admissible heuristic might be consistent but isn't guaranteed to be. A non-admissible heuristic cannot be consistent (since consistency implies admissibility)."},
+
+  {t:"Search", q:"In an n×n grid maze with horizontal/vertical moves of cost 1, which heuristic is ALWAYS admissible (estimates distance from square (x,y) to goal (n,n))?",
+   opts:["Manhattan distance from initial state: (x−1)+(y−1)","Manhattan distance to goal: (n−x)+(n−y)","Euclidean distance from initial state","Number of black squares above-right of the current square"],
+   ans:1, exp:"A heuristic must estimate cost TO THE GOAL — distance from the initial state has nothing to do with how far the goal is. On a grid with only horizontal/vertical moves, Manhattan-to-goal exactly equals the minimum cost ignoring obstacles, so it never overestimates."},
+
+  {t:"Search", q:"Which statement about search algorithms is FALSE?",
+   opts:["Uniform-Cost (Dijkstra) search is uninformed","BFS is a special case of UCS (when all step costs are equal)","UCS is a special case of A* (with h = 0)","DFS always expands at least as many nodes as A* with an admissible heuristic"],
+   ans:3, exp:"DFS does NOT always expand at least as many nodes. DFS can luck into a path quickly by going deep in the right direction. A* may explore many shallow nodes before finding the optimal. The other three are all true."},
+
+  {t:"Search", q:"True or false: BFS is complete even when the state space is infinite and contains no solution.",
+   opts:["True — BFS always terminates","False — BFS will run forever if there is no goal in an infinite state space"],
+   ans:1, exp:"FALSE. Completeness means BFS finds a solution IF one exists. With no solution in an infinite space, BFS expands levels indefinitely and never terminates."},
+
+  {t:"Search", q:"A king on a chessboard can move one square in any of 8 directions (including diagonals). Is Manhattan distance an admissible heuristic for moving the king from A to B?",
+   opts:["Yes — Manhattan never overestimates the king's true cost","No — Manhattan OVERESTIMATES because the king can use diagonals; the true minimum cost is Chebyshev distance (max of |Δx|, |Δy|)"],
+   ans:1, exp:"NO. Diagonal moves cost 1 but cover both an x-step and a y-step. The true minimum cost is the Chebyshev distance — Manhattan double-counts diagonals and overestimates, so it isn't admissible."},
+
+  {t:"Search", q:"What is the correct evaluation function for A* search?",
+   opts:["f(n) = g(n) − h(n)","f(n) = g(n) + h(n)","f(n) = h(n) only","f(n) = g(n) only"],
+   ans:1, exp:"f(n) = g(n) + h(n). g(n) is the actual cost from the start to n; h(n) is the estimated cost from n to the goal. A* expands the node with lowest f."},
+
+  {t:"Search", q:"Which expression correctly defines a CONSISTENT heuristic?",
+   opts:["h(n) ≤ c(n,n') + h(n') for every successor n' of n","h(n) > c(n,n') + h(n') for every successor n' of n","h(n) is always exactly equal to the true cost","h(n) = 0 for non-goal nodes only"],
+   ans:0, exp:"Consistency (monotonicity) is the triangle inequality applied to estimates: the estimate at n can't exceed the cost to a successor plus the estimate from that successor."},
+
+  {t:"Search", q:"A graph has true cost-to-goal: A=4, B=2, C=3, D=1. A heuristic gives h(A)=3, h(B)=2, h(C)=3, h(D)=4. Is this heuristic admissible?",
+   opts:["Yes — all values are non-negative","No — h(D)=4 > true cost 1, so it overestimates","Yes — h(A) ≤ true cost is enough","Cannot be determined"],
+   ans:1, exp:"For admissibility, h(n) ≤ true cost for ALL n. h(D)=4 overestimates the true cost (1), so the heuristic is NOT admissible. One overestimate breaks the whole property."},
+
+  // ── ADVERSARIAL ─────────────────────────────────────────────────────────────
+  {t:"Adversarial", q:"In a minimax tree, MAX root A has MIN children B, C. Under B are MAX nodes D, E with leaves D=(20,0), E=(−16,−4). Under C are MAX nodes F, G with leaves F=(−2,18), G=(19,5). What is the value of the game for MAX?",
+   opts:["20","−16","−4","18","19"],
+   ans:3, exp:"D = max(20,0) = 20. E = max(−16,−4) = −4. B = min(20,−4) = −4. F = max(−2,18) = 18. G = max(19,5) = 19. C = min(18,19) = 18. A = max(−4,18) = 18."},
+
+  {t:"Adversarial", q:"In the same tree, with alpha-beta pruning exploring left-to-right, which leaf is pruned?",
+   opts:["−4","−2","18","19","5"],
+   ans:4, exp:"After B returns −4, A has α=−4. At C (MIN, β=+∞), F returns 18, so β=18. At G (MAX, α=−4, β=18), the first child 19 gives v=19 which is ≥ β=18 → PRUNE the remaining child (5)."},
+
+  {t:"Adversarial", q:"Which statement about minimax is TRUE?",
+   opts:["Minimax only works for games with no possibility of a draw","Minimax is complete if the game tree is finite","Alpha-beta pruning sacrifices optimality for speed","Look-up tables sacrifice optimality for speed"],
+   ans:1, exp:"Minimax is complete given a finite tree. Alpha-beta returns the SAME value as full minimax (no loss of optimality) — it just prunes branches that can't change the result. Look-up tables store exact values so they don't sacrifice optimality either."},
+
+  {t:"Adversarial", q:"Which game setting is minimax search NOT directly suitable for?",
+   opts:["Two-player game with discrete states and moves","Zero-sum game between two opponents","A game where two players cooperate to maximise joint score","A two-player game with a finite tree"],
+   ans:2, exp:"Minimax assumes one player MAXIMISES and the other MINIMISES (adversarial). Cooperating players both want to maximise — a different algorithm (e.g. joint search) is needed."},
+
+  {t:"Adversarial", q:"MAX root A has MIN children B, C. Under B are MAX nodes D, E with leaves D=(5,10), E=(15,5). Under C are MAX nodes F, G with leaves F=(5,0), G=(20,10). What is the value of the game for MAX?",
+   opts:["5","10","15","20"],
+   ans:1, exp:"D=max(5,10)=10. E=max(15,5)=15. B=min(10,15)=10. F=max(5,0)=5. G=max(20,10)=20. C=min(5,20)=5. A=max(10,5)=10."},
+
+  // ── CSP ─────────────────────────────────────────────────────────────────────
+  {t:"CSP", q:"You want to colour 50 US states with 4 colours such that no two adjacent states share a colour. Which is the correct CSP formulation?",
+   opts:["Variables = states. Domain = {Red, Blue, Green, Yellow}. Constraint = 'no two adjacent states share a colour'","Variables = colours. Domain = states. Constraint = 'no two adjacent states share a colour'","Variables = states. Domain = adjacent states. Constraint = 'each state is coloured'","Variables = states. Domain = {Red, Blue, Green, Yellow}. Constraint = 'each state is coloured red, blue, green or yellow'"],
+   ans:0, exp:"Variables are what you assign (states), domain is what you assign FROM (colours), constraint is the actual restriction (adjacency). 'Each state is coloured' is just restating the assignment, not a real constraint."},
+
+  {t:"CSP", q:"You want to fill a crossword where every entry is a 5-letter word. Which is the correct CSP formulation?",
+   opts:["Variables = 5-letter words. Domain = spaces in the crossword","Variables = spaces for a word. Domain = 5-letter words. Constraint = 'crossing letters match'","Variables = letters. Domain = positions. Constraint = 'letters form valid words'","Variables = words. Domain = positions. Constraint = 'each word is five letters long'"],
+   ans:1, exp:"You assign WORDS into SPACES — so spaces are the variables, dictionary words are the domain, and the constraint links crossing spaces by their shared letter."},
+
+  {t:"CSP", q:"Which statement about hill-climbing is TRUE?",
+   opts:["In a finite search space, hill-climbing is guaranteed to find a local maximum given enough time","Hill-climbing is guaranteed to find the global maximum","Hill-climbing requires an admissible heuristic","Hill-climbing has exponential space complexity"],
+   ans:0, exp:"Each step strictly improves and the space is finite, so hill-climbing must terminate at some local maximum. It does NOT guarantee a GLOBAL max — it gets stuck on local ones."},
+
+  {t:"CSP", q:"Which is TRUE about random-restart hill-climbing in a finite search space?",
+   opts:["Always finds the global maximum given enough time","Never finds the global maximum","Has the same guarantees as plain hill-climbing","Requires an admissible heuristic to converge"],
+   ans:0, exp:"With infinitely many restarts, the algorithm eventually starts in the basin of attraction of the global maximum. So given enough time it is guaranteed to find it."},
+
+  {t:"CSP", q:"What is the worst-case space complexity of hill-climbing?",
+   opts:["Exponential in branching factor","Linear in solution depth","Constant","Logarithmic in state-space size"],
+   ans:2, exp:"Hill-climbing only stores the current state (and possibly its best successor). Space is O(1) — constant — independent of depth or branching factor."},
+
+  // ── MDP ────────────────────────────────────────────────────────────────────
+  {t:"MDP", q:"Which is the correct definition of the state value U^π(s)?",
+   opts:["The guaranteed reward obtained in the next state when following policy π","The EXPECTED discounted return starting from state s under policy π","The maximum reward achievable from state s","The transition probability under policy π"],
+   ans:1, exp:"U^π(s) is an expectation over all trajectories starting from s and following π. Not a guarantee — stochastic transitions mean any single rollout may differ."},
+
+  {t:"MDP", q:"Under a DETERMINISTIC policy, the probability of taking a specific action in a given state can be:",
+   opts:["0 or 1 only","Any value between 0 and 1","Must be 0.5 if there are two actions","Determined by the discount factor"],
+   ans:0, exp:"Deterministic means exactly one action is chosen in each state — probability 1 for the chosen action, 0 for the rest. Anything between would be a stochastic policy."},
+
+  {t:"MDP", q:"You park your scooter in an alley. A parking inspector walks past with probability 0.1, in which case you get fined £80. Otherwise no fine. What is the expected fine?",
+   opts:["£0","£4","£8","£60","£80"],
+   ans:2, exp:"E[Fine] = 0.1 × £80 + 0.9 × £0 = £8."},
+
+  {t:"MDP", q:"A room gives reward 100 with prob 0.1, reward 15 with prob 0.7, and reward 5 with prob 0.2. What is the expected reward?",
+   opts:["15","15.5","21.5","40","100"],
+   ans:2, exp:"E[Reward] = 0.1×100 + 0.7×15 + 0.2×5 = 10 + 10.5 + 1 = 21.5."},
+
+  {t:"MDP", q:"A discount rate of γ = 0 means:",
+   opts:["All future rewards are equally weighted","Only the immediate reward matters","All rewards are taken into account equally","Rewards are ignored entirely"],
+   ans:1, exp:"γ = 0 zeros out future rewards — only R₀ contributes to the discounted return. Short-sighted policy."},
+
+  {t:"MDP", q:"A discount rate of γ = 1 means:",
+   opts:["Only immediate reward matters","All future rewards are weighted equally (no discounting)","Future rewards are halved each step","Policy depends only on the current state"],
+   ans:1, exp:"γ = 1 means no discounting — every future reward weighted equally. Used for finite-horizon problems; can diverge in infinite horizons."},
+
+  {t:"MDP", q:"Which statement about MDPs is TRUE?",
+   opts:["All transition probabilities present in a transition graph must sum to 1","For each (state, action) pair, the transition probabilities to next states must sum to 1","All states must have the same set of available actions","The outcome of every action must be stochastic"],
+   ans:1, exp:"From a specific (s, a), the probabilities of next states sum to 1. Different (s, a) pairs are independent. States can have different action sets, and outcomes can be deterministic."},
+
+  {t:"MDP", q:"The Markov property states that:",
+   opts:["The next state depends on the current state and all previous states","The next state and reward depend only on the current state and action taken","The reward function is independent of the action","The discount factor is always 1"],
+   ans:1, exp:"Markov = memoryless. The next state/reward depend only on the current (s, a), not on the history. This is what makes MDPs tractable."},
+
+  {t:"MDP", q:"An MDP has 2 states (T, M) and 2 actions in each state. How many distinct DETERMINISTIC policies exist?",
+   opts:["2","4","6","8","∞"],
+   ans:1, exp:"Each of the 2 states independently picks one of 2 actions → 2 × 2 = 4 distinct deterministic policies."},
+
+  {t:"MDP", q:"From state T, action 'clean' transitions to T w.p. 7/9 (reward +8) and to M w.p. 2/9 (reward −10). From M, 'clean' goes deterministically to T (reward −8). With γ = 0.9 and the 'always clean' policy, what is V(T)?",
+   opts:["−10","20","40","60","80"],
+   ans:1, exp:"Bellman: V(T) = (7/9)(8 + 0.9 V(T)) + (2/9)(−10 + 0.9 V(M)); V(M) = −8 + 0.9 V(T). Substituting: V(T) = 4 + 0.88 V(T) − 1.6 → 0.12 V(T) = 2.4 → V(T) = 20."},
+
+  {t:"MDP", q:"For an MDP, the optimal policy π* depends on:",
+   opts:["The history of visited states and actions","Discount rate, transition probabilities, reward function, and current state — but NOT history","Only the reward function","Only the transition probabilities"],
+   ans:1, exp:"By the Markov property, π* depends only on the current state (not the path taken). It also depends on γ, transitions, and rewards — changing any of those can change π*."},
+
+  {t:"MDP", q:"In an MDP, can the outcome of an action be deterministic?",
+   opts:["No — every action must be stochastic","Yes — an action can transition to a specific next state with probability 1","No — only the policy can be deterministic","Yes, but only in terminal states"],
+   ans:1, exp:"MDPs allow deterministic transitions (probability 1 to one next state). Stochastic is common but not required."},
+
+  // ── PROBABILITY ─────────────────────────────────────────────────────────────
+  {t:"Probability", q:"You estimate P(raining)=0.25, P(jacket)=0.5, P(jacket | raining)=0.7. You see your friend wearing the jacket. What is P(raining | jacket)?",
+   opts:["0.30","0.35","0.70","0.75"],
+   ans:1, exp:"Bayes: P(rain|jacket) = P(jacket|rain) × P(rain) / P(jacket) = 0.7 × 0.25 / 0.5 = 0.175 / 0.5 = 0.35."},
+
+  {t:"Probability", q:"Which statement about probability is FALSE?",
+   opts:["The probability of any event is between 0 and 1","The sum of probabilities of all outcomes in a sample space equals 1","The sum of probabilities of all events in an event space equals 1","Outcomes in a sample space are mutually exclusive"],
+   ans:2, exp:"Events can OVERLAP (e.g. 'even' and '< 4' both include 2), so their probabilities don't sum to 1. Outcomes are mutually exclusive and exhaustive — they DO sum to 1."},
+
+  {t:"Probability", q:"You roll two fair six-sided dice and sum them. What is the probability the sum is exactly 4?",
+   opts:["1/36","1/18","1/12","1/9","5/36"],
+   ans:2, exp:"Outcomes giving sum 4: (1,3), (2,2), (3,1) — three out of 36 → 3/36 = 1/12."},
+
+  {t:"Probability", q:"You roll two fair six-sided dice. What is the expected value of the sum?",
+   opts:["3","3.5","6","7","10.5","12"],
+   ans:3, exp:"E[one die] = (1+2+3+4+5+6)/6 = 3.5. E[sum] = 3.5 + 3.5 = 7."},
+
+  {t:"Probability", q:"P(success) = 0.8. P(B | success) = 0.025. P(B | unsuccess) = 0.3. What is P(success | B)?",
+   opts:["0.025","0.035","0.25","0.75","0.8"],
+   ans:2, exp:"P(B) = 0.025×0.8 + 0.3×0.2 = 0.02 + 0.06 = 0.08. P(success|B) = (0.025 × 0.8) / 0.08 = 0.02/0.08 = 0.25."},
+
+  {t:"Probability", q:"Joint distribution P(Reward, Room): room1 (high=0.1, low=0.4), room2 (high=0.2, low=0.2), room3 (high=0.09, low=0.01). What is P(Reward = high)?",
+   opts:["0.10","0.30","0.39","0.50","1.00"],
+   ans:2, exp:"Marginalise over Room: P(high) = 0.1 + 0.2 + 0.09 = 0.39."},
+
+  {t:"Probability", q:"From the same joint distribution, what is P(Room = room1)?",
+   opts:["0.10","0.40","0.39","0.50","0.89"],
+   ans:3, exp:"Marginalise over Reward: P(room1) = 0.1 + 0.4 = 0.5."},
+
+  {t:"Probability", q:"From the same joint distribution, what is P(Reward = high | Room = room2)?",
+   opts:["0.2","0.4","0.5","1.0"],
+   ans:2, exp:"P(high|room2) = P(high, room2)/P(room2) = 0.2 / (0.2 + 0.2) = 0.2/0.4 = 0.5."},
+
+  {t:"Probability", q:"A cave explorer knows P(close) = 0.03, P(light) = 0.04, P(light | close) = 0.95. He sees light. What is P(close | light)?",
+   opts:["0.03","0.21","0.71","0.95"],
+   ans:2, exp:"Bayes: P(close|light) = P(light|close) × P(close) / P(light) = 0.95 × 0.03 / 0.04 = 0.0285 / 0.04 = 0.7125 ≈ 0.71."},
+
+  // ── SUPERVISED LEARNING ─────────────────────────────────────────────────────
+  {t:"Supervised", q:"In a Naive Bayes classifier trained on 50 Versicolor samples (sepal=L appears 9 times) using add-one Laplace smoothing with 3 sepal categories, what is P(sepal=L | Versicolor)?",
+   opts:["9/50","9/53","10/50","10/53"],
+   ans:3, exp:"Laplace: (count + 1) / (total + #categories) = (9 + 1) / (50 + 3) = 10/53."},
+
+  {t:"Supervised", q:"For the iris data with Laplace smoothing: P(sepal=L|Vers)=10/53, P(petal=M|Vers)=49/53, P(sepal=L|Set)=1/53, P(petal=M|Set)=1/53, P(sepal=L|Virg)=27/53, P(petal=M|Virg)=7/53. Priors equal at 1/3. What is P(Versicolor | sepal=L, petal=M)?",
+   opts:["0.15","0.72","0.73","0.98","0.99"],
+   ans:1, exp:"Unnormalised: Setosa = 1×1 = 1. Versicolor = 10×49 = 490. Virginica = 27×7 = 189. Total = 680. P(Versicolor) = 490/680 ≈ 0.72."},
+
+  {t:"Supervised", q:"You use 1-NN with Euclidean distance. Class 1 = {(1,2), (4,3)}. Class 2 = {(−1.5,3), (−4,2)}. Class 3 = {(5,−3), (1,−2)}. Which class does point (1, −1) belong to?",
+   opts:["Class 1","Class 2","Class 3"],
+   ans:2, exp:"Distances: to (1,2)=3, to (4,3)=5, to (−1.5,3)≈4.72, to (−4,2)≈5.83, to (5,−3)≈4.47, to (1,−2)=1. Nearest is (1,−2) → Class 3."},
+
+  {t:"Supervised", q:"Assuming features k, r, a are conditionally independent given class s, which formula correctly gives P(s | k, r, a)?",
+   opts:["P(s) / P(k,r,a)","P(s) P(k|s) P(r|s) P(a|s) / P(k,r,a)","P(s,k,r,a) / P(s|k,r,a)","P(s) P(k|s) P(r|s) P(r|a) / P(s,k,r,a)"],
+   ans:1, exp:"Bayes' theorem combined with conditional independence: P(s|k,r,a) = P(s) × P(k|s) × P(r|s) × P(a|s) / P(k,r,a)."},
+
+  {t:"Supervised", q:"Spam filter with P(spam) = 0.5. For spam: P(k=1)=0.7, P(r=1)=0.2, P(a=1)=0.6. For ham: P(k=1)=0.4, P(r=1)=0.9, P(a=1)=0.3. Message M = (k=0, r=1, a=0). What is P(spam | M)?",
+   opts:["0.01","0.06","0.19","0.50","0.81"],
+   ans:1, exp:"P(spam, M) = 0.5 × 0.3 × 0.2 × 0.4 = 0.012. P(ham, M) = 0.5 × 0.6 × 0.9 × 0.7 = 0.189. P(spam | M) = 0.012 / (0.012 + 0.189) = 0.06."},
+
+  {t:"Supervised", q:"Which statement about supervised learning is TRUE?",
+   opts:["A problem with a real-valued target variable is a classification problem","A problem with a real-valued target variable is a regression problem","Supervised learning does not require target values","All supervised learning is unsupervised"],
+   ans:1, exp:"Real-valued (continuous) target → regression. Discrete target → classification. Supervised learning requires labelled targets by definition."},
+
+  {t:"Supervised", q:"Which of the following is a source of BIAS in machine learning data?",
+   opts:["Random sampling from the population","Using stratified cross-validation","Experts incorrectly classifying training data","Standardising input features"],
+   ans:2, exp:"Human labelling errors propagate as systematic bias in the trained model. Random sampling, stratified CV, and feature scaling are common mitigations, not sources of bias."},
+];
+
+const STORAGE_KEY = 'cm52053_mcq_v1';
+
+let deck = [...ALL_Q];
+let idx = 0, correct = 0, incorrect = 0;
+let answered = false;
+let activeTopic = 'All';
+let lastChosen = null;
+
+const topics = ['All', ...new Set(ALL_Q.map(q => q.t))];
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function saveState() {
+  try {
+    const state = {
+      activeTopic,
+      deckIndices: deck.map(q => ALL_Q.indexOf(q)),
+      idx, correct, incorrect,
+      lastChosen: answered ? lastChosen : null
+    };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const ind = document.getElementById('savedIndicator');
+    if (ind) {
+      ind.classList.add('show');
+      clearTimeout(saveState._t);
+      saveState._t = setTimeout(() => ind.classList.remove('show'), 1200);
+    }
+  } catch (e) {}
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return false;
+    const s = JSON.parse(raw);
+    if (!s || !Array.isArray(s.deckIndices) || s.deckIndices.length === 0) return false;
+    activeTopic = s.activeTopic || 'All';
+    deck = s.deckIndices.map(i => ALL_Q[i]).filter(Boolean);
+    idx = Math.min(s.idx || 0, deck.length);
+    correct = s.correct || 0;
+    incorrect = s.incorrect || 0;
+    lastChosen = (s.lastChosen === undefined ? null : s.lastChosen);
+    return true;
+  } catch (e) { return false; }
+}
+
+function resetProgress() {
+  if (!confirm('Reset all MCQ progress?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  activeTopic = 'All';
+  deck = [...ALL_Q];
+  shuffle(deck);
+  idx = 0; correct = 0; incorrect = 0; answered = false; lastChosen = null;
+  renderTopicBar();
+  renderQuestion();
+}
+
+function renderTopicBar() {
+  document.getElementById('topicBar').innerHTML = topics.map(t =>
+    `<button class="topic-btn${t===activeTopic?' active':''}" onclick="setTopic('${t}')">${t} ${t==='All'?'('+ALL_Q.length+')':'('+ALL_Q.filter(q=>q.t===t).length+')'}</button>`
+  ).join('');
+}
+
+function setTopic(t) {
+  activeTopic = t;
+  deck = t === 'All' ? [...ALL_Q] : ALL_Q.filter(q => q.t === t);
+  shuffle(deck);
+  idx = 0; correct = 0; incorrect = 0; answered = false; lastChosen = null;
+  renderTopicBar();
+  saveState();
+  renderQuestion();
+}
+
+function shuffleAndRestart() { setTopic(activeTopic); }
+
+function renderQuestion() {
+  const total = deck.length;
+  document.getElementById('progressFill').style.width = (idx / total * 100) + '%';
+  document.getElementById('qMeta').textContent = `Question ${Math.min(idx+1, total)} of ${total}  ·  ✓ ${correct}  ✗ ${incorrect}`;
+
+  if (idx >= total) { renderDone(); return; }
+
+  const q = deck[idx];
+  answered = false;
+
+  document.getElementById('quizArea').innerHTML = `
+    <div class="card">
+      <div class="topic-tag">${q.t}</div>
+      <div class="question">${q.q}</div>
+      <div class="options" id="opts">
+        ${q.opts.map((o,i) => `<button class="option" id="opt${i}" onclick="selectAnswer(${i})">${String.fromCharCode(65+i)}.  ${o}</button>`).join('')}
+      </div>
+      <div class="explanation" id="exp"></div>
+    </div>
+    <div class="nav">
+      <span></span>
+      <button class="nav-btn primary" id="nextBtn" onclick="nextQ()" style="display:none">Next →</button>
+    </div>
+  `;
+
+  if (lastChosen !== null && lastChosen !== undefined) {
+    answered = true;
+    const isCorrect = lastChosen === q.ans;
+    for (let i = 0; i < q.opts.length; i++) {
+      const btn = document.getElementById('opt'+i);
+      btn.disabled = true;
+      if (i === q.ans) btn.classList.add('correct');
+      else if (i === lastChosen && !isCorrect) btn.classList.add('wrong');
+    }
+    const exp = document.getElementById('exp');
+    exp.textContent = (isCorrect ? '✓ Correct. ' : '✗ Incorrect. ') + q.exp;
+    exp.className = 'explanation show ' + (isCorrect ? 'correct-exp' : 'wrong-exp');
+    document.getElementById('nextBtn').style.display = 'block';
+  }
+}
+
+function selectAnswer(chosen) {
+  if (answered) return;
+  answered = true;
+  lastChosen = chosen;
+  const q = deck[idx];
+  const isCorrect = chosen === q.ans;
+  if (isCorrect) correct++; else incorrect++;
+
+  for (let i = 0; i < q.opts.length; i++) {
+    const btn = document.getElementById('opt'+i);
+    btn.disabled = true;
+    if (i === q.ans) btn.classList.add('correct');
+    else if (i === chosen && !isCorrect) btn.classList.add('wrong');
+  }
+
+  const exp = document.getElementById('exp');
+  exp.textContent = (isCorrect ? '✓ Correct. ' : '✗ Incorrect. ') + q.exp;
+  exp.className = 'explanation show ' + (isCorrect ? 'correct-exp' : 'wrong-exp');
+  document.getElementById('nextBtn').style.display = 'block';
+  document.getElementById('qMeta').textContent = `Question ${idx+1} of ${deck.length}  ·  ✓ ${correct}  ✗ ${incorrect}`;
+  saveState();
+}
+
+function nextQ() {
+  idx++;
+  lastChosen = null;
+  answered = false;
+  saveState();
+  renderQuestion();
+}
+
+function renderDone() {
+  const pct = Math.round(correct / deck.length * 100);
+  const grade = pct >= 70 ? '🟢 Good' : pct >= 50 ? '🟡 Needs work' : '🔴 Keep revising';
+  document.getElementById('quizArea').innerHTML = `
+    <div class="score-card">
+      <div class="score-label">Final score</div>
+      <div class="score-big">${pct}%</div>
+      <div class="score-label">${grade}</div>
+      <div class="score-breakdown">
+        <span class="g">✓ Correct: ${correct}</span>
+        <span class="b">✗ Incorrect: ${incorrect}</span>
+        <span>Total: ${deck.length}</span>
+      </div>
+      <button class="restart-btn primary" onclick="setTopic(activeTopic)">Retry this topic</button>
+      <button class="restart-btn" onclick="setTopic('All')">Try all topics</button>
+    </div>
+  `;
+  document.getElementById('progressFill').style.width = '100%';
+}
+
+if (!loadState()) {
+  shuffle(deck);
+}
+renderTopicBar();
+renderQuestion();
+</script>
+</body>
+</html>
