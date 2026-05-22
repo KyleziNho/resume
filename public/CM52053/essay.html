@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CM52053 Essay Practice — Velasquez 2025</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100vh; padding: 1.5rem; }
+  .app { max-width: 820px; margin: 0 auto; }
+  .eyebrow { font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: #aaa; margin-bottom: 4px; }
+  h1 { font-size: 22px; font-weight: 500; margin-bottom: 0.25rem; }
+  .subtitle { font-size: 13px; color: #888; margin-bottom: 1rem; line-height: 1.5; }
+  .nav-tabs { display: flex; gap: 4px; margin-bottom: 1rem; border-bottom: 1px solid #e0e0e0; }
+  .nav-tab { padding: 8px 16px; text-decoration: none; color: #888; font-size: 14px; border-bottom: 2px solid transparent; transition: all 0.15s; }
+  .nav-tab:hover { color: #1a1a1a; }
+  .nav-tab.active { color: #1a1a1a; border-bottom-color: #1a1a1a; font-weight: 500; }
+  .toolbar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-bottom: 1rem; padding: 12px 16px; background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; }
+  .toolbar-btn { padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #ccc; background: #fff; color: #1a1a1a; cursor: pointer; }
+  .toolbar-btn:hover { background: #f0f0f0; }
+  .toolbar-summary { margin-left: auto; font-size: 13px; color: #888; }
+  .toolbar-summary .g { color: #2d7a2d; font-weight: 500; }
+  .toolbar-summary .b { color: #c0392b; font-weight: 500; }
+  .saved-indicator { font-size: 11px; color: #2d7a2d; opacity: 0; transition: opacity 0.3s; }
+  .saved-indicator.show { opacity: 1; }
+  .scenario { background: #fff; border: 1px solid #e0e0e0; border-radius: 12px; padding: 1.5rem; margin-bottom: 1rem; }
+  .scenario-head { display: flex; align-items: baseline; gap: 12px; margin-bottom: 0.75rem; flex-wrap: wrap; }
+  .scenario-num { font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #aaa; }
+  .scenario-title { font-size: 17px; font-weight: 500; }
+  .scenario-marks { font-size: 12px; color: #888; margin-left: auto; }
+  .scenario-context { font-size: 14px; color: #444; line-height: 1.6; padding: 12px 16px; background: #f9f9f7; border-left: 3px solid #888; border-radius: 4px; margin-bottom: 1.25rem; }
+  .scenario-context strong { color: #1a1a1a; }
+  .part { border-top: 1px solid #f0f0ec; padding: 1rem 0; }
+  .part:first-of-type { border-top: none; padding-top: 0; }
+  .part:last-of-type { padding-bottom: 0; }
+  .part-head { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap; margin-bottom: 0.5rem; }
+  .part-ref { font-weight: 500; font-size: 14px; color: #1a1a1a; min-width: 70px; }
+  .part-tag { font-size: 10px; text-transform: uppercase; letter-spacing: 0.05em; color: #888; padding: 2px 8px; border: 1px solid #e0e0e0; border-radius: 10px; }
+  .part-marks { font-size: 12px; color: #888; margin-left: auto; }
+  .part-status { font-size: 11px; padding: 2px 8px; border-radius: 10px; }
+  .part-status.got { background: #f0faf0; color: #2d7a2d; border: 1px solid #cfe8cf; }
+  .part-status.review { background: #fdf0f0; color: #c0392b; border: 1px solid #f0d0cc; }
+  .part-question { font-size: 14px; line-height: 1.6; color: #1a1a1a; margin-bottom: 0.75rem; }
+  .answer-toggle { padding: 6px 14px; border-radius: 6px; border: 1px solid #1a1a1a; background: #1a1a1a; color: #fff; font-size: 13px; cursor: pointer; }
+  .answer-toggle:hover { background: #333; }
+  .answer-toggle.hide { background: #fff; color: #1a1a1a; }
+  .answer-box { display: none; margin-top: 0.75rem; padding: 12px 16px; background: #f9f9f7; border-left: 3px solid #2d7a2d; border-radius: 4px; font-size: 13.5px; line-height: 1.75; color: #1a1a1a; white-space: pre-wrap; }
+  .answer-box.show { display: block; }
+  .self-rate { display: none; gap: 8px; margin-top: 0.75rem; align-items: center; flex-wrap: wrap; }
+  .self-rate.show { display: flex; }
+  .self-rate-label { font-size: 12px; color: #888; margin-right: 4px; }
+  .rate-btn { font-size: 12px; padding: 4px 12px; border-radius: 6px; border: 1px solid #ccc; background: #fff; cursor: pointer; }
+  .rate-btn.got { color: #2d7a2d; border-color: #2d7a2d; }
+  .rate-btn.got.active { background: #2d7a2d; color: #fff; }
+  .rate-btn.review { color: #c0392b; border-color: #c0392b; }
+  .rate-btn.review.active { background: #c0392b; color: #fff; }
+  .foot { font-size: 12px; color: #aaa; margin-top: 2rem; text-align: center; }
+  .foot a { color: #888; text-decoration: none; }
+  .foot a:hover { color: #1a1a1a; }
+</style>
+</head>
+<body>
+<div class="app">
+  <nav class="nav-tabs">
+    <a href="/CM52053/flashcards.html" class="nav-tab">Flashcards</a>
+    <a href="/CM52053/mcq.html" class="nav-tab">MCQ Practice</a>
+    <a href="/CM52053/essay.html" class="nav-tab active">Essay Practice</a>
+  </nav>
+  <div class="eyebrow">University of Bath</div>
+  <h1>CM52053 — Essay Practice (Velasquez 2025)</h1>
+  <p class="subtitle">Long-form practice for the 34-mark essay question on the Velasquez et al. (2025) paper, <em>Neurosymbolic AI as an antithesis to scaling laws</em>. Multiple model paragraphs are provided so you can choose the problem domain you know best.</p>
+  <div class="toolbar">
+    <button class="toolbar-btn" onclick="showAll()">Show all answers</button>
+    <button class="toolbar-btn" onclick="hideAll()">Hide all answers</button>
+    <button class="toolbar-btn" onclick="resetProgress()">Reset progress</button>
+    <span class="saved-indicator" id="savedIndicator">✓ saved</span>
+    <span class="toolbar-summary" id="summary"></span>
+  </div>
+  <div id="content"></div>
+  <p class="foot"><a href="https://www.kyleosullivan.uk">kyleosullivan.uk</a></p>
+</div>
+
+<script>
+const STORAGE_KEY = 'cm52053_essay_v1';
+
+const EXAM = [
+  {
+    id: 1,
+    title: "Velasquez et al. (2025) — Neurosymbolic AI as an antithesis to scaling laws",
+    scenario: "The paper argues that current AI scaling laws (data, parameters, compute roughly doubling every 6 months) are unsustainable and create gatekeeping. It proposes a neurosymbolic architecture that interleaves data-driven neural updates with symbolic reasoning via a LIFT–SYMBOLIC UPDATE–PROJECT feedback loop, drawing on the manifold hypothesis, the universal approximation theorem, and dual-process cognitive psychology. The paper covers multiple problem domains: physics-informed ML, knowledge-graph-augmented LLMs, constrained text generation, off-road autonomous driving, and few-shot visual learning.",
+    parts: [
+      {
+        ref: "Q1 (a)", topic: "Symbolic forms — physics", marks: 9,
+        question: "One paragraph explaining what specific form(s) the symbolic component of neuro-symbolism takes in the problem domain(s) covered by the paper. (MODEL ANSWER OPTION A — physics-informed ML.)",
+        answer: "In the physics-informed ML domain, the symbolic component takes the form of PARTIAL DIFFERENTIAL EQUATIONS (PDEs) — mathematical expressions that encode physical laws such as the conservation of mass, momentum and energy. A PDE is a precise, semantically meaningful symbolic structure: it states an exact functional relationship between a quantity and its partial derivatives, and is independent of any particular dataset. This form is applicable because PDEs are DIFFERENTIABLE, which means they can be embedded as a soft constraint directly into the neural network's loss function (as in physics-informed neural networks, Raissi et al. 2019), making them compatible with gradient-based optimisation. In the neural constitutive laws of Ma et al. (2023), the individual TERMS of a constitutive PDE are themselves parameterised by small neural networks, so that the symbolic form acts as an INDUCTIVE BIAS that fixes the structural relationships between physical quantities while allowing data to refine the constants. Because the conservation laws are baked in by construction, the network generalises to new geometries and initial/boundary conditions from a single training video, which purely data-driven approaches cannot achieve. Similar use of PDEs underpins physics-informed neural operators and PAC-NeRF, which augments neural radiance fields with material point methods to enforce mechanics during rendering, accelerating it by two orders of magnitude."
+      },
+      {
+        ref: "Q1 (b)", topic: "Symbolic forms — knowledge graphs", marks: 9,
+        question: "One paragraph explaining what specific form(s) the symbolic component of neuro-symbolism takes in the problem domain(s) covered by the paper. (MODEL ANSWER OPTION B — LLMs and knowledge graphs.)",
+        answer: "In the LLM and recommendation domains, the symbolic component takes the form of KNOWLEDGE GRAPHS — directed graph structures of semantic relations stored as triples (subject, predicate, object). Each node is an entity (e.g. 'kangaroo', 'Paris'), each labelled edge a relation (e.g. 'is-a', 'capital-of'). Technically, a knowledge graph is a finite set of such triples drawn from controlled vocabularies, and entities can be EMBEDDED in a continuous vector space so that semantically similar entities sit close together — preserving relational structure (the classic 'king − man + woman ≈ queen' parallelogram). This form is applicable to LLMs because purely statistical models lack grounded common-sense relations and tend to hallucinate or fail on out-of-distribution queries. Amazon's COSMO framework uses LLMs to construct large-scale common-sense knowledge graphs from customer interaction data, enabling product-to-context inference (function, audience) that pure embeddings miss; GraphRAG automatically extracts knowledge graphs from text corpora and incorporates them into retrieval-augmented generation. Unlike monolithic deep learning, knowledge graphs SEPARATE data, representation, and downstream task — they are interpretable, expandable by humans, and reusable across problems, which is why neurosymbolic distillation of GPT-3 into a knowledge graph plus a 100× smaller neural model can achieve SUPERIOR common-sense reasoning."
+      },
+      {
+        ref: "Q1 (c)", topic: "Symbolic forms — DFAs / Ctrl-G", marks: 9,
+        question: "One paragraph explaining what specific form(s) the symbolic component of neuro-symbolism takes in the problem domain(s) covered by the paper. (MODEL ANSWER OPTION C — constrained LLM generation.)",
+        answer: "In the constrained text-generation domain (Ctrl-G, Zhang et al. 2024), the symbolic component takes the form of LOGICAL CONSTRAINTS encoded as DETERMINISTIC FINITE AUTOMATA (DFAs). A DFA is a 5-tuple (Q, Σ, δ, q₀, F) of states, alphabet, transition function, initial state and accepting set; it accepts exactly those strings whose state sequence ends in an accepting state. This form is applicable to text generation because high-level user requirements (must include a topic, must avoid forbidden content, must follow a template) can be expressed precisely as automata and CHECKED EXACTLY against any candidate string — unlike the implicit statistical preferences of a fine-tuned LLM. Ctrl-G further distils a production-ready LLM into a HIDDEN MARKOV MODEL — itself a symbolic probabilistic structure — that supports tractable reasoning over DFA constraints during generation. The system combines a 7B-parameter LLM (the neural component, providing broad language coverage) with a 2B-parameter HMM and the DFA (the symbolic component, providing verifiable constraint adherence), and outperforms GPT-3.5 (175B) and GPT-4 (~1T) by over 30% in human evaluation on quality plus constraint satisfaction. The symbolic forms here — DFAs and HMMs — are essential because LLMs alone cannot provably satisfy logical specifications."
+      },
+      {
+        ref: "Q2 (a)", topic: "Approach — physics", marks: 9,
+        question: "One paragraph summarising the approach presented in the paper to facilitate neuro-symbolic integration in one specific problem domain. (MODEL ANSWER OPTION A — physics-informed ML.)",
+        answer: "In the physics-informed ML domain, the paper's neurosymbolic approach interleaves data-driven and symbolic computation through the LIFT–SYMBOLIC-UPDATE–PROJECT feedback loop of Velasquez Fig. 1. Physical knowledge in the form of PDEs encoding conservation laws is PROJECTED into the neural model by integration into the loss function, so the network's parameter updates are guided not only by data but by physical consistency. In the neural constitutive laws of Ma et al. (2023), this is taken further: the individual terms of the constitutive PDE are themselves parameterised by small neural networks, allowing data-driven correction of imperfect priors while preserving the symbolic structure. The system is trained against a differentiable visual loss that compares simulated dynamics (generated via the parameterised PDE inside a differentiable simulator) against ground-truth video. Because the symbolic physics acts as a strong INDUCTIVE BIAS, the model generalises to new geometries and initial/boundary conditions from a single training video — impossible for purely neural approaches. The same architectural principle drives PhysORD (off-road driving), which matches the state of the art with 0.1% of the training time, 1% of the data, and 96.9% fewer parameters, and PAC-NeRF, which accelerates rendering by two orders of magnitude while satisfying conservation laws. This demonstrates the paper's central claim that symbolic priors offer an EFFICIENT alternative to scaling."
+      },
+      {
+        ref: "Q2 (b)", topic: "Approach — Ctrl-G", marks: 9,
+        question: "One paragraph summarising the approach presented in the paper to facilitate neuro-symbolic integration in one specific problem domain. (MODEL ANSWER OPTION B — Ctrl-G constrained LLM generation.)",
+        answer: "For constrained LLM generation, Ctrl-G (Zhang et al. 2024) implements the LIFT–SYMBOLIC-UPDATE–PROJECT loop by combining a large autoregressive LLM with a distilled probabilistic symbolic reasoner. Users specify LOGICAL CONSTRAINTS that the generated text must satisfy, and these are LIFTED to a symbolic representation in the form of DETERMINISTIC FINITE AUTOMATA. A production-ready LLM (e.g. a 7B-parameter model) is then DISTILLED into a tractable hidden Markov model with only 2B parameters. At generation time, the LLM proposes candidate tokens and the HMM symbolically reasons about which continuations remain consistent with the DFA (whether the next state can still reach an accepting state). The HMM's reweighting of LLM-proposed distributions is then PROJECTED back into the neural decoding step, so the next token sampled is one that both fits the LLM's language model and satisfies the symbolic constraint. The result is generated text with PROVABLE constraint adherence. In human evaluation on text quality and adherence, the 7B+2B hybrid outperformed GPT-3.5 (175B) and GPT-4 (~1T) by over 30% — strong evidence that small neurosymbolic systems can beat models 100× larger, and that integrating a tractable symbolic reasoner with a neural language model is a more sample- and parameter-efficient path than continued scaling."
+      },
+      {
+        ref: "Q2 (c)", topic: "Approach — PhysORD driving", marks: 9,
+        question: "One paragraph summarising the approach presented in the paper to facilitate neuro-symbolic integration in one specific problem domain. (MODEL ANSWER OPTION C — PhysORD off-road autonomous driving.)",
+        answer: "For off-road autonomous driving, PhysORD (Zhao et al. 2024) integrates symbolic and neural components by CO-DESIGNING two pieces that train and operate jointly: a neural network that estimates physical state variables from off-road sensor data, and a SYMBOLIC SET OF CONSERVATION EQUATIONS that govern the vehicle's motion. The neural component handles perception and parameter estimation in noisy, varied terrain — the kind of high-dimensional inference where data-driven models excel. The symbolic component projects these estimates through physically grounded equations (conservation of momentum and energy) to predict motion, so any predicted trajectory is physically valid by construction. Concretely, the symbolic equations act as a PROJECTION step (the symbolic-to-neural direction in Velasquez Fig. 1): they constrain the neural network's outputs to lie on a smooth submanifold of physically realisable motions, bypassing the sharp regions in the loss landscape that a purely neural off-road predictor would have to scale up to overcome. The result is matching the state-of-the-art motion prediction with 0.1% of the training TIME, 1% of the training DATA, and 96.9% fewer PARAMETERS, with a 46% improvement over the SOTA once trained further — concrete evidence that strong symbolic priors give an alternative scaling axis to brute-force data and parameters."
+      },
+      {
+        ref: "Q3", topic: "Unseen — 16 marks", marks: 16,
+        question: "This part is unseen and worth 16 marks. The lecturer said it will be designed so it is not easier to answer with one paper than another. It will be assessed on accuracy, clarity, depth, breadth of reasoning and quality of argumentation. Show the answer for preparation tips and likely angles.",
+        answer: "WHAT MIGHT BE ASKED (informed by the paper and lecture):\n\n• Critically evaluate the paper's claim that neurosymbolic AI is COMPLEMENTARY to scaling rather than a replacement. Strong answers: cite AlphaStar (needs 987k human replays) AND AlphaGo Zero (none) to show that the right balance depends on the domain.\n\n• How does the paper's argument relate to AI's energy and economic sustainability? Strong answers: cite the 3.7% emissions figure, GPT-3 = 1.287 GWh vs human brain = 3.15 MWh in 18 years, Gemini Ultra training cost $191M.\n\n• Discuss the manifold hypothesis as a basis for both scaling and neurosymbolic AI. Strong answers: scaling promotes smoothness; neurosymbolic skips sharp regions instead of smoothing them. Reference Kiani et al. on the hardness of learning under the hypothesis.\n\n• Compare the paper's vision to dual-process cognitive theory. Strong answers: link System 1 (subsymbolic, fast) to neural networks and System 2 (symbolic, deliberate) to logical/PDE reasoning. Use the driving-novice analogy: symbolic rules as guardrails, slowly trained into automatic perceptuomotor skills.\n\n• Evaluate the from-symbols-to-neurons vs from-neurons-to-symbols directions. Strong answers: contrast PDEs in PINNs (knowledge-in) with symbolic distillation via quantisation and grammatical inference (knowledge-out), and note that the full feedback loop requires both.\n\n• Discuss the trustworthiness implications. Strong answers: symbolic inference is sound (Velasquez and the lecture both emphasise this — logic-based 1980s/90s AI never hallucinated, just couldn't scale); the symbolic layer therefore provides interpretability and verifiability that pure neural models lack.\n\n• Critically engage with the bitter lesson. Strong answers: the bitter lesson holds in some domains (AlphaGo Zero) but breaks where data is fundamentally limited (Villalobos et al. 2024 on data scarcity, edge AI). Discovery and prior knowledge are not mutually exclusive (the 'carry the 1' analogy).\n\nGENERAL STRATEGY:\n• Quote the paper's terminology precisely (manifold, lift/project, sharp regions, inductive bias).\n• Use AT LEAST 2 concrete domain examples (physics, LLMs, driving) for credibility on 'breadth'.\n• Include AT LEAST 2 quantitative results (Ctrl-G 30%+ over GPT-4, PhysORD 96.9% fewer parameters) for 'depth'.\n• Argue both sides where appropriate — markers reward 'quality of argumentation' which is nuance, not advocacy.\n• Aim for a clear thesis sentence, supporting points with cited mechanisms, and a clear close that links back to the paper's central claim."
+      }
+    ]
+  }
+];
+
+let state = {};
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) { state = {}; return; }
+    const parsed = JSON.parse(raw);
+    state = (parsed && typeof parsed === 'object') ? parsed : {};
+  } catch (e) { state = {}; }
+}
+
+function saveState() {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    const ind = document.getElementById('savedIndicator');
+    if (ind) {
+      ind.classList.add('show');
+      clearTimeout(saveState._t);
+      saveState._t = setTimeout(() => ind.classList.remove('show'), 1200);
+    }
+  } catch (e) {}
+}
+
+function partKey(qid, ref) { return qid + ref; }
+
+function getPart(qid, ref) {
+  const key = partKey(qid, ref);
+  return state[key] || { revealed: false, status: null };
+}
+
+function setPart(qid, ref, patch) {
+  const key = partKey(qid, ref);
+  state[key] = Object.assign({ revealed: false, status: null }, state[key] || {}, patch);
+  saveState();
+}
+
+function resetProgress() {
+  if (!confirm('Reset all essay practice progress (revealed answers + got/review marks)?')) return;
+  state = {};
+  localStorage.removeItem(STORAGE_KEY);
+  render();
+}
+
+function showAll() {
+  EXAM.forEach(q => q.parts.forEach(p => {
+    const cur = getPart(q.id, p.ref);
+    state[partKey(q.id, p.ref)] = Object.assign({}, cur, { revealed: true });
+  }));
+  saveState();
+  render();
+}
+
+function hideAll() {
+  EXAM.forEach(q => q.parts.forEach(p => {
+    const cur = getPart(q.id, p.ref);
+    state[partKey(q.id, p.ref)] = Object.assign({}, cur, { revealed: false });
+  }));
+  saveState();
+  render();
+}
+
+function toggleAnswer(qid, ref) {
+  const cur = getPart(qid, ref);
+  setPart(qid, ref, { revealed: !cur.revealed });
+  renderPart(qid, ref);
+  updateSummary();
+}
+
+function setStatus(qid, ref, status) {
+  const cur = getPart(qid, ref);
+  const next = (cur.status === status) ? null : status;
+  setPart(qid, ref, { status: next });
+  renderPart(qid, ref);
+  updateSummary();
+}
+
+function partElId(qid, ref) { return 'part-' + qid + '-' + ref.replace(/[^a-z0-9]/gi, ''); }
+
+function renderPart(qid, ref) {
+  const el = document.getElementById(partElId(qid, ref));
+  if (!el) return;
+  const q = EXAM.find(x => x.id === qid);
+  const p = q.parts.find(x => x.ref === ref);
+  const st = getPart(qid, ref);
+
+  const statusBadge = st.status === 'got'
+    ? '<span class="part-status got">✓ Got it</span>'
+    : st.status === 'review'
+      ? '<span class="part-status review">✗ Needs review</span>'
+      : '';
+
+  el.innerHTML = `
+    <div class="part-head">
+      <span class="part-ref">${p.ref}</span>
+      <span class="part-tag">${p.topic}</span>
+      ${statusBadge}
+      <span class="part-marks">[${p.marks} mark${p.marks === 1 ? '' : 's'}]</span>
+    </div>
+    <div class="part-question">${escapeHtml(p.question)}</div>
+    <button class="answer-toggle ${st.revealed ? 'hide' : ''}" onclick="toggleAnswer(${qid}, '${p.ref}')">${st.revealed ? 'Hide answer' : 'Show answer'}</button>
+    <div class="answer-box ${st.revealed ? 'show' : ''}">${escapeHtml(p.answer)}</div>
+    <div class="self-rate ${st.revealed ? 'show' : ''}">
+      <span class="self-rate-label">How did you do?</span>
+      <button class="rate-btn got ${st.status === 'got' ? 'active' : ''}" onclick="setStatus(${qid}, '${p.ref}', 'got')">✓ Got it</button>
+      <button class="rate-btn review ${st.status === 'review' ? 'active' : ''}" onclick="setStatus(${qid}, '${p.ref}', 'review')">✗ Needs review</button>
+    </div>
+  `;
+}
+
+function escapeHtml(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
+function updateSummary() {
+  let total = 0, revealed = 0, got = 0, review = 0;
+  EXAM.forEach(q => q.parts.forEach(p => {
+    total++;
+    const st = getPart(q.id, p.ref);
+    if (st.revealed) revealed++;
+    if (st.status === 'got') got++;
+    if (st.status === 'review') review++;
+  }));
+  document.getElementById('summary').innerHTML =
+    `<span class="g">✓ ${got}</span> · <span class="b">✗ ${review}</span> · Revealed ${revealed}/${total}`;
+}
+
+function render() {
+  const content = document.getElementById('content');
+  content.innerHTML = EXAM.map(q => {
+    const totalMarks = q.parts.reduce((s, p) => s + p.marks, 0);
+    return `
+      <section class="scenario" id="q${q.id}">
+        <div class="scenario-head">
+          <span class="scenario-num">Paper</span>
+          <span class="scenario-title">${escapeHtml(q.title)}</span>
+          <span class="scenario-marks">essay = 34 marks</span>
+        </div>
+        <div class="scenario-context"><strong>Context.</strong> ${escapeHtml(q.scenario)}</div>
+        ${q.parts.map(p => `<div class="part" id="${partElId(q.id, p.ref)}"></div>`).join('')}
+      </section>
+    `;
+  }).join('');
+
+  EXAM.forEach(q => q.parts.forEach(p => renderPart(q.id, p.ref)));
+  updateSummary();
+}
+
+loadState();
+render();
+</script>
+</body>
+</html>
