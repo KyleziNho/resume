@@ -19,6 +19,7 @@ import AppStore, { AppData } from './components/apps/AppStore';
 import AppDetail from './components/apps/AppDetail';
 import LetterGlitch from './components/ui/LetterGlitch';
 import RatingPopup from './components/ui/RatingPopup';
+import UpdateNotification from './components/ui/UpdateNotification';
 import ControlCenter, { ControlCenterButton, WallpaperType } from './components/ui/ControlCenter';
 import RippleGrid from './components/ui/RippleGrid';
 import Iridescence from './components/ui/Iridescence';
@@ -170,6 +171,9 @@ interface WindowState {
 export default function MacOsPortfolio() {
   const [booted, setBooted] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(0);
+  const [isMobileBoot, setIsMobileBoot] = useState(false);
+  const [videoTransitioning, setVideoTransitioning] = useState(false);
+  const bootVideoRef = useRef<HTMLVideoElement>(null);
   const [time, setTime] = useState('');
   const [zIndex, setZIndex] = useState(10);
   const [activeProject, setActiveProject] = useState<any>(null);
@@ -280,12 +284,20 @@ export default function MacOsPortfolio() {
   } | null>(null);
 
   useEffect(() => {
+    const mobile = window.innerWidth < 768;
+    setIsMobileBoot(mobile);
+
     const timer = setInterval(() => {
         const now = new Date();
         setTime(now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}));
     }, 1000);
 
-    // Animate loading progress with pulsing haptic feedback
+    // On mobile, the video handles the boot transition
+    if (mobile) {
+      return () => clearInterval(timer);
+    }
+
+    // Desktop: Animate loading progress with pulsing haptic feedback
     let progress = 0;
 
     // Pulsing haptic feedback during boot (like app installation)
@@ -965,7 +977,60 @@ export default function MacOsPortfolio() {
     });
   };
 
+  const handleBootVideoTimeUpdate = () => {
+    const video = bootVideoRef.current;
+    if (!video || videoTransitioning) return;
+
+    if (video.currentTime >= 4.8) {
+      setVideoTransitioning(true);
+      haptic();
+      setTimeout(() => {
+        haptic();
+        setTimeout(() => haptic(), 100);
+      }, 200);
+      // Wait for white flash to fully cover, then boot
+      setTimeout(() => setBooted(true), 500);
+    }
+  };
+
   if (!booted) {
+    // Mobile: Video boot sequence
+    if (isMobileBoot) {
+      return (
+        <div className="h-screen w-screen bg-black relative overflow-hidden">
+          <video
+            ref={bootVideoRef}
+            className="w-full h-full object-cover"
+            style={{ transform: 'scale(1.5)' }}
+            poster="/boot-poster.png"
+            autoPlay
+            muted
+            playsInline
+            onTimeUpdate={handleBootVideoTimeUpdate}
+            onEnded={() => {
+              if (!videoTransitioning) {
+                setVideoTransitioning(true);
+                setTimeout(() => setBooted(true), 400);
+              }
+            }}
+          >
+            <source src="/boot-video.mp4" type="video/mp4" />
+          </video>
+
+          {/* White flash transition overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              backgroundColor: 'white',
+              opacity: videoTransitioning ? 1 : 0,
+              transition: 'opacity 300ms ease-in',
+            }}
+          />
+        </div>
+      );
+    }
+
+    // Desktop: Original Apple boot screen
     return (
         <div className="h-screen w-screen bg-[#c0c0c0] flex flex-col items-center justify-center"
           style={{
@@ -1533,6 +1598,15 @@ export default function MacOsPortfolio() {
           </MacWindow>
         );
       })}
+
+      {/* OnlyBills 2.0 launch notification */}
+      <UpdateNotification
+        enabled={booted}
+        onOpen={() => {
+          setSafariUrl('https://onlybills.app');
+          openWindow('safari');
+        }}
+      />
 
       {/* Rating Popup */}
       {showRatingPopup && (

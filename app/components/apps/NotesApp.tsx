@@ -223,7 +223,7 @@ export default function NotesApp() {
           className={`${isMobile ? 'w-24 h-24' : 'w-32 h-32'} rounded-lg object-cover mb-4 float-right ml-4`}
         />
         <p>
-          hey, i'm kyle. currently doing a CS masters at bath uni, looking for a grad role in 2026. i love building things - check out my apps in the finder or chat with me via kylebot!
+          hey, i'm kyle. i'm a software engineer at sharkninja, and i'm looking for grad software engineering roles. i love building things - check out my apps in the finder or chat with me via kylebot!
         </p>
       </div>
     </div>

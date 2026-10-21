@@ -16,6 +16,7 @@ interface Tab {
 const BOOKMARKS = [
   { name: 'Kyro', url: 'https://www.kyro.onl' },
   { name: 'Frift', url: 'https://www.frift.uk' },
+  { name: 'OnlyBills', url: 'https://onlybills.app' },
 ];
 
 export default function Safari({ initialUrl = 'https://www.kyro.onl' }: SafariProps) {

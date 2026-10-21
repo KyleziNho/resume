@@ -26,15 +26,17 @@ export const apps: AppData[] = [
     id: 'onlybills',
     name: 'OnlyBills',
     tagline: 'Split bills, not friendships',
-    icon: '/app-onlybills.png',
+    icon: '/app-onlybills-2.png',
     link: 'https://apps.apple.com/gb/app/onlybills/id6754412082',
-    description: 'The easiest way to split receipts. Snap a photo and AI extracts items, prices, tax and tips. Assign items to friends and see exactly who owes what.',
+    website: 'https://onlybills.app',
+    description: 'The easiest way to split a bill. Scan the receipt and AI reads every item, then share a QR code with the table. Everyone joins from their own phone (no app or login needed), taps what they had, and pays you with Monzo, Revolut, PayPal or bank transfer.',
+    progressNotes: 'onlybills 2.0 is out! full liquid glass redesign, live tables where everyone claims their own items in real time, an app clip so iphone guests get a native card straight from the qr, and an iou tab to track who still owes you.',
     videoId: '1140723788',
     videoAspectRatio: 'portrait',
     images: ['/onlybills-screenshot-1.png', '/onlybills-screenshot-2.png', '/onlybills-screenshot-3.png', '/onlybills-screenshot-4.png'],
     progress: 100,
     stage: 'Live on App Store',
-    technologies: ['SwiftUI', 'SwiftData', 'Google Gemini', 'Vision']
+    technologies: ['SwiftUI', 'SwiftData', 'Google Gemini', 'Vision', 'Firebase', 'App Clips']
   },
   {
     id: 'frift',
@@ -57,13 +59,13 @@ export const apps: AppData[] = [
     tagline: 'Resources for vulnerable people',
     icon: '/app-wearehere.png',
     link: '',
-    description: 'A comprehensive map app that lists all resources available to vulnerable people within an area - food shelters, healthcare, day care centres, and support services. Leading the tech development for this non-profit with a team of 12 people.',
+    description: 'A charity map app that connects people experiencing homelessness to shelters, food banks, legal aid and mental health support across London. I\'m CTO and lead developer, running a tech team of 5. Works fully offline, now live on iOS and Android.',
     videoId: '1141169621',
     videoAspectRatio: 'portrait',
     images: ['/wearehere-screenshot-1.png', '/wearehere-screenshot-2.png', '/wearehere-screenshot-3.png', '/wearehere-screenshot-4.png'],
-    progress: 75,
-    stage: 'In Development',
-    technologies: ['Flutter', 'Firebase', 'MapBox']
+    progress: 100,
+    stage: 'Live on iOS & Android',
+    technologies: ['Flutter', 'Supabase', 'PostgreSQL', 'Mapbox']
   },
   {
     id: 'arcadeus',
