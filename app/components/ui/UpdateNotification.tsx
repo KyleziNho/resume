@@ -6,11 +6,11 @@ import { AnimatePresence, motion, PanInfo, useReducedMotion } from 'framer-motio
 import { haptic } from 'ios-haptics';
 
 const SEEN_KEY = 'kyleos-onlybills2-notification';
-const SHOW_DELAY_MS = 2500;
+const SHOW_DELAY_MS = 2000;
 const AUTO_HIDE_MS = 10000;
 
 interface UpdateNotificationProps {
-  /** Only start the timer once the desktop is on screen */
+  /** Starts the 2s timer once this turns true (after KyleBOT is first closed) */
   enabled: boolean;
   onOpen: () => void;
 }
@@ -60,7 +60,7 @@ export default function UpdateNotification({ enabled, onOpen }: UpdateNotificati
     return () => window.removeEventListener('resize', check);
   }, []);
 
-  // Drop in a moment after boot, once per visit
+  // Drop in 2s after it's enabled, once per visit
   useEffect(() => {
     if (!enabled || alreadySeen()) return;
     const t = setTimeout(() => {

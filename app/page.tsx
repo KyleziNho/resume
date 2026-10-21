@@ -276,6 +276,8 @@ export default function MacOsPortfolio() {
   const [installedAppPositions, setInstalledAppPositions] = useState<Record<string, { x: number; y: number }>>({});
   const [safariUrl, setSafariUrl] = useState('https://www.kyro.onl');
   const [showRatingPopup, setShowRatingPopup] = useState(false);
+  // The OnlyBills notification waits until the visitor first closes KyleBOT
+  const [chatClosedOnce, setChatClosedOnce] = useState(false);
 
   const [contextMenu, setContextMenu] = useState<{
     x: number;
@@ -334,6 +336,10 @@ export default function MacOsPortfolio() {
       clearInterval(pulseInterval);
     };
   }, []);
+
+  useEffect(() => {
+    if (booted && !windows.messages.isOpen) setChatClosedOnce(true);
+  }, [booted, windows.messages.isOpen]);
 
   // Rating popup: Show after 1 minute if user hasn't rated
   useEffect(() => {
@@ -1601,7 +1607,7 @@ export default function MacOsPortfolio() {
 
       {/* OnlyBills 2.0 launch notification */}
       <UpdateNotification
-        enabled={booted}
+        enabled={chatClosedOnce}
         onOpen={() => {
           setSafariUrl('https://onlybills.app');
           openWindow('safari');
