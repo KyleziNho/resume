@@ -39,8 +39,7 @@ export async function run(root, ctx) {
   const next = (btn) => new Promise((res) => btn.addEventListener("click", () => { sfx.pop(); res(); }, { once: true }));
 
   /* ── (a) the envelope: photobooth pics + a card with the letter ── */
-  const keeps = photos.length ? photos.map((p) => ({ ...p, type: p.type === "strip" ? "strip" : "polaroid" }))
-    : [{ type: "polaroid", src: String(config.puzzle?.photo || ""), fallback: true }];
+  const keeps = photos.map((p) => ({ ...p, type: p.type === "strip" ? "strip" : "polaroid" }));
   const firstStrip = keeps.find((k) => k.type === "strip"), firstPol = keeps.find((k) => k.type === "polaroid");
   const peek = `<div class="mail-peek" aria-hidden="true">
       ${firstStrip ? `<img class="pk-strip" src="${esc(firstStrip.src)}" alt="">` : ""}
@@ -117,7 +116,7 @@ export async function run(root, ctx) {
   p0.querySelector(".mail-env").classList.add("gone");
   await W(450);
   p0.querySelector(".mail-env").hidden = true;
-  p0.querySelector(".mail-title").textContent = photos.length ? "look what was inside 👀" : "a little something";
+  p0.querySelector(".mail-title").hidden = true;
   const spread = p0.querySelector(".spread");
   spread.hidden = false;
 
@@ -141,7 +140,7 @@ export async function run(root, ctx) {
   if (photos.some((p) => p.type === "strip")) {
     art.setMood("love");
     ctx.say("the photobooth pics! tap one to save it 💾", 0);
-  } else {
+  } else if (keeps.length) {
     ctx.say("tap the photo to look closer 💾", 0);
   }
   await W(1300);
@@ -168,10 +167,8 @@ export async function run(root, ctx) {
   p0.querySelector(".skip-hint").hidden = false;
   await typeLetter(card.querySelector(".letter-text"), String(config.letter || ""), card, sfx, root);
   p0.querySelector(".skip-hint").hidden = true;
-  card.querySelector(".sign").hidden = false;
   sfx.chime(7);
   await W(700);
-  card.querySelector(".ps-note").hidden = false;
   const b0 = p0.querySelector(".next"); b0.hidden = false;
   spread.classList.add("read");
   b0.scrollIntoView({ behavior: smooth(), block: "nearest" });

@@ -394,8 +394,7 @@ export async function run(root, ctx) {
     $(".geo-round-label").textContent = r.title || `Round ${i + 1}`;
 
     await showView(r);
-    say(i === 0 ? `ok ${name}, where were we? 👀<br>no googling lah`
-      : pick(["where are we now? 🧐", `this one's easy, right ${name}?`]), 4500);
+    say(pick(["wawaWEWA", "bumhole", "WAWAWEEEWA"]), 4500);
 
     const guess = await new Promise((resolve) => (roundState.resolveGuess = resolve));
     roundState.done = true;

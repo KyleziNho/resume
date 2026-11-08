@@ -57,5 +57,5 @@ export const CONFIG = {
   ],
 
   // The letter at the very end. Each new line = a new paragraph (one \n, not two).
-  letter: `write something here...`,
+  letter: `hi, u can read my real card instead 😏`,
 };

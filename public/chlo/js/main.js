@@ -1,4 +1,4 @@
-// Scene flow: intro → puzzle → geo → photobooth → finale.
+// Scene flow: start → sabra → gta → cheongsing → skyjo (year in numbers) → intro → puzzle → geo → photobooth → finale.
 // Every scene module exports `async function run(root, ctx)` and resolves when the scene is finished.
 //   root  – an empty .scene <div> already attached to #stage; render everything inside it.
 //   ctx   – shared helpers + state (see below). Scenes may add results to ctx.state.
@@ -10,6 +10,8 @@ import * as puzzle from "./puzzle.js";
 import * as geo from "./geo.js";
 import * as photobooth from "./photobooth.js";
 import * as finale from "./finale.js";
+import { sabra, gta, cheongsing, skyjo } from "./sabra.js";
+import * as start from "./start.js";
 
 const stage = document.getElementById("stage");
 const mascotEl = document.getElementById("mascot");
@@ -58,12 +60,12 @@ async function play(mod) {
 
 // Dev shortcut: index.html?scene=geo jumps straight to a scene.
 const only = new URLSearchParams(location.search).get("scene");
-const scenes = { intro, puzzle, geo, photobooth, finale };
+const scenes = { start, intro, puzzle, geo, photobooth, sabra, gta, cheongsing, skyjo, finale };
 
 (async () => {
   if (only && scenes[only]) {
     await play(scenes[only]);
     return;
   }
-  for (const s of [intro, puzzle, geo, photobooth, finale]) await play(s);
+  for (const s of [start, sabra, gta, cheongsing, skyjo, intro, puzzle, geo, photobooth, finale]) await play(s);
 })();
