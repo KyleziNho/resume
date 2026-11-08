@@ -7,21 +7,21 @@ const SCALE_KM = 1.5; // tight: right city ≠ right street
 
 /* ───────────────────────── funny lines ───────────────────────── */
 const ladder = (n) => [
-  [0.05, ["ok are u STALKING me 😳", "literally standing on it. witch?? 🧙‍♀️", "PERFECT. ok i'm acc scared of u now"]],
-  [0.2, ["this is why u always beat me at guess the asian 😭", `${n} how?? did u put a tracker on me`, "hello?? that's suspiciously accurate 👀"]],
-  [2, ["basically a local lah 😌", "walking distance only! can tapau from there", "steady lah, so close"]],
-  [50, ["close-ish… i'll allow it 🤏", "aiyo nearly! same neighbourhood-ish", "right area, wrong lorong lah"]],
-  [500, ["babe.", `${n}. babe. 😐`, "aiyo… u were THERE with me", "skill issue tbh 🤣🤣🤣"]],
-  [3000, ["are u even my girlfriend 😭", "wrong country?? i'm telling ur mum", "aiyo. AIYO."]],
-  [Infinity, ["were u holding the map upside down 🙃", `that's not even the right continent ${n}`, "ok u clicked with ur elbow right", "u gona say it's acc rigged aren't u 🤣"]],
+  [0.05, ["perfect. are you stalking me? 😳", "right on top of it 🎯"]],
+  [0.2, [`${n}, how?? 😳`, "suspiciously accurate 👀"]],
+  [2, ["so close 😌", "basically a local"]],
+  [50, ["close-ish, i'll allow it 🤏", "right area at least"]],
+  [500, ["hmm, not quite", `${n}… you were there with me 😐`]],
+  [3000, ["wrong country?? 😭", "aiyo."]],
+  [Infinity, ["was the map upside down? 🙃", `wrong continent, ${n}`]],
 ];
 const RECEIPTS = [
-  "a hint costs <b>1 kiss</b> 💋<br>payable on demand. no refunds no takebacks",
-  "another one?? 🤨<br>ok fine <b>+1 kiss</b>. i thought u were good at this",
-  "ur acc racking up a tab now 🤣<br><b>+1 kiss</b>, interest free (for now 😏)",
-  "last hint i've got!! 🔍<br>this one is basically cheating ngl. <b>+1 kiss</b>",
+  "a hint costs <b>1 kiss</b> 💋",
+  "another one? <b>+1 kiss</b> 🤨",
+  "adding it to your tab. <b>+1 kiss</b> 😏",
+  "last one, this is basically cheating. <b>+1 kiss</b> 🔍",
 ];
-const BROKE_LINES = ["no more hints lah, u have to use ur brain now 🧠", "hint shop is closed. go guess pumpkin 😤"];
+const BROKE_LINES = ["no hints left, you're on your own 🧠"];
 
 /* ───────────────────────── tiny helpers ───────────────────────── */
 const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
@@ -41,7 +41,7 @@ function fmtKm(km) {
   return `${Math.round(km).toLocaleString()} km`;
 }
 const reactionFor = (km, pick, name) => pick(ladder(name).find(([lim]) => km < lim)[1]);
-const NO_MEMORY = ["another little dot on our map ♡", "one more place i'd go back to with u", "more experiences to tell the grandkids about yk", "best travel buddy, best girlfriend 🫶"];
+const NO_MEMORY = ["another dot on our map ♡", "i'd go back here with you"];
 
 function continentOf({ lat, lng }) {
   if (lat < -10 && lng > 110) return "Oceania 🦘";
@@ -75,7 +75,7 @@ async function countryOf(r) {
     if (j?.address?.country) return j.address.country;
   } catch { /* offline: fall through */ }
   const hit = COUNTRY_BOXES.find(([, a, b, c, d]) => r.lat >= a && r.lat <= b && r.lng >= c && r.lng <= d);
-  return hit ? hit[0] : "…the internet won't tell me 😅 (but u've definitely been there)";
+  return hit ? hit[0] : "the internet won't say 😅";
 }
 
 // roughjs should be global (index.html), but load it ourselves if that script failed.
@@ -135,7 +135,7 @@ function mountEmbed(host, r) {
   const src = `https://maps.google.com/maps?layer=c&cbll=${r.lat},${r.lng}&cbp=12,${r.heading || 0},0,0,0&output=svembed`;
   host.insertAdjacentHTML("beforeend", `
     <iframe class="geo-sv" src="${src}" title="street view" allow="accelerometer *; gyroscope *" loading="eager" referrerpolicy="no-referrer-when-downgrade"></iframe>
-    <div class="geo-peek-note" aria-hidden="true"><i class="tape yellow"></i>no peeking cheater 🙈<small>(the answer was here)</small></div>
+    <div class="geo-peek-note" aria-hidden="true"><i class="tape yellow"></i>no peeking 🙈<small>(the answer was here)</small></div>
     <div class="geo-credit-tape tape mint" aria-hidden="true">✿ photos by google ✿</div>`);
   return { labelCovered: true };
 }
@@ -145,7 +145,7 @@ function sceneMarkup(rounds) {
   return `
   <div class="geo">
     <header class="geo-strip">
-      <h2 class="geo-strip-title">guess the asian<br><span>where were we edition</span></h2>
+      <h2 class="geo-strip-title">where in the world<br><span>were we?</span></h2>
       <ol class="geo-rounds">
         ${rounds.map((r, i) => `
           <li class="geo-mini" data-i="${i}" style="--tilt:${[-4, 3, -2, 4, -3][i % 5]}deg">
@@ -155,8 +155,8 @@ function sceneMarkup(rounds) {
       </ol>
       <div class="geo-strip-right">
         <div class="geo-total">total: <b>0</b></div>
-        <button class="btn alt geo-hint-btn" type="button">need a hint? <span class="nowrap">(costs 1 kiss 💋)</span></button>
-        <div class="geo-kisses">kisses u owe me: <b>0</b> 💋</div>
+        <button class="btn alt geo-hint-btn" type="button">hint <span class="nowrap">(1 kiss 💋)</span></button>
+        <div class="geo-kisses">kisses owed: <b>0</b> 💋</div>
       </div>
     </header>
 
@@ -169,7 +169,7 @@ function sceneMarkup(rounds) {
 
     <aside class="geo-map-card" aria-label="guess map">
       <div class="geo-map-head">
-        <span class="geo-map-name">📍 our map <small>(hover / tap me)</small></span>
+        <span class="geo-map-name">📍 our map <small>(open me)</small></span>
         <button class="geo-map-close" type="button" aria-label="fold the map">fold ✕</button>
       </div>
       <div class="geo-map-wrap">
@@ -177,7 +177,7 @@ function sceneMarkup(rounds) {
         <div class="geo-map-creases"></div>
         <svg class="geo-rough"></svg>
       </div>
-      <button class="btn green geo-guess" type="button" disabled>drop a pin first pumpkin 📍</button>
+      <button class="btn green geo-guess" type="button" disabled>drop a pin first 📍</button>
     </aside>
 
     <div class="geo-result" hidden></div>
@@ -291,8 +291,8 @@ export async function run(root, ctx) {
     if (!roundState || roundState.done) return;
     const n = roundState.hints;
     if (n >= 4) { say(pick(BROKE_LINES), 3500); return; }
-    const ok = await ask(RECEIPTS[n], n === 0 ? "deal 😙" : "ugh fineee 💋", "nah i got this 💪");
-    if (!ok) { say(pick(["that's my girl 😤", "confidence!! i like it", "ok big brain 🧠 i see u"]), 2500); return; }
+    const ok = await ask(RECEIPTS[n], n === 0 ? "deal 😙" : "fine 💋", "no thanks");
+    if (!ok) { say(pick(["confident, i like it 😤"]), 2500); return; }
     if (!roundState || roundState.done) return;
     const { r } = roundState;
     roundState.hints++;
@@ -316,11 +316,11 @@ export async function run(root, ctx) {
       hintCircle = L.circle(c, { radius, color: "#e0728f", weight: 3, dashArray: "8 8", fillColor: "#f2a7b8", fillOpacity: 0.18 }).addTo(map);
       openMap(true);
       setTimeout(() => map.flyToBounds(hintCircle.getBounds(), { duration: 1.2, padding: [10, 10] }), 350);
-      text = `it's somewhere in the <b>pink circle</b> on your map 🔍`;
+      text = `it's in the <b>pink circle</b> 🔍`;
     }
     addHint(text);
-    say(pick(["pleasure doing business 💋", "added to ur tab 😏", "kiss received (pending) 😙😙😙"]), 2500);
-    if (roundState.hints >= 4) { hintBtn.disabled = true; hintBtn.textContent = "hint shop closed 🔒"; }
+    say(pick(["added to your tab 😏"]), 2500);
+    if (roundState.hints >= 4) { hintBtn.disabled = true; hintBtn.textContent = "no hints left 🔒"; }
   }
   function addHint(html) {
     const li = el(`<li style="--tilt:${(Math.random() * 6 - 3).toFixed(1)}deg">${html}</li>`);
@@ -344,7 +344,7 @@ export async function run(root, ctx) {
   /* ── view: street view ── */
   async function showView(r) {
     slot.innerHTML = "";
-    const host = el(`<div class="geo-sv-host"><div class="geo-sv-loading">loading… patience pumpkin 🛵</div></div>`);
+    const host = el(`<div class="geo-sv-host"><div class="geo-sv-loading">loading… 🛵</div></div>`);
     slot.appendChild(host);
     if (config.googleMapsKey) {
       try { await mountGooglePano(host, r, config.googleMapsKey); return; }
@@ -362,7 +362,7 @@ export async function run(root, ctx) {
         <i class="tape tl"></i><i class="tape mint tr"></i>
         <div class="geo-res-top">
           <div class="geo-res-score"><b>${score.toLocaleString()}</b><small>/ ${MAX.toLocaleString()}</small></div>
-          <div class="geo-res-dist">${guess ? `u were <b>${fmtKm(km)}</b> away` : "no guess?? 😭"}</div>
+          <div class="geo-res-dist">${guess ? `you were <b>${fmtKm(km)}</b> away` : "no guess? 😭"}</div>
         </div>
         <div class="geo-meter"><i style="width:${(score / MAX) * 100}%"></i></div>
         <div class="geo-res-answer">it was: <span class="scribble-underline">${esc(r.answer || "here!")}</span></div>
@@ -383,9 +383,9 @@ export async function run(root, ctx) {
     resultEl.hidden = true;
     hintList.innerHTML = "";
     hintBtn.disabled = false;
-    hintBtn.innerHTML = `need a hint? <span class="nowrap">(costs 1 kiss 💋)</span>`;
+    hintBtn.innerHTML = `hint <span class="nowrap">(1 kiss 💋)</span>`;
     guessBtn.disabled = true;
-    guessBtn.textContent = "drop a pin first pumpkin 📍";
+    guessBtn.textContent = "drop a pin first 📍";
     card.classList.remove("result", "open");
     roughSvg.innerHTML = ""; line = null;
     [guessMarker, truthMarker, hintCircle].forEach((m) => m && m.remove());
@@ -394,8 +394,8 @@ export async function run(root, ctx) {
     $(".geo-round-label").textContent = r.title || `Round ${i + 1}`;
 
     await showView(r);
-    say(i === 0 ? `ok ${name} u beat me 13–9 so this should be easy 👉 exact street only, no cheating lah`
-      : pick(["ok where r we now 🧐", `this one's easy… right ${name}?`, "go go go 🏃‍♀️<br>no googling"]), 4500);
+    say(i === 0 ? `ok ${name}, where were we? 👀<br>no googling lah`
+      : pick(["where are we now? 🧐", `this one's easy, right ${name}?`]), 4500);
 
     const guess = await new Promise((resolve) => (roundState.resolveGuess = resolve));
     roundState.done = true;
@@ -437,12 +437,12 @@ export async function run(root, ctx) {
   async function summary() {
     const total = state.roundScores.reduce((a, b) => a + b, 0), max = MAX * rounds.length;
     const pct = total / max;
-    const title = pct > 0.8 ? "certified human GPS 🛰️" : pct > 0.55 ? "elite travel buddy 🧳" : pct > 0.3 ? "cute but lost 🧭" : "skill issue (ily tho) 🙈";
+    const title = pct > 0.8 ? "human GPS 🛰️" : pct > 0.55 ? "great travel buddy 🧳" : pct > 0.3 ? "cute but lost 🧭" : "very lost (ily) 🙈";
     const kisses = state.kissesOwed;
     card.classList.add("hide");
     hintBtn.hidden = true;
     slot.innerHTML = "";
-    $(".geo-round-label").textContent = "the results r in!!";
+    $(".geo-round-label").textContent = "the results are in";
     hintList.innerHTML = "";
     renderStrip(-1);
     resultEl.innerHTML = `
@@ -455,12 +455,12 @@ export async function run(root, ctx) {
         <ol class="geo-sum-list">
           ${rounds.map((r, i) => `<li><span>${esc((r.answer || `round ${i + 1}`).split(",")[0])}</span><b>${(results[i]?.score ?? 0).toLocaleString()}</b></li>`).join("")}
         </ol>
-        <p class="geo-sum-kiss">${kisses ? `hints bought: u owe me <b>${kisses} kiss${kisses > 1 ? "es" : ""}</b> 💋<br><small>(pickle will be collecting very soon 😏)</small>` : "zero hints?? no kisses owed… <br><small>(u can still give me some tho)</small> 💋"}</p>
-        <p class="geo-sum-cash">every point = photobooth credits 📸</p>
-        <button class="btn geo-next" type="button">cash in my points 🎟️</button>
+        <p class="geo-sum-kiss">${kisses ? `you owe me <b>${kisses} kiss${kisses > 1 ? "es" : ""}</b> 💋` : "no hints used. impressive 💋"}</p>
+        <p class="geo-sum-cash">points = photobooth credits 📸</p>
+        <button class="btn geo-next" type="button">cash in 🎟️</button>
       </div>`;
     resultEl.hidden = false;
-    say(pct > 0.55 ? "ok u acc know all our places 🥹<br>best travel buddy ever" : `aiyo ${name}… guess we just have to travel MORE then ✈️<br>217 more years of practice`, 5000);
+    say(pct > 0.55 ? "you know all our places 🥹" : `guess we'll just have to travel more, ${name} ✈️`, 5000);
     const b = resultEl.querySelector(".geo-sum-total").getBoundingClientRect();
     ctx.burst(b.left + b.width / 2, b.top + b.height / 2, 26);
     window.confetti?.({ particleCount: 140, spread: 100, origin: { y: 0.55 }, colors: ["#f2a7b8", "#e0728f", "#f6d36b", "#8fb38a"] });

@@ -1,13 +1,13 @@
 // Finale: envelope (photobooth pics + a greeting card with the letter) → results bouquet → kiss coupons → anniversary + petal shower.
 const COUPONS = [
-  "one (1) kiss. anytime, anywhere, even mid-sentence",
-  "one (1) kiss + u pick dinner (no 'what do u want' / 'U')",
-  "one (1) skyjo game where i don't say it's rigged",
-  "one (1) kiss + i don't complain when 11:30 means 11:59",
-  "one (1) spoon. biggest spoon. best feeling in the world",
-  "one (1) hotpot date (i'll pretend the spice is fine)",
-  "one (1) airport-arrivals kiss, big run-up included",
-  "one (1) kiss + i carry all the bags",
+  "one (1) kiss",
+  "one (1) dinner, you pick",
+  "one (1) back scratch",
+  "one (1) movie night, you pick",
+  "one (1) extra long hug",
+  "one (1) breakfast in bed",
+  "one (1) argument you automatically win",
+  "one (1) more kiss",
 ];
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -51,13 +51,13 @@ export async function run(root, ctx) {
   const words = label.split(" ");
   const greet = words.length > 1 ? `<span>${esc(words[0])}</span><b>${esc(words.slice(1).join(" "))}</b>` : `<b>${esc(label)}</b>`;
   const capFor = (k, i) => k.fallback ? esc(config.puzzle?.caption || "us ♥")
-    : k.type === "strip" ? ctx.pick(["exhibit A: us being cute (mostly u)", "4 frames of pure chaos 🤣", "evidence (v incriminating)"])
-    : ctx.pick(["fridge-worthy", "a keeper. like u", "my cutie patootie ♥"]);
+    : k.type === "strip" ? ctx.pick(["us", "4 frames of chaos", "evidence"])
+    : ctx.pick(["a keeper", "fridge-worthy", "cute ♥"]);
   const TAPES = [["mint", "dots"], ["pink", "stripes"], ["yellow", "grid"], ["sky", "hearts"], ["lilac", "dots"]];
   const p0 = page(`
     <h2 class="fin-title small mail-title">you've got mail</h2>
     <div class="mail-env">${art.envelope({ seed: 8, sealLabel: "break the seal", inner: peek,
-      face: `<div class="env-to">for <span>${her}</span></div><div class="env-addr">from: ${him} 🥒 · courier: pip</div><div class="env-stamp sticker">${art.stamp("1 year", 78, { seed: 44, flower: "lily" })}</div>` })}</div>
+      face: `<div class="env-to">for <span>${her}</span></div><div class="env-addr">from: ${him}</div><div class="env-stamp sticker">${art.stamp("1 year", 78, { seed: 44, flower: "lily" })}</div>` })}</div>
     <p class="env-hint">tap the wax seal</p>
     <div class="spread" hidden>
       ${keeps.map((k, i) => {
@@ -72,8 +72,8 @@ export async function run(root, ctx) {
         <div class="fcard" role="button" tabindex="0" aria-label="open the card">
           <div class="fc-inside">
             <div class="letter-text" aria-live="off"></div>
-            <div class="sign" hidden><span>love u sm,</span><b>${him} 🥒</b>${art.heart(34, "#e0728f", { seed: 9 })}</div>
-            <div class="ps-note" hidden>p.s. i have a problem. i love u too much 😙</div>
+            <div class="sign" hidden><span>love,</span><b>${him}</b>${art.heart(34, "#e0728f", { seed: 9 })}</div>
+            <div class="ps-note" hidden>p.s. real card irl</div>
           </div>
           <div class="fc-front">
             <div class="fc-face fc-cover">
@@ -84,8 +84,8 @@ export async function run(root, ctx) {
             <div class="fc-face fc-back">
               <div class="fc-pressed sticker">${art.lily(86, { seed: 51, color: "white" })}</div>
               <p class="fc-date">${anniv}</p>
-              <p class="fc-one">one whole year<br>of my pumpkin ${art.heart(26, "#e0728f", { seed: 12 })}</p>
-              <p class="fc-pip">(pip was not allowed to read the inside. it's v soppy)</p>
+              <p class="fc-one">one whole year ${art.heart(26, "#e0728f", { seed: 12 })}</p>
+              <p class="fc-pip">(inside: very heartfelt)</p>
               <div class="fc-mini sticker">${art.peony(54, { seed: 33, color: 2 })}</div>
             </div>
           </div>
@@ -99,15 +99,15 @@ export async function run(root, ctx) {
       <div class="lb-in"><img alt=""><div class="lb-btns"><button class="btn save">save 💾</button><button class="btn alt close">close ✕</button></div><p class="lb-note"></p></div>
     </div>`, "pg-mail");
   ctx.say(ctx.pick([
-    `psst. ${him} left this with pip for "my cutie pumpkin". pip guarded it w his life (and one nap)`,
-    `special delivery for ${her}! pip has no arms. pip carried it anyway. respect it 😤`,
+    `delivery for ${her}! from ${him}.`,
+    `pip has mail for ${her} 📬`,
   ]), 0);
   const env = p0.querySelector(".envelope");
   const sealHint = p0.querySelector(".env-hint");
   env.addEventListener("click", (e) => {
     if (e.target.closest(".env-seal") || env.classList.contains("opening")) return;
     sfx.nope(); env.classList.remove("shake"); void env.offsetWidth; env.classList.add("shake");
-    ctx.say("no not there 🤣 the shiny pink seal 👆", 2000);
+    ctx.say("not there 🤣 the pink seal 👆", 2000);
   });
   await new Promise((res) => p0.querySelector(".env-seal").addEventListener("click", res, { once: true }));
   ctx.say("");
@@ -140,9 +140,9 @@ export async function run(root, ctx) {
   }
   if (photos.some((p) => p.type === "strip")) {
     art.setMood("love");
-    ctx.say(ctx.pick(["the photobooth pics made it!! tap one to see it big + save it 💾", "fresh from the booth, still warm. tap one to look closer + save it 💾"]), 0);
+    ctx.say("the photobooth pics! tap one to save it 💾", 0);
   } else {
-    ctx.say("a polaroid! tap it to look closer 💾", 0);
+    ctx.say("tap the photo to look closer 💾", 0);
   }
   await W(1300);
 
@@ -151,7 +151,7 @@ export async function run(root, ctx) {
   slot.hidden = false; sfx.whoosh();
   await W(500);
   slot.scrollIntoView({ behavior: smooth(), block: "nearest" });
-  ctx.say(`and a card!! pip didn't read it<br>jk pip read it<br>pip cried 😭`, 0);
+  ctx.say("and a card 👀", 0);
   await tapOnce(card);
   ctx.say("");
   sfx.whoosh();
@@ -176,7 +176,7 @@ export async function run(root, ctx) {
   spread.classList.add("read");
   b0.scrollIntoView({ behavior: smooth(), block: "nearest" });
   art.setMood("love");
-  ctx.say(photos.length ? `the pics r urs to keep (tap one to save 💾)<br>${him} says that letter wasn't sincere enough. needs more text effects ✨` : `${him} says that letter wasn't sincere enough. it needs more text effects ✨`, 0);
+  ctx.say(photos.length ? `the pics are yours to keep 💾<br>wow. so moving 😭` : "wow. so moving 😭", 0);
   await next(b0);
   lightbox.close();
   lbEl.remove();
@@ -184,11 +184,11 @@ export async function run(root, ctx) {
   /* ── (b) results → bouquet (brisk; tap to hurry it along) ── */
   const total = scores.reduce((a, b) => a + b, 0), max = scores.length * 5000;
   const frac = total / max;
-  const rank = frac >= 0.85 ? "chlo 13–9 pickle levels 🌏" : frac >= 0.6 ? "frequent flyer ✈️" : frac >= 0.35 ? "lowk getting there 🧭" : "lost but adorable 🐣";
+  const rank = frac >= 0.85 ? "world traveler 🌏" : frac >= 0.6 ? "frequent flyer ✈️" : frac >= 0.35 ? "getting there 🧭" : "lost but cute 🐣";
   const kinds = scores.map((s, i) => (s <= 0 ? "bud" : i % 2 ? "lily" : "peony"));
   const scales = scores.map((s) => (s <= 0 ? 1 : 0.6 + 0.55 * (s / 5000)));
   const p = page(`
-    <h2 class="fin-title">the results r in!!</h2>
+    <h2 class="fin-title">the results are in!</h2>
     <div class="results">
       <div class="score-sheet card">
         <div class="tape" style="top:-13px;left:30%;transform:rotate(-4deg)"></div>
@@ -210,14 +210,14 @@ export async function run(root, ctx) {
   let fast = false;
   p.addEventListener("pointerdown", () => (fast = true), { once: true });
   const F = (ms) => wait(fast || reduced() ? Math.min(ms, 40) : ms);
-  ctx.say("every point u scored grew into a flower. watch 👀", 0);
+  ctx.say("every point grows a flower 👀", 0);
   const lines = [...p.querySelectorAll(".lines .ln")];
   const off = puzzleMs ? 1 : 0;
   await F(450);
   if (puzzleMs) {
     lines[0].classList.add("on"); sfx.pick();
     const m = puzzleMs / 60000;
-    ctx.say(m < 2 ? "that jigsaw time is acc suspicious. speedrunner? 🤨" : m < 6 ? `v respectable jigsaw time. ${him} took longer to cut the pieces` : "u took ur time w the jigsaw and that's valid", 0);
+    ctx.say(m < 2 ? "suspiciously fast jigsaw 🤨" : m < 6 ? "nice jigsaw time" : "took your time. valid", 0);
     await F(900);
   }
   for (let i = 0; i < scores.length; i++) {
@@ -227,8 +227,8 @@ export async function run(root, ctx) {
     sfx.chime(i + 2);
     const bloom = p.querySelector(`.bq-bloom[data-i="${i}"]`);
     if (bloom && !reduced() && !fast) setTimeout(() => ctx.burst(...center(bloom), Math.round(4 + scores[i] / 700)), 250);
-    if (scores[i] === 5000) { art.setMood("wow"); ctx.say("5000?! PERFECT SCORE. IM SOOO PROUD OF U", 1800); }
-    else if (scores[i] <= 0) { art.setMood("sad"); ctx.say("that one's a bud. skill issue 🤣 jk it's trying its best 🥺", 1800); }
+    if (scores[i] === 5000) { art.setMood("wow"); ctx.say("5000! perfect score!", 1800); }
+    else if (scores[i] <= 0) { art.setMood("sad"); ctx.say("that one's a bud. it's trying 🥺", 1800); }
     await F(420);
   }
   const tot = p.querySelector(".tot");
@@ -239,14 +239,14 @@ export async function run(root, ctx) {
   p.querySelector(".bq-tag").classList.add("on");
   sfx.win(); ctx.burst(...center(p.querySelector(".bq")), 30);
   art.setMood("love");
-  ctx.say(`${total.toLocaleString()} points of love, tied w a bow 🎀 pip did the ribbon. pip has no thumbs`, 0);
+  ctx.say(`${total.toLocaleString()} points, tied with a bow 🎀`, 0);
   const b1 = p.querySelector(".next"); b1.hidden = false;
   await next(b1);
 
   /* ── (c) kiss coupons ── */
   const p2 = page(`
-    <h2 class="fin-title">u earned some <span class="hl">coupons</span></h2>
-    <p class="fin-sub">${state.kissesOwed ? `u bought ${state.kissesOwed} hint${state.kissesOwed > 1 ? "s" : ""} w kisses. ${him} has been keeping a v official record 😏` : demo ? "hints bought with kisses get printed here. very official." : "zero hints?! smart AND cute. here's a bonus one anyway 😙"}</p>
+    <h2 class="fin-title">you earned some <span class="hl">coupons</span></h2>
+    <p class="fin-sub">${state.kissesOwed ? `you bought ${state.kissesOwed} hint${state.kissesOwed > 1 ? "s" : ""} with kisses. ${him} kept count.` : demo ? "hints bought with kisses show up here." : "zero hints! here's one anyway 😙"}</p>
     <div class="booklet">
       <div class="stub"><div class="stub-in"><b>KISS<br>COUPONS</b><small>booklet no. 001<br>issued by ${him}</small>${art.heart(30)}</div><div class="staple s1"></div><div class="staple s2"></div></div>
       <div class="stack"></div>
@@ -261,11 +261,11 @@ export async function run(root, ctx) {
     c.style.setProperty("--k", Math.min(i, 4));
     c.innerHTML = `<div class="c-in"><div class="c-top"><span>ADMIT ONE</span><span>No. ${String(i + 1).padStart(4, "0")}</span></div>
       <div class="c-main">${art.heart(34, "#e0728f", { seed: i + 3 })}<span>good for ${esc(COUPONS[i % COUPONS.length])}</span></div>
-      <div class="c-fine">valid forever (ur stuck with me unfortunately) · redeemable on ${him} only</div></div>`;
+      <div class="c-fine">valid forever · redeemable on ${him} only</div></div>`;
     c.setAttribute("role", "button"); c.setAttribute("tabindex", i === 0 ? "0" : "-1"); c.setAttribute("aria-label", "tear off coupon");
     stack.appendChild(c);
   }
-  ctx.say(kisses > 1 ? `${kisses} kiss coupons. tear them out, they're all urs ✂️` : "one (1) kiss coupon. tear it out, it's urs ✂️", 0);
+  ctx.say(kisses > 1 ? `${kisses} coupons. tear them out ✂️` : "one coupon. tear it out ✂️", 0);
   let torn = 0;
   const pile = p2.querySelector(".pile"), wn = p2.querySelector(".wn"), b2 = p2.querySelector(".next");
   {
@@ -285,10 +285,10 @@ export async function run(root, ctx) {
         b2.hidden = false;
         if (torn === kisses) {
           art.setMood("love");
-          ctx.say(ctx.pick([`all urs. ${him} has been notified. he's acc thrilled`, "coupons secured. pip recommends redeeming one immediately 😙", "10/10 tearing technique. u slayedddd"]), 0);
+          ctx.say(ctx.pick(["all yours 😙", "coupons secured", "nice tearing"]), 0);
           p2.querySelector(".tear-hint").textContent = "all collected ♥";
         } else {
-          ctx.say(ctx.pick(["rrrip! so satisfying", "another one!!", "wow a natural", `${kisses - torn} to go`]), 2000);
+          ctx.say(ctx.pick(["rrrip!", "another one", `${kisses - torn} to go`]), 2000);
           setTimeout(arm, 250);
         }
       });
@@ -309,7 +309,7 @@ export async function run(root, ctx) {
       <h1 class="end-title" aria-label="${esc(label)}">${letters}</h1>
       <p class="end-sub">${her} &amp; ${him} · ${new Date().getFullYear()}</p>
       ${endImg}
-      <p class="end-more">here's to many more places together<br>and 217 more years, minimum 😙</p>
+      <p class="end-more">here's to many more 😙</p>
       <div class="end-btns">
         <button class="btn kiss-btn">send a kiss 💋</button>
         <button class="btn alt again">play again ↺</button>
@@ -324,11 +324,11 @@ export async function run(root, ctx) {
     confetti({ particleCount: 90, spread: 100, origin: { y: 0.35 }, colors: ["#f2a7b8", "#e0728f", "#fff7f0", "#f6d36b", "#8fb38a"], scalar: 0.9 });
   }
   art.setMood("love");
-  ctx.say("ok NOW it's sincere enough. text effects ✓ confetti ✓ pip crying ✗ (it's dew)", 0);
+  ctx.say("happy anniversary 🌸", 0);
   p4.addEventListener("pointerdown", (e) => { if (!e.target.closest("button")) { ctx.burst(e.clientX, e.clientY, 8); sfx.chime(Math.floor(Math.random() * 10)); } });
   let sent = 0;
   const kc = p4.querySelector(".kiss-count");
-  const kissLines = ["kiss delivered ✓", "another one?! ok ok 😙", `${him} just got a jump scare. his heart is racing`, "the kiss tank is now full", `${him} says he has a problem. he loves u too much`, "I", "LOVE", "YOU", "SO", "MUCH", `I love you sooo much ${her} ❤️❤️❤️`];
+  const kissLines = ["kiss sent ✓", "another one? ok 😙", "ok you really like this button", `love you ${her} ❤️`];
   p4.querySelector(".kiss-btn").onclick = (e) => {
     sent++; sfx.kiss(); ctx.burst(e.clientX || innerWidth / 2, e.clientY || innerHeight / 2, 14);
     kc.hidden = false; kc.textContent = `kisses sent: ${sent}`;

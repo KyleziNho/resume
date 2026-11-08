@@ -4,20 +4,16 @@ import { isMuted } from "./sfx.js";
 // ✏️ Kyle: prices, prompts and captions live right here.
 const PRICE = 50;               // tickets needed to use the booth
 const PTS_PER_TICKET = 250;     // 5000 pts/round → 20 tickets
-const POSE_FIRST = "first one: ur biggest smile 😁";
-const POSE_LAST = "last one… kiss the camera 😙😙😙";
+const POSE_FIRST = "first one: big smile 😁";
+const POSE_LAST = "last one: kiss the camera 😘";
 const POSES = [
-  "ur 'skill issue' face 😤",
-  "pretend u just beat me at skyjo 🏆",
-  "ur 'I wouldn't go that far' face 🤨",
-  "act like ur 11:59 for an 11:30 🏃‍♀️",
-  "chongqing hotpot spice face 🌶️",
-  "show me ur 'go book an nhs appointment' face",
-  "ur best 'aiyo' face",
-  "look like u just guessed bath first try 🏠",
-  "act nonchalant (u can't) 😏",
+  "silly face 🤪",
+  "peace sign ✌️",
+  "cheeky wink 😉",
+  "act surprised 😲",
+  "your skyjo winning face 🏆",
 ];
-const POLA_CAPTION = "my favourite pumpkin";
+const POLA_CAPTION = "my favourite view";
 
 const SHOTS = 4;
 const FW = 640, FH = 480;       // raw frame size (4:3, same crop as the preview window)
@@ -78,8 +74,8 @@ async function unlockView(root, ctx) {
     <div class="tape" style="top:-13px;left:calc(50% - 55px);transform:rotate(-2deg)"></div>
     <div class="pb-u-flower f1 sticker">${art.peony(78, { seed: 61, color: 0 })}</div>
     <div class="pb-u-flower f2 sticker">${art.lily(70, { seed: 62, color: "pink" })}</div>
-    <h2 class="pb-u-title"><span class="t-a">cashing in ur points…</span><span class="t-b">u did ittt!!</span></h2>
-    <p class="pb-u-sub"><span class="t-a">every geo point = arcade tickets 🎟</span><span class="t-b">ur officially rich enough for the <span class="hl">photobooth machine</span> 📸</span></p>
+    <h2 class="pb-u-title"><span class="t-a">cashing in your points…</span><span class="t-b">you did it!</span></h2>
+    <p class="pb-u-sub"><span class="t-a">points = tickets 🎟</span><span class="t-b">enough for the <span class="hl">photobooth</span> 📸</span></p>
     <ul class="pb-rounds">${scores.map((s, i) => `<li><span>round ${i + 1}</span><i></i><b>${s.toLocaleString()} pts</b><em>+${tix[i]} 🎟</em></li>`).join("")}</ul>
     <div class="pb-disp">
       <div class="pb-disp-head"><span class="pb-disp-mouth"></span><span class="pb-disp-label">TICKETS</span></div>
@@ -90,7 +86,7 @@ async function unlockView(root, ctx) {
     <p class="pb-u-note"></p>
     <div class="pb-u-stamp">UNLOCKED</div>
     <button class="btn pb-u-go" hidden>to the booth →</button>
-    ${demo ? `<p class="pb-demo">(practice numbers, u haven't played geo yet)</p>` : ""}
+    ${demo ? `<p class="pb-demo">(practice numbers)</p>` : ""}
   </div></div>`;
   const card = root.querySelector(".pb-unlock");
   const cnt = card.querySelector(".pb-cnt"), pile = card.querySelector(".pb-pile"), bar = card.querySelector(".pb-meter-bar i");
@@ -100,7 +96,7 @@ async function unlockView(root, ctx) {
   const setCount = (n) => { shown = n; cnt.textContent = n; bar.style.transform = `scaleX(${Math.min(1, n / PRICE)})`; };
 
   art.setMood("wow");
-  ctx.say(ctx.pick(["ok so every geo point = arcade tickets<br>let's see how rich u are 🤑", "cha-ching time. pip is the cashier today 🧾<br>no refunds"]), 0);
+  ctx.say("let's count your tickets 🎟", 0);
   await wait(rm ? 200 : 900);
 
   const spill = async (n, from, kind = "admit") => {
@@ -127,22 +123,22 @@ async function unlockView(root, ctx) {
 
   if (total >= PRICE) {
     const spare = total - PRICE;
-    note.innerHTML = spare ? `✓ that's enough!! <b>+${spare}</b> spare 🎟 (redeemable for 1 teh tarik, ask kyle)` : `✓ exactly ${PRICE}. down to the last ticket. acc iconic`;
+    note.innerHTML = spare ? `✓ enough! <b>+${spare}</b> spare 🎟` : `✓ exactly ${PRICE}. just made it`;
     note.classList.add("on");
     art.setMood("love");
-    ctx.say(total >= 80 ? "ur lowk a photobooth millionaire 💅" : "look at u go, ballin' 💸", 0);
+    ctx.say(total >= 80 ? "rich! 💸" : "nice 💸", 0);
   } else {
     note.innerHTML = `hmm… that's <b>${PRICE - total}</b> 🎟 short`;
     note.classList.add("on");
     sfx.sad();
     art.setMood("sad");
-    ctx.say("oh<br>ohhh<br>hold on…", 0);
+    ctx.say("hold on…", 0);
     await wait(rm ? 400 : 1700);
-    note.innerHTML = `…<b>kyle topped up the rest</b> 💸 <small>(he has a tab here 😏)</small>`;
+    note.innerHTML = `…<b>kyle covered the rest</b> 💸`;
     note.classList.add("topup");
     await spill(PRICE - total, total, "iou");
     art.setMood("smug");
-    ctx.say("kyle says don't worry about it 😌<br>(he also said skill issue 🤣)", 0);
+    ctx.say("don't worry, it's on kyle 😌", 0);
   }
   await wait(rm ? 100 : 500);
   card.classList.add("done");
@@ -206,7 +202,7 @@ function boothView(root, ctx, S, locked) {
               <div class="pb-count"></div>
               <div class="pb-curtain l"></div><div class="pb-curtain r"></div>
               <div class="pb-valance"></div>
-              ${locked ? `<div class="pb-lock"><span class="pb-lock-str"></span><div class="pb-lock-tag">🔒 <b>${PRICE} 🎟</b><small>pay up cutie</small></div></div>` : ""}
+              ${locked ? `<div class="pb-lock"><span class="pb-lock-str"></span><div class="pb-lock-tag">🔒 <b>${PRICE} 🎟</b><small>pay up</small></div></div>` : ""}
             </div>
           </div>
           <div class="pb-row">
@@ -225,10 +221,10 @@ function boothView(root, ctx, S, locked) {
       </div>
       ${locked ? `<div class="pb-wallet">
         <div class="pb-coin" role="button" tabindex="0" aria-label="booth token: drag it into the coin slot, or tap it">${coinSVG}</div>
-        <p>ur booth token<br><small>(traded for ${PRICE} 🎟)</small><br><b class="pb-arrow"><span class="m">drag it up into the slot ↑</span><span class="d">← drop it in the slot</span></b></p>
+        <p>your token<br><small>(${PRICE} 🎟)</small><br><b class="pb-arrow"><span class="m">drag it up into the slot ↑</span><span class="d">← drop it in the slot</span></b></p>
       </div>` : ""}
     </div>
-    <button class="pb-skip" hidden>camera shy? skip the booth →</button>
+    <button class="pb-skip" hidden>skip the booth →</button>
   </div>`;
   root.scrollTop = 0;
   const $ = (s) => root.querySelector(s);
@@ -255,7 +251,7 @@ function boothView(root, ctx, S, locked) {
     async insertCoin() {
       const coin = $(".pb-coin"), slot = $(".pb-coinbox");
       art.setMood("smug");
-      ctx.say(touchy() ? "🔒 locked lol. pip swapped ur tickets for a token<br>drag it into the coin slot (or just tap it)" : "🔒 locked lol. pip swapped ur tickets for a token<br>drag it into the coin slot (or just click it)", 0);
+      ctx.say(touchy() ? "drag the token into the coin slot<br>(or just tap it)" : "drag the token into the coin slot<br>(or just click it)", 0);
       await new Promise((res) => {
         let id = null, sx = 0, sy = 0, moved = false, ox = 0, oy = 0;
         const inSlot = () => {
@@ -277,7 +273,7 @@ function boothView(root, ctx, S, locked) {
           id = null; coin.classList.remove("held");
           if (!moved || inSlot()) return done();
           sfx.nope(); ox = oy = 0; coin.style.translate = ""; slot.classList.remove("hot");
-          ctx.say(ctx.pick(["closerrr… the little slot on the machine 👉", "into the slot!! the dark one that says 'insert ♡ coin'"]), 3000);
+          ctx.say("into the slot that says 'insert ♡ coin' 👉", 3000);
         };
         coin.onkeydown = (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); done(); } };
       });
@@ -303,7 +299,7 @@ function boothView(root, ctx, S, locked) {
       sfx.win();
       ctx.burst(...center(booth.querySelector(".pb-sign")), 22);
       art.setMood("wow");
-      ctx.say("ding ding ding!! ✨ booth is open for business", 0);
+      ctx.say("booth open ✨", 0);
       await wait(reduced() ? 150 : 700);
       lock.remove();
     },
@@ -358,30 +354,30 @@ function boothView(root, ctx, S, locked) {
     },
     async fallback(reason) {
       const why = {
-        denied: "the camera said no (fair tbh). if that was an accident, tap the 🔒 / ⓘ next to the web address → allow camera, then try again",
-        insecure: "browsers only share the camera on a secure <b>https://</b> link and this one isn't 😭 u can still upload a pic!",
-        unsupported: "this browser doesn't do cameras sadly 😭 u can still upload a pic!",
-        nocam: "pip looked everywhere but couldn't find a camera on this device 🙈 u can still upload a pic!",
-        busy: "the camera's busy in another app or tab. close that one and try again?",
-        other: "the camera got shy and wouldn't turn on (relatable). try again or upload a pic?",
-      }[reason] || "the camera got shy and wouldn't turn on (relatable). try again or upload a pic?";
+        denied: "camera access was blocked. tap the 🔒 / ⓘ next to the web address, allow the camera, then try again.",
+        insecure: "the camera only works on a secure <b>https://</b> link. you can upload a photo instead.",
+        unsupported: "this browser can't use the camera. you can upload a photo instead.",
+        nocam: "no camera found on this device. you can upload a photo instead.",
+        busy: "the camera is being used by another app or tab. close it and try again.",
+        other: "the camera wouldn't turn on. try again, or upload a photo.",
+      }[reason] || "the camera wouldn't turn on. try again, or upload a photo.";
       const note = document.createElement("div");
       note.className = "pb-note card";
       const t = touchy();
       note.innerHTML = `<div class="tape mint" style="top:-12px;left:20px;transform:rotate(-7deg)"></div>
         <div class="tape yellow" style="top:-12px;right:20px;transform:rotate(6deg)"></div>
-        <h3>pip can't see u 🙈</h3>
+        <h3>no camera 🙈</h3>
         <p class="pb-why">${why}</p>
         <div class="pb-note-btns">
           <button class="btn alt pb-retry">try again ↻</button>
           <label class="btn pb-upl">${t ? "📷 snap one" : "🖼 upload a photo"}<input type="file" accept="image/*" ${t ? 'capture="user"' : "multiple"}></label>
           ${t ? `<label class="btn alt pb-upl">🖼 from gallery<input type="file" accept="image/*" multiple></label>` : ""}
         </div>
-        <button class="pb-skiplink">skip, just tuck in our puzzle pic →</button>`;
+        <button class="pb-skiplink">skip, use our puzzle photo →</button>`;
       $(".pb-body").appendChild(note);
       skipBtn.hidden = true;
       art.setMood("sad");
-      ctx.say("pip can't see u 😭 but we can still make a strip!!", 5000);
+      ctx.say("no camera, but you can still make a strip", 5000);
       const choice = await new Promise((res) => {
         note.querySelector(".pb-retry").onclick = () => res("retry");
         note.querySelector(".pb-skiplink").onclick = () => res("skip");
@@ -391,7 +387,7 @@ function boothView(root, ctx, S, locked) {
           if (!files.length) return;
           const imgs = (await Promise.all(files.map(loadFile))).filter(Boolean);
           if (imgs.length) res({ images: imgs });
-          else { sfx.nope(); ctx.say("hmm pip couldn't open that one. try a jpg or png?", 3500); }
+          else { sfx.nope(); ctx.say("couldn't open that one. try a jpg or png?", 3500); }
         }));
       });
       sfx.pop();
@@ -405,7 +401,7 @@ function boothView(root, ctx, S, locked) {
       await this.close();
       booth.classList.add("printing");
       art.setMood("wow");
-      ctx.say(ctx.pick(["ooh it's printinggg ✨ don't touch, it's developing!", "bzzzt… printing… pip is very professional rn"]), 0);
+      ctx.say("printing… ✨", 0);
       const strip = await renderStrip(S, { stickers: false });
       const img = root.querySelector(".pb-out img");
       img.src = strip.toDataURL("image/jpeg", 0.9);
@@ -425,7 +421,7 @@ function boothView(root, ctx, S, locked) {
 async function getFrames(B, ctx, S) {
   const { art, sfx } = ctx;
   for (;;) {
-    B.msg("pip is asking to borrow ur camera… 👀<br><small>tap <b>allow</b>!</small>");
+    B.msg("pip needs your camera 👀<br><small>tap <b>allow</b></small>");
     const camP = startCam(S);
     await B.open();
     const cam = await Promise.race([camP, B.skipP.then(() => ({ skip: true }))]);
@@ -434,7 +430,7 @@ async function getFrames(B, ctx, S) {
     if (cam.ok && (await B.attach(S.stream))) {
       B.msg("");
       art.setMood("love");
-      ctx.say(ctx.pick(["there u are!! 🥹 pick a filter, then hit <b>take photos</b>", "hi cutie patootie 😙 pick a filter &amp; press <b>take photos</b> when ur ready"]), 6000);
+      ctx.say("there you are 🥹 pick a filter, then hit <b>take photos</b>", 6000);
       if ((await B.waitShoot()) === "skip") { stopCam(S); return "skip"; }
       if (await shoot(B, ctx, S)) { stopCam(S); B.detach(); S.source = "camera"; return "shot"; }
       stopCam(S); B.detach();
@@ -729,7 +725,7 @@ const jpg = (c, q = 0.85) => c.toDataURL("image/jpeg", q);
 async function storeSkip(ctx) {
   const S = { art: ctx.art, config: ctx.config };
   ctx.art.setMood("love");
-  ctx.say("no worries!! pip will tuck in this one instead 💌", 0);
+  ctx.say("no worries, we'll use this one 💌", 0);
   try {
     const img = new Image();
     img.src = ctx.config.puzzle.photo;
@@ -765,7 +761,7 @@ async function resultsView(root, ctx, S) {
   const tray = STICKERS.map(([k, mk]) => ({ k, svg: mk(art) }));
   root.innerHTML = `<div class="pb-desk" aria-hidden="true">${deskStickers(art)}</div>
   <div class="pb-view pb-results">
-    <h2 class="pb-r-title">look at my cutie pumpkin <span>🥹</span></h2>
+    <h2 class="pb-r-title">cute <span>🥹</span></h2>
     <div class="pb-r-grid">
       <div class="pb-r-strip">
         <div class="tape" style="top:-12px;left:calc(50% - 45px);width:90px;transform:rotate(-4deg)"></div>
@@ -807,7 +803,7 @@ async function resultsView(root, ctx, S) {
   picks.forEach((b, i) => { b.style.backgroundImage = `url(${filteredThumb(S, i)})`; });
 
   art.setMood("love");
-  ctx.say(ctx.pick([`omg framing this (pip is not crying, ur crying)<br>add some stickers if u want!`, `${her} ur unreal 😙<br>but kyle says not sincere enough… needs more stickers ✨`]), 6000);
+  ctx.say("add some stickers if you want ✨", 6000);
 
   // polaroid: tap to shake
   polaImg.onclick = () => { polaImg.classList.remove("shook"); void polaImg.offsetWidth; polaImg.classList.add("shook", "dev-fast"); sfx.crinkle(); sfx.crinkle(); };
@@ -868,7 +864,7 @@ async function resultsView(root, ctx, S) {
     const n = S.stickers.length;
     const frame = n % SHOTS, side = n % 2 ? 0.8 : 0.2;
     addSticker(t, side + (Math.random() - 0.5) * 0.12, 0.03 + (frame + 0.25 + Math.random() * 0.5) * 0.2);
-    if (n === 0) { art.setMood("wow"); ctx.say("cuteee!! drag it wherever. drag it off the strip to peel it off", 3500); }
+    if (n === 0) { art.setMood("wow"); ctx.say("drag to move, drag off to remove", 3500); }
   }));
 
   const bake = async () => {
@@ -882,10 +878,10 @@ async function resultsView(root, ctx, S) {
     const a = document.createElement("a");
     a.href = strip; a.download = `${config.hisName}-${config.herName}-photobooth.jpg`.toLowerCase().replace(/[^a-z0-9.\-]+/g, "-");
     document.body.appendChild(a); a.click(); a.remove();
-    art.setMood("happy"); ctx.say("saved!! one for ur camera roll, one for the envelope 📥", 3000);
+    art.setMood("happy"); ctx.say("saved 📥", 3000);
   };
   return new Promise((res) => {
-    $(".pb-retake").onclick = () => { sfx.pop(0.9); art.setMood("wow"); ctx.say("again!! again!! 🤣", 1500); res("retake"); };
+    $(".pb-retake").onclick = () => { sfx.pop(0.9); art.setMood("wow"); ctx.say("again! 📸", 1500); res("retake"); };
     $(".pb-keep").onclick = async (e) => {
       const btn = e.currentTarget; btn.disabled = true;
       const { strip, pola } = await bake();
@@ -893,7 +889,7 @@ async function resultsView(root, ctx, S) {
       sfx.win(); ctx.burst(...center(btn), 30);
       $(".pb-results").classList.add("kept");
       art.setMood("love");
-      ctx.say("tucked away somewhere safe… u'll see 😏", 0);
+      ctx.say("saved for later 😏", 0);
       await wait(reduced() ? 400 : 1800);
       res("keep");
     };

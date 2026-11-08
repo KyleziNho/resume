@@ -4,64 +4,43 @@
 // "photo units" (the frame is 0..W × 0..H) and are mapped to the screen by one
 // scale + offset, so resizing/rotating the phone just re-maps everything.
 
-const LEVELS = [
-  { key: "baby", label: "baby mode", n: 12, cols: 4, rows: 3, sub: "for sleepy pumpkins 🍼", k: 2.3,
-    line: "baby mode?? no judgement 🤣<br>ok maybe a lil judgement" },
-  { key: "normal", label: "girlfriend mode", n: 24, cols: 6, rows: 4, sub: "recommended by me (kyle)", k: 2.6,
-    line: "solid choice. very girlfriend of u 😙" },
-  { key: "genius", label: "locked in mode", n: 48, cols: 8, rows: 6, sub: "u have to prove it now", k: 2.9,
-    line: "ooh confident. i love that for u. good luck lah 😈" },
-];
+// one size only: 12 pieces. k = how much cork there is around the frame.
+const LEVEL = { label: "12 pieces", cols: 4, rows: 3, k: 2.3 };
 
 const LINES = {
   first: [
-    "FIRST PIECE!! she's a natural 🌸",
-    "ok ok i see u 👀 one down",
-    "look at u go. proud of u already 😙",
+    "first piece! 🌸",
+    "one down 👀",
   ],
   half: [
-    "halfway there!! (livin' on a prayer 🎶)",
-    "50%!! lowk faster than kyle tbh",
-    "half done!! i can almost smell the hotpot 🌶️",
+    "halfway there!",
+    "half done, nice 💕",
   ],
   cheeky: [
-    "that piece was hiding from u fr",
-    "wah so pro. are u sure ur not cheating?? 🤨",
-    "this is the most attention my face has ever gotten",
     "careful, that's my good side 😏",
-    "kyle says he'd be faster<br>kyle also thinks he's good at skyjo 🤣",
-    "u r doing amazing cutiepie 💖",
-    "faster than finding a parking spot in KL",
-    "can i distract u yet<br>no?? ok 🦧",
-    "that one fit better than my jeans",
-    "giving Chlo 13–9 pickle energy rn",
+    "you're good at this",
+    "that one was hiding",
+    "this is the most attention my face has ever gotten",
   ],
   near: [
-    "sooo close. like a nose away",
-    "almost!! wiggle it a bit",
-    "kyle would call that a skill issue. pip would never 🤣",
+    "so close!",
+    "almost, wiggle it a bit",
   ],
   idle: [
-    "hello?? r u asleep 😴",
-    "*taps glass* hellooo",
-    "ok this is very 11:30 means 11:59 of u 🤣",
-    "the pieces miss u. i miss u. come back pumpkin",
+    "hello? 😴",
+    "the pieces miss you",
   ],
   peek: [
-    "ok fine, one little peek 👀",
-    "peeking again?? i'm telling kyle",
-    "no peeking!! ...ok just a tiny one",
-    "u were literally there when we took this 🤣",
-    "at this point just stare at me directly 😏",
+    "ok, one little peek 👀",
+    "peeking again? 🤨",
+    "you were literally there when we took this 🤣",
   ],
   last: [
-    "one more piece... no pressure... (pressure)",
-    "last one!! drum roll pls 🥁",
+    "last one! 🥁",
   ],
   win: [
-    "WE'RE WHOLE AGAIN 😭💕",
-    "u did it!!! put us back together like always",
-    "genius. gorgeous. mine. 💐",
+    "we're whole again 💕",
+    "you did it!!",
   ],
 };
 
@@ -77,42 +56,11 @@ export async function run(root, ctx) {
   const on = (el, ev, fn, opt) => { el.addEventListener(ev, fn, opt); cleanups.push(() => el.removeEventListener(ev, fn, opt)); };
 
   try {
-    const level = await chooseLevel(root, ctx, photo);
-    ctx.say(level.line, 3500);
-    await playPuzzle(root, ctx, photo, W, H, level, on);
+    setTimeout(() => ctx.say("can you put our photo back together? 🧩", 3500), 400);
+    await playPuzzle(root, ctx, photo, W, H, LEVEL, on);
   } finally {
     cleanups.forEach((f) => f());
   }
-}
-
-/* ───────────── start screen ───────────── */
-
-function chooseLevel(root, ctx, photo) {
-  const { art } = ctx;
-  root.innerHTML = `
-    <div class="pz-cork"></div>
-    <div class="pz-start">
-      <div class="pz-start-card card">
-        <span class="tape" style="top:-14px;left:50%;transform:translateX(-50%) rotate(-3deg)"></span>
-        <div class="pz-deco pz-deco-a">${art.peony(78)}</div>
-        <div class="pz-deco pz-deco-b">${art.lily(70)}</div>
-        <h2>oh no. i dropped our chongqing photo</h2>
-        <p class="pz-sub">and it broke into a bunch of pieces 🙈<br>can u fix it pumpkin? pick ur vibe:</p>
-        <div class="pz-levels">
-          ${LEVELS.map((l, i) => `
-            <button class="btn ${i === 1 ? "" : "alt"} pz-level" data-i="${i}" style="--r:${[-1.5, 1, -0.5][i]}deg">
-              <span class="pz-level-name">${l.label} <b>(${l.n})</b></span>
-              <span class="pz-level-sub">${l.sub}</span>
-            </button>`).join("")}
-        </div>
-      </div>
-    </div>`;
-  setTimeout(() => ctx.say("psst. it's puzzle time 🧩", 3000), 500);
-  return new Promise((resolve) => {
-    root.querySelectorAll(".pz-level").forEach((b) => {
-      b.onclick = () => { ctx.sfx.pop(); resolve(LEVELS[+b.dataset.i]); };
-    });
-  });
 }
 
 /* ───────────── the puzzle ───────────── */
@@ -127,7 +75,7 @@ function playPuzzle(root, ctx, photo, W, H, level, on) {
     root.innerHTML = `
       <div class="pz-cork"></div>
       <header class="pz-bar">
-        <h2 class="pz-title">${level.label} <small>(${N})</small></h2>
+        <h2 class="pz-title">fix our photo</h2>
         <div class="pz-timer" aria-label="time">0:00</div>
         <div class="pz-count">0/${N}</div>
         <button class="btn alt pz-peek" type="button">👀 peek</button>
@@ -494,7 +442,7 @@ function playPuzzle(root, ctx, photo, W, H, level, on) {
             <figcaption>${escapeHtml(ctx.config.puzzle.caption)}</figcaption>
             <div class="pz-sticker">${ctx.art.heart(46)}</div>
           </figure>
-          <p class="pz-result">solved in <b>${fmt(ms)}</b> on <span class="scribble-underline">${level.label}</span></p>
+          <p class="pz-result">solved in <b>${fmt(ms)}</b></p>
           <button class="btn pz-next" type="button">next →</button>`;
         root.appendChild(wrap);
         // start the polaroid exactly where the frame was, then let it fly to centre
@@ -523,7 +471,7 @@ function playPuzzle(root, ctx, photo, W, H, level, on) {
           });
         });
         wrap.querySelector(".pz-next").onclick = () => { ctx.sfx.pop(); ctx.say(""); resolve(); };
-        setTimeout(() => say(`${fmt(ms)}!! ${ms < 120000 ? "ok ur acc too good at this 😤" : "took a while but worth every second 😙"}`, 4000), 1600);
+        setTimeout(() => say(`${fmt(ms)}! ${ms < 120000 ? "that was fast 😤" : "worth the wait 😙"}`, 4000), 1600);
       }, 1500);
     }
 
