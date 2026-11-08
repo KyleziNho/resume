@@ -1,0 +1,165 @@
+/* Shared scrapbook theme. Scene CSS should use these tokens, not new colours. */
+:root {
+  --paper: #fbf5ea;          /* page */
+  --paper-2: #f3e8d6;        /* card / darker paper */
+  --kraft: #d9bf98;          /* kraft paper / cardboard */
+  --cork: #c8a273;
+  --ink: #3b2f2f;            /* pen ink */
+  --ink-soft: #7a6460;
+  --peony: #f2a7b8;          /* main pink */
+  --peony-deep: #e0728f;
+  --blush: #fde0e6;
+  --lily: #fff7f0;           /* lily petals */
+  --lily-throat: #f6d36b;    /* lily centre yellow */
+  --leaf: #8fb38a;
+  --leaf-deep: #5f8a5b;
+  --sky: #a9cfe6;
+  --tape-pink: rgba(242, 167, 184, .75);
+  --tape-mint: rgba(168, 214, 190, .75);
+  --tape-yellow: rgba(246, 211, 107, .7);
+  --shadow: 2px 3px 0 rgba(59, 47, 47, .18), 4px 8px 18px rgba(59, 47, 47, .12);
+
+  --font-hand: "Caveat", "Gaegu", cursive;      /* headings, notes */
+  --font-body: "Patrick Hand", "Gaegu", cursive; /* buttons, body */
+  --font-cute: "Gaegu", "Patrick Hand", cursive;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; height: 100%; }
+body {
+  background: var(--paper);
+  /* subtle paper grain + dotted journal grid */
+  background-image:
+    radial-gradient(rgba(59,47,47,.08) 1px, transparent 1px),
+    url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 .3  0 0 0 0 .2  0 0 0 0 .1  0 0 0 .06 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+  background-size: 22px 22px, 200px 200px;
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 20px;
+  overflow: hidden;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#stage { position: fixed; inset: 0; overflow: hidden; }
+.scene { position: absolute; inset: 0; animation: scene-in .6s cubic-bezier(.2,.9,.3,1.2) both; }
+.scene.leaving { animation: scene-out .45s ease-in both; }
+@keyframes scene-in { from { opacity: 0; transform: translateY(30px) rotate(-1deg); } }
+@keyframes scene-out { to { opacity: 0; transform: translateY(-30px) rotate(1deg) scale(.97); } }
+
+/* ── reusable bits ── */
+h1, h2, h3 { font-family: var(--font-hand); font-weight: 700; margin: 0; line-height: 1; }
+
+.btn {
+  font: inherit; font-size: 22px; color: var(--ink);
+  background: var(--blush); border: 2.5px solid var(--ink);
+  border-radius: 255px 15px 225px 15px / 15px 225px 15px 255px; /* wobbly hand-drawn */
+  padding: 8px 22px; cursor: pointer; box-shadow: 3px 3px 0 var(--ink);
+  transition: transform .12s, box-shadow .12s;
+}
+.btn:hover { transform: translate(-1px,-2px) rotate(-1deg); box-shadow: 4px 5px 0 var(--ink); }
+.btn:active { transform: translate(2px,2px); box-shadow: 1px 1px 0 var(--ink); }
+.btn.alt { background: var(--lily); }
+.btn.green { background: #d7ead2; }
+.btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+
+.card {
+  background: var(--lily); border-radius: 4px; box-shadow: var(--shadow);
+  padding: 18px 22px; position: relative;
+}
+.polaroid { background: #fff; padding: 12px 12px 48px; box-shadow: var(--shadow); }
+
+.tape {  /* washi tape strip; position it yourself */
+  position: absolute; width: 110px; height: 28px; background: var(--tape-pink);
+  clip-path: polygon(3% 0, 97% 4%, 100% 50%, 96% 100%, 2% 96%, 0 50%);
+  background-image: repeating-linear-gradient(45deg, transparent 0 6px, rgba(255,255,255,.35) 6px 10px);
+}
+.tape.mint { background-color: var(--tape-mint); }
+.tape.yellow { background-color: var(--tape-yellow); }
+
+.scribble-underline { background: linear-gradient(transparent 62%, var(--tape-yellow) 62% 90%, transparent 90%); }
+
+/* mascot speech bubble (driven by ctx.say) */
+#mascot { position: fixed; left: 14px; bottom: 10px; z-index: 50; display: flex; align-items: flex-end; gap: 8px; pointer-events: none; }
+#mascot .bubble {
+  font-family: var(--font-cute); font-size: 21px; max-width: min(340px, 70vw);
+  background: #fff; border: 2.5px solid var(--ink); border-radius: 18px 18px 18px 4px;
+  padding: 8px 14px; box-shadow: 3px 3px 0 var(--ink); animation: pop .35s cubic-bezier(.2,1.6,.4,1);
+}
+@keyframes pop { from { transform: scale(.4); opacity: 0; } }
+
+#fx { position: fixed; inset: 0; pointer-events: none; z-index: 60; }
+
+@media (max-width: 600px) { body { font-size: 18px; } .btn { font-size: 19px; padding: 7px 16px; } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01s !important; transition-duration: .01s !important; } }
+
+/* ───────── art-kit polish (owned by the art/intro/finale agent) ───────── */
+html { background: var(--paper); }
+body { overscroll-behavior: none; }
+::selection { background: var(--tape-pink); }
+.btn { cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='28' height='28' viewBox='0 0 40 40'><path d='M20 35C6 25 3 16 7 10S17 7 20 13C23 7 29 5 33 10S34 25 20 35Z' fill='%23e0728f' stroke='%233b2f2f' stroke-width='3'/></svg>") 14 4, pointer; }
+.btn:focus-visible, .sfx-btn:focus-visible { outline: 3px dashed var(--peony-deep); outline-offset: 4px; }
+
+[hidden] { display: none !important; }
+/* doodles */
+svg.doodle { display: inline-block; vertical-align: middle; overflow: visible; }
+
+/* sticker look: white die-cut outline + soft shadow */
+.sticker { filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 2px 0 #fff) drop-shadow(0 -2px 0 #fff) drop-shadow(2px 3px 2px rgba(59,47,47,.22)); }
+
+/* mascot: Pip the peony-bun */
+#mascot { left: max(10px, env(safe-area-inset-left)); bottom: max(8px, env(safe-area-inset-bottom)); }
+#mascot .mascot-face { flex: none; width: 84px; height: 84px; animation: pip-hop .45s cubic-bezier(.2,1.6,.4,1); }
+#mascot .mascot-face svg { width: 100%; height: 100%; transform-origin: 50% 95%; animation: pip-bob 2.6s ease-in-out infinite; filter: drop-shadow(2px 0 0 #fff) drop-shadow(-2px 0 0 #fff) drop-shadow(0 -2px 0 #fff); }
+#mascot .bubble { position: relative; margin-bottom: 30px; line-height: 1.15; }
+#mascot .bubble::after { content: ""; position: absolute; left: -12px; bottom: 6px; width: 14px; height: 14px; background: #fff; border-left: 2.5px solid var(--ink); border-bottom: 2.5px solid var(--ink); transform: skewY(-30deg) rotate(10deg); border-radius: 0 0 0 4px; }
+.m-eyes { transform-box: fill-box; transform-origin: center; animation: pip-blink 4.2s infinite; }
+.m-mouth { transform-box: fill-box; transform-origin: center; animation: pip-talk .16s 6 alternate; }
+.m-arm-r.waving { transform-box: fill-box; transform-origin: 20% 90%; animation: pip-wave .5s ease-in-out infinite alternate; }
+@keyframes pip-bob { 0%,100% { transform: translateY(0) rotate(-2deg) scaleY(1); } 50% { transform: translateY(-4px) rotate(2deg) scaleY(1.03); } }
+@keyframes pip-blink { 0%, 92%, 100% { transform: scaleY(1); } 95% { transform: scaleY(.1); } }
+@keyframes pip-talk { to { transform: scaleY(.45) scaleX(1.1); } }
+@keyframes pip-wave { from { transform: rotate(-12deg); } to { transform: rotate(18deg); } }
+@keyframes pip-hop { from { transform: translateY(30px) scale(.6); } }
+@media (max-width: 600px) {
+  #mascot .mascot-face { width: 56px; height: 56px; }
+  #mascot .bubble { font-size: 18px; margin-bottom: 22px; max-width: calc(100vw - 100px); }
+}
+
+/* mute / music stickers (made by sfx.js) */
+.sfx-toggles { position: fixed; top: max(10px, env(safe-area-inset-top)); right: max(10px, env(safe-area-inset-right)); z-index: 70; display: flex; gap: 6px; }
+.sfx-btn { width: 42px; height: 42px; display: grid; place-items: center; padding: 0; cursor: pointer;
+  background: var(--lily); border: 2.5px solid var(--ink); border-radius: 50% 46% 52% 48% / 48% 52% 46% 50%;
+  box-shadow: 2px 2px 0 var(--ink); transition: transform .15s; }
+.sfx-btn:nth-child(1) { transform: rotate(-6deg); } .sfx-btn:nth-child(2) { transform: rotate(5deg); background: var(--blush); }
+.sfx-btn:hover { transform: rotate(0) scale(1.08); }
+.sfx-btn:active { transform: scale(.92); }
+.sfx-btn .off { display: none; } .sfx-btn.is-off .off { display: inline; } .sfx-btn.is-off .on { display: none; }
+.sfx-btn.is-off { opacity: .75; }
+@media (max-width: 600px) { .sfx-btn { width: 36px; height: 36px; } .sfx-btn svg { width: 22px; height: 22px; } }
+
+/* flower clusters in the corners (art.flowerBorder()) */
+.flower-border { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.flower-border .fc { position: absolute; width: clamp(110px, 22vw, 200px); }
+.flower-border .fc svg { width: 100%; height: auto; }
+.flower-border .tl { top: -18px; left: -18px; }
+.flower-border .tr { top: -18px; right: -18px; transform: scaleX(-1); }
+.flower-border .bl { bottom: -18px; left: -18px; transform: scaleY(-1) rotate(8deg); }
+.flower-border .br { bottom: -18px; right: -18px; transform: scale(-1,-1); }
+
+/* bouquet growth (art.bouquet(..., {animate:true})): add .on to [data-i] / .bq-ribbon */
+.bq-anim .bq-stem { stroke-dasharray: 1; stroke-dashoffset: 1; transition: stroke-dashoffset .8s ease-out; }
+.bq-anim .bq-stem.on { stroke-dashoffset: 0; }
+.bq-anim .bq-leaf, .bq-anim .bq-bloom, .bq-ribbon { transform-box: fill-box; transform-origin: 50% 50%; transform: scale(0); }
+.bq-anim .bq-leaf { transition: transform .5s cubic-bezier(.3,1.6,.5,1) .5s; transform-origin: 0 100%; }
+.bq-anim .bq-bloom { transition: transform .8s cubic-bezier(.3,1.7,.45,1) .65s; }
+.bq-ribbon { transition: transform .7s cubic-bezier(.3,1.8,.5,1); }
+.bq-anim .on.bq-leaf, .bq-anim .on.bq-bloom, .bq-ribbon.on { transform: none; }
+.bq-anim .on.bq-bloom { animation: bloom-sway 3.5s ease-in-out 1.6s infinite alternate; }
+@keyframes bloom-sway { from { transform: rotate(-3deg); } to { transform: rotate(3deg); } }
+
+/* scene scroller helper: tall content scrolls on phones */
+.scroll-scene { overflow-y: auto; overflow-x: hidden; -webkit-overflow-scrolling: touch; }
+
+/* shared "shake" for nope moments */
+.shake { animation: shake .4s; }
+@keyframes shake { 20% { transform: translateX(-8px) rotate(-2deg); } 40% { transform: translateX(7px) rotate(2deg); } 60% { transform: translateX(-5px); } 80% { transform: translateX(3px); } }
